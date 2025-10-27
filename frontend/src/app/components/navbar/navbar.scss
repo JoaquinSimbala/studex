@@ -1,0 +1,76 @@
+// STUDEX - Navbar Component Styles
+
+// Título del navbar - sobrescribe el estilo global de h1
+.navbar-title {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
+  background-clip: unset !important;
+  color: white !important;
+}
+
+// Contenedor de búsqueda personalizado
+.search-container {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.search-container:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(120, 129, 96, 0.14), 0 10px 10px -5px rgba(120, 129, 96, 0.06);
+}
+
+.search-container:focus-within {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(120, 129, 96, 0.14), 0 10px 10px -5px rgba(120, 129, 96, 0.06);
+}
+
+// Input de búsqueda - desactivar efectos individuales
+.search-input {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transform: none !important;
+}
+
+.search-input:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+// Asegurar que la altura del navbar sea consistente
+.navbar-container {
+  min-height: 80px;
+}
+
+// Mejoras para la alineación del input de búsqueda
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+// Asegurar el centrado vertical del botón de búsqueda
+.search-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+// Mejorar la consistencia de la navbar
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+// Responsivo para mobile
+@media (max-width: 768px) {
+  .search-input-container {
+    margin: 0.5rem 0;
+  }
+}

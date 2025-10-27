@@ -1,0 +1,563 @@
+<div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">
+  <div class="max-w-7xl mx-auto px-4">
+    
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-4xl font-bold text-studex-900 mb-2">📁 Subir Nuevo Proyecto</h1>
+        <p class="text-studex-600">Comparte tu trabajo y ayuda a otros estudiantes</p>
+      </div>
+      <button (click)="goBack()" 
+              class="px-6 py-3 bg-studex-600 text-white font-semibold rounded-lg hover:bg-studex-700 transition-colors">
+        ← Volver al Panel
+      </button>
+    </div>
+
+    <!-- Main Card -->
+    <div class="bg-white rounded-2xl shadow-studex-xl overflow-hidden">
+      
+      <!-- Steps Progress -->
+      <div class="bg-studex-50 border-b border-studex-200 px-4 md:px-8 py-4 md:py-6">
+        <div class="flex justify-center items-center">
+          <div class="flex items-center flex-col md:flex-row md:space-x-8 space-y-4 md:space-y-0">
+            
+            <!-- Step 1 -->
+            <div class="flex items-center">
+              <div class="flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm transition-all duration-300"
+                   [ngClass]="{
+                     'bg-studex-600 text-white': currentStep >= 1,
+                     'bg-studex-200 text-studex-600': currentStep < 1
+                   }">
+                1
+              </div>
+              <span class="ml-3 font-medium text-studex-700 text-sm md:text-base"
+                    [ngClass]="{
+                      'text-studex-600 font-semibold': currentStep === 1
+                    }">
+                Información básica
+              </span>
+            </div>
+
+            <!-- Connector -->
+            <div class="w-4 h-16 md:w-16 md:h-1 rounded-full transition-all duration-300 rotate-90 md:rotate-0"
+                 [ngClass]="{
+                   'bg-studex-600': currentStep >= 2,
+                   'bg-studex-200': currentStep < 2
+                 }">
+            </div>
+
+            <!-- Step 2 -->
+            <div class="flex items-center">
+              <div class="flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm transition-all duration-300"
+                   [ngClass]="{
+                     'bg-studex-600 text-white': currentStep >= 2,
+                     'bg-studex-200 text-studex-600': currentStep < 2
+                   }">
+                2
+              </div>
+              <span class="ml-3 font-medium text-studex-700 text-sm md:text-base"
+                    [ngClass]="{
+                      'text-studex-600 font-semibold': currentStep === 2
+                    }">
+                Archivos
+              </span>
+            </div>
+
+            <!-- Connector -->
+            <div class="w-4 h-16 md:w-16 md:h-1 rounded-full transition-all duration-300 rotate-90 md:rotate-0"
+                 [ngClass]="{
+                   'bg-studex-600': currentStep >= 3,
+                   'bg-studex-200': currentStep < 3
+                 }">
+            </div>
+
+            <!-- Step 3 -->
+            <div class="flex items-center">
+              <div class="flex items-center justify-center w-10 h-10 rounded-full font-semibold text-sm transition-all duration-300"
+                   [ngClass]="{
+                     'bg-studex-600 text-white': currentStep >= 3,
+                     'bg-studex-200 text-studex-600': currentStep < 3
+                   }">
+                3
+              </div>
+              <span class="ml-3 font-medium text-studex-700 text-sm md:text-base"
+                    [ngClass]="{
+                      'text-studex-600 font-semibold': currentStep === 3
+                    }">
+                Publicar
+              </span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    <!-- Form Content -->
+    <div class="form-container">
+      <form [formGroup]="uploadForm" (ngSubmit)="onSubmit()">
+        
+        <!-- STEP 1: Información básica -->
+        <div *ngIf="currentStep === 1" class="step-content">
+          <h2>Información del Proyecto</h2>
+          
+          <!-- Título -->
+          <div class="form-group">
+            <label for="titulo">Título del Proyecto *</label>
+            <input 
+              type="text" 
+              id="titulo"
+              formControlName="titulo"
+              class="form-control"
+              placeholder="Ej: Sistema de Gestión de Inventario"
+              [class.is-invalid]="titulo?.invalid && titulo?.touched">
+            
+            <div *ngIf="titulo?.invalid && titulo?.touched" class="invalid-feedback">
+              <small *ngIf="titulo?.errors?.['required']">El título es requerido</small>
+              <small *ngIf="titulo?.errors?.['minlength']">El título debe tener al menos 5 caracteres</small>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div class="form-group">
+            <label for="descripcion">Descripción *</label>
+            <textarea 
+              id="descripcion"
+              formControlName="descripcion"
+              class="form-control"
+              rows="4"
+              placeholder="Describe brevemente de qué trata tu proyecto..."
+              [class.is-invalid]="descripcion?.invalid && descripcion?.touched">
+            </textarea>
+            
+            <div *ngIf="descripcion?.invalid && descripcion?.touched" class="invalid-feedback">
+              <small *ngIf="descripcion?.errors?.['required']">La descripción es requerida</small>
+              <small *ngIf="descripcion?.errors?.['minlength']">La descripción debe tener al menos 20 caracteres</small>
+            </div>
+          </div>
+
+          <!-- Universidad y Materia -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="university">Universidad *</label>
+              <input 
+                type="text" 
+                id="university"
+                formControlName="university"
+                class="form-control"
+                placeholder="Ej: Universidad Tecnológica del Perú"
+                [class.is-invalid]="university?.invalid && university?.touched">
+              
+              <div *ngIf="university?.invalid && university?.touched" class="invalid-feedback">
+                <small *ngIf="university?.errors?.['required']">La universidad es requerida</small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="subject">Materia *</label>
+              <input 
+                type="text" 
+                id="subject"
+                formControlName="subject"
+                class="form-control"
+                placeholder="Ej: Programación Web"
+                [class.is-invalid]="subject?.invalid && subject?.touched">
+              
+              <div *ngIf="subject?.invalid && subject?.touched" class="invalid-feedback">
+                <small *ngIf="subject?.errors?.['required']">La materia es requerida</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Año y Precio -->
+          <div class="form-row">
+            <div class="form-group">
+              <label for="year">Año *</label>
+              <input 
+                type="number" 
+                id="year"
+                formControlName="year"
+                class="form-control"
+                min="2020" 
+                max="2030"
+                [class.is-invalid]="year?.invalid && year?.touched">
+              
+              <div *ngIf="year?.invalid && year?.touched" class="invalid-feedback">
+                <small *ngIf="year?.errors?.['required']">El año es requerido</small>
+                <small *ngIf="year?.errors?.['min'] || year?.errors?.['max']">Año debe estar entre 2020 y 2030</small>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="precio">Precio (S/.) *</label>
+              <input 
+                type="number" 
+                id="precio"
+                formControlName="precio"
+                class="form-control"
+                placeholder="25.00"
+                min="1"
+                step="0.01"
+                [class.is-invalid]="precio?.invalid && precio?.touched">
+              
+              <div *ngIf="precio?.invalid && precio?.touched" class="invalid-feedback">
+                <small *ngIf="precio?.errors?.['required']">El precio es requerido</small>
+                <small *ngIf="precio?.errors?.['min']">El precio debe ser mayor a 0</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="form-group">
+            <label for="tags">Tags del Proyecto</label>
+            <input 
+              type="text" 
+              id="tags"
+              formControlName="tags"
+              class="form-control"
+              placeholder="Ej: javascript, html, css, angular"
+              maxlength="100">
+            <small class="form-text text-muted">Separa los tags con comas</small>
+          </div>
+
+          <!-- Tipo de Proyecto -->
+          <div class="form-group">
+            <label for="tipo">Tipo de Proyecto *</label>
+            
+            <!-- Botón para abrir modal de tipos -->
+            <button 
+              type="button"
+              (click)="openProjectTypesModal()"
+              class="form-control text-left flex items-center justify-between"
+              [class.is-invalid]="tipo?.invalid && tipo?.touched">
+              
+              <span *ngIf="!selectedProjectType" class="text-gray-500">
+                Selecciona el tipo de proyecto
+              </span>
+              
+              <span *ngIf="selectedProjectType" class="flex items-center space-x-2">
+                <span class="font-medium">{{ selectedProjectType.label }}</span>
+                <span class="text-sm text-gray-600">({{ selectedProjectType.category }})</span>
+              </span>
+              
+              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            
+            <div *ngIf="tipo?.invalid && tipo?.touched" class="invalid-feedback">
+              <small *ngIf="tipo?.errors?.['required']">El tipo de proyecto es requerido</small>
+            </div>
+          </div>
+
+          <!-- Categoría -->
+          <div class="form-group">
+            <label>Categoría del Proyecto *</label>
+            
+            <div *ngIf="isLoading" class="text-center py-8">
+              <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-studex-600"></div>
+              <p class="mt-2 text-studex-600">Cargando categorías...</p>
+            </div>
+
+            <div *ngIf="!isLoading" class="category-grid">
+              <div 
+                *ngFor="let categoria of categories" 
+                class="category-option"
+                [class.selected]="categoryId?.value === categoria.id"
+                (click)="uploadForm.patchValue({categoryId: categoria.id})">
+                
+                <div class="category-icon">{{ getCategoryIcon(categoria) }}</div>
+                <div class="category-name">{{ categoria.nombre }}</div>
+                <div class="category-desc">{{ categoria.descripcion }}</div>
+              </div>
+            </div>
+
+            <div *ngIf="categoryId?.invalid && categoryId?.touched" class="invalid-feedback d-block">
+              <small>Debes seleccionar una categoría</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: Archivos -->
+        <div *ngIf="currentStep === 2" class="step-content">
+          <h2>Archivos del Proyecto</h2>
+          
+          <!-- Imágenes -->
+          <div class="form-group">
+            <label for="images">Imágenes del Proyecto (Máximo 5)</label>
+            <input 
+              type="file" 
+              id="images"
+              class="form-control"
+              multiple
+              accept="image/*"
+              (change)="onImageSelect($event)">
+            
+            <small class="form-text text-muted">
+              Sube imágenes que representen tu proyecto (opcional, máximo 5 imágenes, 49MB cada una)
+            </small>
+
+            <!-- Vista previa de imágenes -->
+            <div *ngIf="selectedImages.length > 0" class="image-gallery">
+              <div class="gallery-header">
+                <h6>Imágenes seleccionadas ({{ selectedImages.length }}/5):</h6>
+              </div>
+              <div class="image-grid">
+                <div *ngFor="let image of selectedImages; let i = index" class="image-item">
+                  <img [src]="imagePreviewUrls[i]" alt="Vista previa" class="preview-img">
+                  <div class="image-info">
+                    <span class="image-name">{{ image.name }}</span>
+                    <span class="image-size">({{ getFileSize(image.size) }})</span>
+                  </div>
+                  <button type="button" class="btn-remove-image" (click)="removeImage(i)">✕</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Archivos -->
+          <div class="form-group">
+            <label for="files">Archivos del Proyecto (Máximo 5) *</label>
+            <input 
+              type="file" 
+              id="files"
+              class="form-control"
+              multiple
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.rar,.txt,.js,.ts,.html,.css,.py,.java,.cpp,.c"
+              (change)="onFileSelect($event)"
+              [class.is-invalid]="!selectedFiles.length && filesRequired">
+            
+            <small class="form-text text-muted">
+              Selecciona los archivos de tu proyecto (PDF, documentos, código, etc. - máximo 5 archivos, 49MB cada uno)
+            </small>
+
+            <!-- Lista de archivos seleccionados -->
+            <div *ngIf="selectedFiles.length > 0" class="selected-files">
+              <div class="files-header">
+                <h6>Archivos seleccionados ({{ selectedFiles.length }}/5):</h6>
+              </div>
+              <div class="file-list">
+                <div *ngFor="let file of selectedFiles; let i = index" class="file-item">
+                  <span class="file-icon">📄</span>
+                  <span class="file-name">{{ file.name }}</span>
+                  <span class="file-size">({{ getFileSize(file.size) }})</span>
+                  <button type="button" class="btn-remove" (click)="removeFile(i)">✕</button>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="!selectedFiles.length && !selectedImages.length && filesRequired" class="invalid-feedback d-block">
+              <small>Debes seleccionar al menos un archivo o imagen</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: Vista previa y publicar -->
+        <div *ngIf="currentStep === 3" class="step-content">
+          <h2 class="text-2xl font-bold text-studex-navbar mb-6">Revisar y Publicar</h2>
+          
+          <div class="project-preview">
+            <h3 class="text-lg font-semibold text-gray-700 mb-4">Vista previa del proyecto</h3>
+            
+            <!-- Tarjeta blanca como en la imagen -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-200">
+              <div class="preview-header mb-4">
+                <h4 class="text-xl font-bold text-gray-800 mb-2">{{ uploadForm.get('titulo')?.value || 'Título del proyecto' }}</h4>
+                <div class="flex flex-wrap gap-2 mb-3">
+                  <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full">
+                    💰 S/ {{ uploadForm.get('precio')?.value || '0' }}
+                  </span>
+                  <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-purple-600 bg-purple-100 rounded-full">
+                    🏛️ {{ uploadForm.get('university')?.value || 'Universidad' }}
+                  </span>
+                  <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full">
+                    📅 {{ uploadForm.get('year')?.value || '2024' }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="preview-description mb-4">
+                <p class="text-gray-600 leading-relaxed">{{ uploadForm.get('descripcion')?.value || 'Descripción del proyecto...' }}</p>
+              </div>
+              
+              <div class="preview-details">
+                <div class="mb-3">
+                  <span class="font-semibold text-gray-700">Materia:</span> 
+                  <span class="text-gray-600">{{ uploadForm.get('subject')?.value || 'Materia' }}</span>
+                </div>
+                <div class="mb-3">
+                  <span class="font-semibold text-gray-700">Archivos incluidos:</span>
+                </div>
+                
+                <div class="flex gap-4 text-sm">
+                  <div *ngIf="selectedImages.length > 0" class="flex items-center text-blue-600">
+                    📷 {{ selectedImages.length }} imagen(es)
+                  </div>
+                  <div *ngIf="selectedFiles.length > 0" class="flex items-center text-green-600">
+                    📄 {{ selectedFiles.length }} archivo(s)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Términos con checkbox -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-6">
+              <label class="flex items-start space-x-3 cursor-pointer">
+                <input type="checkbox" required class="mt-1 h-4 w-4 text-studex-600 border-gray-300 rounded focus:ring-studex-500"> 
+                <div>
+                  <span class="font-medium text-gray-700">Acepto los términos de publicación</span>
+                  <p class="text-sm text-gray-500 mt-1">
+                    Confirmo que este contenido es original, no infringe derechos de autor y cumple con las políticas de STUDEX.
+                  </p>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Navigation Buttons - Alineados como en la imagen -->
+        <div class="flex justify-between items-center pt-6 border-t border-gray-200">
+          <!-- Botón Anterior - Alineado a la izquierda -->
+          <button 
+            *ngIf="currentStep > 1"
+            type="button" 
+            class="px-6 py-3 text-studex-600 bg-white border-2 border-studex-600 rounded-lg font-medium hover:bg-studex-50 transition-colors duration-200 flex items-center gap-2"
+            (click)="prevStep()">
+            ← Anterior
+          </button>
+          
+          <!-- Espaciador cuando no hay botón anterior -->
+          <div *ngIf="currentStep === 1"></div>
+          
+          <!-- Botón Siguiente/Publicar - Alineado a la derecha -->
+          <button 
+            type="submit" 
+            class="px-6 py-3 bg-studex-600 text-white rounded-lg font-medium hover:bg-studex-700 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            [disabled]="(currentStep === 1 && !isStep1Valid()) || 
+                       (currentStep === 2 && !isStep2Valid()) || 
+                       isSubmitting">
+            
+            <span *ngIf="isSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
+            
+            <span *ngIf="currentStep < 3">Siguiente →</span>
+            <span *ngIf="currentStep === 3">
+              {{ isSubmitting ? 'Publicando...' : '🚀 Publicar Proyecto' }}
+            </span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Tipos de Proyecto -->
+<div *ngIf="showProjectTypesModal" class="fixed inset-0 z-[60] overflow-y-auto">
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
+       (click)="closeProjectTypesModal()"></div>
+  
+  <!-- Modal -->
+  <div class="flex min-h-screen items-center justify-center p-4">
+    <div class="relative w-full max-w-4xl bg-white rounded-2xl shadow-2xl transform transition-all">
+      
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-bold text-gray-900">Selecciona el Tipo de Proyecto</h3>
+          <button (click)="closeProjectTypesModal()" 
+                  class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <p class="text-gray-600 mt-2">Elige el formato que mejor describe tu proyecto</p>
+      </div>
+
+      <!-- Content -->
+      <div class="px-6 py-6">
+        
+        <!-- Loading State -->
+        <div *ngIf="projectTypes.length === 0" class="text-center py-8">
+          <div class="animate-spin w-8 h-8 border-4 border-studex-200 border-t-studex-600 rounded-full mx-auto mb-4"></div>
+          <p class="text-gray-600">Cargando tipos de proyecto...</p>
+        </div>
+
+        <!-- Project Types by Category -->
+        <div *ngIf="projectTypes.length > 0" class="space-y-6">
+          <div *ngFor="let categoryGroup of getProjectTypesByCategory()" class="mb-8">
+            
+            <!-- Category Header -->
+            <h4 class="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+              {{ categoryGroup.category }}
+            </h4>
+            
+            <!-- Types Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button 
+                *ngFor="let type of categoryGroup.types"
+                (click)="selectProjectType(type)"
+                class="flex items-center p-4 border border-gray-200 rounded-xl hover:border-studex-500 hover:bg-studex-50 transition-all duration-300 text-left group"
+                [class.border-studex-500]="selectedProjectType?.value === type.value"
+                [class.bg-studex-50]="selectedProjectType?.value === type.value">
+                
+                <!-- Icono del tipo -->
+                <div class="w-12 h-12 rounded-lg flex items-center justify-center mr-4 transition-all bg-gray-100 group-hover:bg-studex-100">
+                  <span class="text-xl">{{ getProjectTypeIcon(type) }}</span>
+                </div>
+                
+                <!-- Info del tipo -->
+                <div class="flex-1">
+                  <h5 class="font-semibold text-gray-900 group-hover:text-studex-700 transition-colors">
+                    {{ type.label }}
+                  </h5>
+                  <p class="text-sm text-gray-600 mt-1">
+                    {{ getProjectTypeDescription(type) }}
+                  </p>
+                </div>
+
+                <!-- Check mark si está seleccionado -->
+                <div *ngIf="selectedProjectType?.value === type.value" 
+                     class="w-6 h-6 bg-studex-600 text-white rounded-full flex items-center justify-center">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="projectTypes.length === 0" class="text-center py-8">
+          <div class="text-4xl mb-4">📄</div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">No hay tipos disponibles</h3>
+          <p class="text-gray-600">No se pudieron cargar los tipos de proyecto en este momento.</p>
+        </div>
+
+      </div>
+      
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+        <div class="flex justify-between items-center">
+          <p class="text-sm text-gray-600">
+            {{ projectTypes.length }} {{ projectTypes.length === 1 ? 'tipo' : 'tipos' }} disponible{{ projectTypes.length === 1 ? '' : 's' }}
+          </p>
+          <div class="flex space-x-3">
+            <button 
+              (click)="closeProjectTypesModal()"
+              class="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
+              Cancelar
+            </button>
+            <button 
+              *ngIf="selectedProjectType"
+              (click)="confirmProjectTypeSelection()"
+              class="px-4 py-2 bg-studex-600 text-white rounded-lg hover:bg-studex-700 transition-colors">
+              Confirmar Selección
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

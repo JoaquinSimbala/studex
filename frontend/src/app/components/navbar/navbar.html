@@ -1,0 +1,348 @@
+<!-- STUDEX - Barra de Navegación Principal -->
+<nav class="bg-studex-navbar backdrop-blur-md sticky top-0 z-50 shadow-navbar transition-all duration-300">
+  <div class="studex-container">
+    <div class="flex items-center justify-between h-20">
+      
+      <!-- Logo y Brand -->
+      <div class="flex items-center space-x-4">
+        <a routerLink="/" class="flex items-center space-x-3 px-3 py-2 rounded-xl">
+          <div class="p-2 rounded-xl">
+            <img src="/LogoBlanco.svg" alt="Studex Logo" class="w-8 h-8">
+          </div>
+          <h1 class="navbar-title font-display text-2xl font-bold text-white">
+            STUDEX
+          </h1>
+        </a>
+      </div>
+
+      <!-- Barra de Búsqueda Central (Desktop) -->
+      <div class="hidden md:flex flex-1 max-w-2xl mx-8">
+        <div class="relative w-full search-container">
+          <input 
+            type="text" 
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput($event)"
+            (keyup.enter)="onSearch()"
+            placeholder="Busca proyectos, tesis, trabajos..."
+            class="search-input w-full h-12 pl-12 pr-16 bg-white/90 border border-studex-200 rounded-xl text-studex-900 placeholder-studex-500 focus:outline-none focus:ring-2 focus:ring-studex-400 focus:border-transparent focus:bg-white">
+          
+          <!-- Icono de búsqueda -->
+          <div class="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+            <svg class="w-5 h-5 text-studex-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </div>
+          
+          <!-- Botón de búsqueda -->
+          <button 
+            (click)="onSearch()"
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-studex-600 text-white rounded-lg hover:bg-studex-700 focus:outline-none focus:ring-2 focus:ring-studex-400 transition-all duration-300 flex items-center justify-center shadow-md">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </button>
+
+          <!-- Resultados de búsqueda (dropdown) -->
+          <div *ngIf="showSearchResults && searchResults.length > 0" 
+               class="absolute top-full left-0 right-0 mt-2 bg-white border border-studex-200 rounded-xl shadow-studex-lg max-h-96 overflow-y-auto z-50 modern-card">
+            <div class="p-2">
+              <div *ngFor="let result of searchResults" 
+                   (click)="selectSearchResult(result)"
+                   class="flex items-center space-x-3 p-3 hover:bg-studex-100 rounded-lg cursor-pointer transition-all duration-200 modern-card">
+                <img [src]="result.image || '/assets/images/project-placeholder.png'" 
+                     [alt]="result.title"
+                     class="w-12 h-12 object-cover rounded-lg shadow-sm">
+                <div class="flex-1">
+                  <h4 class="font-medium text-studex-900 text-sm">{{ result.title }}</h4>
+                  <p class="text-studex-600 text-xs">{{ result.university }} • {{ result.category }}</p>
+                  <p class="text-studex-500 font-semibold text-sm">S/ {{ result.price }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navegación y Usuario -->
+      <div class="flex items-center space-x-4">
+        
+        <!-- Enlaces de navegación (Desktop) -->
+        <div class="hidden lg:flex items-center space-x-6">
+          <a routerLink="/explorar" routerLinkActive="text-studex-200" 
+             class="text-white/90 hover:text-white font-medium transition-all duration-300 modern-button px-3 py-2 rounded-lg">
+            Explorar
+          </a>
+          <button (click)="openCategoriesModal()"
+             class="text-white/90 hover:text-white font-medium transition-all duration-300 modern-button px-3 py-2 rounded-lg">
+            Categorías
+          </button>
+          <a routerLink="/vender" routerLinkActive="text-studex-200"
+             class="text-white/90 hover:text-white font-medium transition-all duration-300 modern-button px-3 py-2 rounded-lg">
+            Vender
+          </a>
+        </div>
+
+        <!-- Notificaciones -->
+        <div *ngIf="currentUser">
+          <app-notifications-dropdown></app-notifications-dropdown>
+        </div>
+
+        <!-- Carrito de compras -->
+        <div class="relative" *ngIf="currentUser">
+          <button 
+            (click)="toggleCart()"
+            class="relative p-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 modern-button">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 11-4 0v-6m4 0v6a2 2 0 104 0v-6"></path>
+            </svg>
+            <!-- Badge del carrito -->
+            <span *ngIf="cartItemsCount > 0" 
+                  class="absolute -top-1 -right-1 bg-studex-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+              {{ cartItemsCount }}
+            </span>
+          </button>
+        </div>
+
+        <!-- Menú de usuario -->
+        <div class="relative" *ngIf="currentUser; else guestMenu">
+          <button 
+            (click)="toggleUserMenu()"
+            class="flex items-center space-x-2 p-2 hover:bg-white/10 rounded-lg transition-all duration-300 modern-button">
+            <img [src]="getProfileImageUrl()" 
+                 [alt]="currentUser.firstName"
+                 class="w-8 h-8 rounded-full object-cover border-2 border-white/20 shadow-sm">
+            <span class="hidden md:block font-medium text-white">{{ currentUser.firstName }}</span>
+            <svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <!-- Dropdown del usuario -->
+          <div *ngIf="showUserMenu" 
+               class="absolute right-0 top-full mt-2 w-56 bg-white border border-studex-200 rounded-xl shadow-studex-lg z-50">
+            <div class="p-4 border-b border-studex-100">
+              <p class="font-medium text-studex-900">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
+              <p class="text-sm text-studex-600">{{ currentUser.email }}</p>
+            </div>
+            <div class="py-2">
+              <a routerLink="/perfil" 
+                 class="flex items-center space-x-3 px-4 py-2 text-studex-700 hover:bg-studex-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <span>Mi Perfil</span>
+              </a>
+              <a routerLink="/vendedor/mis-proyectos" 
+                 class="flex items-center space-x-3 px-4 py-2 text-studex-700 hover:bg-studex-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                <span>Mis Proyectos</span>
+              </a>
+              <a routerLink="/favoritos" 
+                 class="flex items-center space-x-3 px-4 py-2 text-studex-700 hover:bg-studex-50 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                </svg>
+                <span>Favoritos</span>
+              </a>
+              <div class="border-t border-studex-100 mt-2 pt-2">
+                <button 
+                  (click)="logout()"
+                  class="flex items-center space-x-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full text-left">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                  </svg>
+                  <span>Cerrar Sesión</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Menú para invitados -->
+        <ng-template #guestMenu>
+          <div class="flex items-center space-x-3">
+            <a routerLink="/login" 
+               class="text-white/90 hover:text-white font-medium transition-all duration-300 modern-button px-4 py-2 rounded-lg">
+              Iniciar Sesión
+            </a>
+            <a routerLink="/login" 
+               class="bg-studex-accent hover:bg-studex-accent/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 modern-button shadow-md">
+              Registrarse
+            </a>
+          </div>
+        </ng-template>
+
+        <!-- Botón de menú móvil -->
+        <button 
+          (click)="toggleMobileMenu()"
+          class="md:hidden p-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 modern-button">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path *ngIf="!showMobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            <path *ngIf="showMobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Búsqueda móvil -->
+    <div *ngIf="showMobileSearch" class="md:hidden pb-4 border-t border-studex-100 pt-4">
+      <div class="relative">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery"
+          (input)="onSearchInput($event)"
+          (keyup.enter)="onSearch()"
+          placeholder="Busca proyectos, tesis, trabajos..."
+          class="w-full pl-12 pr-4 py-3 bg-studex-50 border border-studex-200 rounded-xl text-studex-900 placeholder-studex-400 focus:outline-none focus:ring-2 focus:ring-studex-500 focus:border-transparent focus:bg-white">
+        <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
+          <svg class="w-5 h-5 text-studex-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menú móvil -->
+    <div *ngIf="showMobileMenu" class="md:hidden border-t border-studex-100 py-4">
+      <div class="space-y-1">
+        <!-- Búsqueda móvil toggle -->
+        <button 
+          (click)="toggleMobileSearch()"
+          class="flex items-center space-x-3 w-full px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <span>Buscar</span>
+        </button>
+
+        <a routerLink="/explorar" 
+           class="flex items-center space-x-3 px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <span>Explorar</span>
+        </a>
+        
+        <button (click)="openCategoriesModal()" 
+           class="flex items-center space-x-3 px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <span>Categorías</span>
+        </button>
+        
+        <a routerLink="/vender" 
+           class="flex items-center space-x-3 px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+          </svg>
+          <span>Vender Proyecto</span>
+        </a>
+
+        <div *ngIf="!currentUser" class="border-t border-studex-100 pt-4 mt-4">
+          <a routerLink="/login" 
+             class="block px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
+            Iniciar Sesión
+          </a>
+          <a routerLink="/login" 
+             class="block px-4 py-3 text-white bg-studex-500 hover:bg-studex-600 rounded-lg transition-colors mt-2">
+            Registrarse
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- Modal de Categorías -->
+<div *ngIf="showCategoriesModal" class="fixed inset-0 z-[60] overflow-y-auto">
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
+       (click)="closeCategoriesModal()"></div>
+  
+  <!-- Modal -->
+  <div class="flex min-h-screen items-center justify-center p-4">
+    <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl transform transition-all">
+      
+      <!-- Header -->
+      <div class="px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-xl font-bold text-gray-900">Selecciona una Categoría</h3>
+          <button (click)="closeCategoriesModal()" 
+                  class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+        <p class="text-gray-600 mt-2">Explora proyectos por categoría</p>
+      </div>
+
+      <!-- Content -->
+      <div class="px-6 py-6">
+        
+        <!-- Loading State -->
+        <div *ngIf="loadingCategories" class="text-center py-8">
+          <div class="animate-spin w-8 h-8 border-4 border-studex-200 border-t-studex-600 rounded-full mx-auto mb-4"></div>
+          <p class="text-gray-600">Cargando categorías...</p>
+        </div>
+
+        <!-- Categories Grid -->
+        <div *ngIf="!loadingCategories" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <button 
+            *ngFor="let category of modalCategories"
+            (click)="selectCategory(category)"
+            class="flex items-center p-4 border border-gray-200 rounded-xl hover:border-studex-500 hover:bg-studex-50 transition-all duration-300 text-left group">
+            
+            <!-- Icono de categoría -->
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center mr-4 transition-all"
+                 [style.background-color]="category.colorHex + '20'"
+                 [style.color]="category.colorHex">
+              <span class="text-xl">{{ category.icono || '📂' }}</span>
+            </div>
+            
+            <!-- Info de categoría -->
+            <div class="flex-1">
+              <h4 class="font-semibold text-gray-900 group-hover:text-studex-700 transition-colors">
+                {{ category.nombre }}
+              </h4>
+              <p class="text-sm text-gray-600 mt-1" *ngIf="category.descripcion">
+                {{ category.descripcion }}
+              </p>
+            </div>
+
+            <!-- Flecha -->
+            <svg class="w-5 h-5 text-gray-400 group-hover:text-studex-600 transition-colors" 
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!loadingCategories && modalCategories.length === 0" class="text-center py-8">
+          <div class="text-4xl mb-4">📂</div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">No hay categorías disponibles</h3>
+          <p class="text-gray-600">No se pudieron cargar las categorías en este momento.</p>
+        </div>
+
+      </div>
+      
+      <!-- Footer -->
+      <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
+        <div class="flex justify-between items-center">
+          <p class="text-sm text-gray-600">
+            {{ modalCategories.length }} {{ modalCategories.length === 1 ? 'categoría' : 'categorías' }} disponible{{ modalCategories.length === 1 ? '' : 's' }}
+          </p>
+          <button 
+            (click)="closeCategoriesModal()"
+            class="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

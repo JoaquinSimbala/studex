@@ -1,0 +1,153 @@
+<div class="cart-container">
+  <!-- Header -->
+  <div class="cart-header">
+    <h1>Mi Carrito</h1>
+    <div class="cart-stats" *ngIf="!isLoading">
+      <span class="item-count">{{ cartItems.length }} {{ cartItems.length === 1 ? 'proyecto' : 'proyectos' }}</span>
+      <span class="total-price">Total: {{ formatPrice(totalPrice) }}</span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando carrito...</p>
+  </div>
+
+  <!-- Empty Cart -->
+  <div *ngIf="!isLoading && cartItems.length === 0" class="empty-cart">
+    <div class="empty-icon">🛒</div>
+    <h2>Tu carrito está vacío</h2>
+    <p>¡Explora nuestros proyectos y encuentra algo que te guste!</p>
+    <button class="btn-primary" (click)="goToExplore()">
+      Explorar Proyectos
+    </button>
+  </div>
+
+  <!-- Cart Items -->
+  <div *ngIf="!isLoading && cartItems.length > 0" class="cart-content">
+    
+    <!-- Items List -->
+    <div class="cart-items">
+      <div *ngFor="let item of cartItems" class="cart-item">
+        
+        <!-- Project Image -->
+        <div class="item-image" (click)="viewProject(item.proyecto.id)">
+          <img 
+            [src]="getImageUrl(item.proyecto.imagenes[0]?.urlArchivo || '')" 
+            [alt]="item.proyecto.titulo"
+            onerror="this.src='/assets/images/default-project.jpg'"
+          >
+        </div>
+
+        <!-- Project Info -->
+        <div class="item-info">
+          <div class="item-header">
+            <h3 (click)="viewProject(item.proyecto.id)" class="item-title">
+              {{ item.proyecto.titulo }}
+            </h3>
+            <div class="item-category" [style.background-color]="item.proyecto.categoria.colorHex">
+              {{ item.proyecto.categoria.nombre }}
+            </div>
+          </div>
+          
+          <p class="item-description">{{ item.proyecto.descripcion }}</p>
+          
+          <div class="item-meta">
+            <div class="meta-row">
+              <span class="meta-label">Universidad:</span>
+              <span>{{ item.proyecto.universidad }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Materia:</span>
+              <span>{{ item.proyecto.materia }}</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-label">Año:</span>
+              <span>{{ getProjectYear(item.proyecto) }}</span>
+            </div>
+          </div>
+
+          <!-- Seller Info -->
+          <div class="seller-info">
+            <div class="seller-avatar">
+              <img 
+                [src]="item.proyecto.vendedor.profileImage || '/assets/images/default-avatar.png'"
+                [alt]="item.proyecto.vendedor.nombre"
+                onerror="this.src='/assets/images/default-avatar.png'"
+              >
+            </div>
+            <div class="seller-details">
+              <span class="seller-name">
+                {{ item.proyecto.vendedor.nombre }} {{ item.proyecto.vendedor.apellidos }}
+              </span>
+              <div class="seller-stats">
+                <span class="rating">⭐ {{ item.proyecto.vendedor.calificacionVendedor }}</span>
+                <span class="sales">{{ item.proyecto.vendedor.totalVentas }} ventas</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="item-footer">
+            <span class="added-date">
+              Agregado el {{ formatAddedDate(item.fechaAgregado) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Price and Actions -->
+        <div class="item-actions">
+          <div class="item-price">
+            {{ formatPrice(item.proyecto.precio) }}
+          </div>
+          <button 
+            class="btn-remove" 
+            (click)="removeFromCart(item.proyecto.id)"
+            title="Remover del carrito"
+          >
+            🗑️ Remover
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cart Summary -->
+    <div class="cart-summary">
+      <div class="summary-content">
+        <h3>Resumen de Compra</h3>
+        
+        <div class="summary-row">
+          <span>Proyectos ({{ cartItems.length }})</span>
+          <span>{{ formatPrice(totalPrice) }}</span>
+        </div>
+        
+        <div class="summary-row total">
+          <span><strong>Total</strong></span>
+          <span><strong>{{ formatPrice(totalPrice) }}</strong></span>
+        </div>
+
+        <div class="summary-actions">
+          <button 
+            class="btn-secondary" 
+            (click)="clearCart()"
+            [disabled]="isProcessingPurchase"
+          >
+            Vaciar Carrito
+          </button>
+          
+          <button 
+            class="btn-primary" 
+            (click)="purchaseCart()"
+            [disabled]="isProcessingPurchase || cartItems.length === 0"
+          >
+            <span *ngIf="!isProcessingPurchase">🛒 Comprar Todo</span>
+            <span *ngIf="isProcessingPurchase">
+              <div class="btn-spinner"></div>
+              Procesando...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

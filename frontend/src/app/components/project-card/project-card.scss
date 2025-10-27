@@ -1,0 +1,316 @@
+/* Estilos del componente ProjectCard */
+
+/* Keyframes para animaciones */
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Contenedor principal de la carta */
+.studex-card {
+  /* Estilos base equivalentes a: bg-white rounded-2xl shadow-lg border border-studex-100 */
+  background-color: #ffffff !important;
+  border-radius: 1rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgb(242, 239, 229); /* studex-100 */
+  
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backface-visibility: hidden;
+  will-change: transform, box-shadow;
+  
+  /* Altura uniforme para todas las cartas */
+  min-height: 480px;
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+}
+
+.studex-card:hover {
+  box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.2),
+              0 10px 25px -5px rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  background-color: #ffffff !important; /* Mantener fondo blanco en hover */
+}
+
+/* Animaciones de entrada */
+.slide-in-up {
+  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Clases base de badges */
+.studex-badge {
+  /* Equivalente a: inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold */
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.studex-badge.primary {
+  background-color: rgb(242, 239, 229); /* studex-100 */
+  color: rgb(58, 63, 45); /* studex-800 */
+}
+
+.studex-badge.secondary {
+  background-color: rgb(243, 244, 246); /* gray-100 */
+  color: rgb(55, 65, 81); /* gray-700 */
+}
+
+.studex-badge.success {
+  background-color: rgb(220, 252, 231); /* green-100 */
+  color: rgb(22, 101, 52); /* green-800 */
+}
+
+.studex-badge.warning {
+  background-color: rgb(254, 249, 195); /* yellow-100 */
+  color: rgb(146, 64, 14); /* yellow-800 */
+}
+
+.studex-badge.error {
+  background-color: rgb(254, 226, 226); /* red-100 */
+  color: rgb(153, 27, 27); /* red-800 */
+}
+
+.studex-badge.info {
+  background-color: rgb(219, 234, 254); /* blue-100 */
+  color: rgb(30, 64, 175); /* blue-800 */
+}
+
+/* Efectos hover para badges */
+.studex-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+}
+
+/* Efectos modernos para botones */
+.modern-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.modern-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.modern-button:hover::before {
+  left: 100%;
+}
+
+/* Efectos para la carta moderna - Anular efectos globales */
+.studex-card.modern-card {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  backdrop-filter: none !important; /* Anular backdrop-filter global */
+  -webkit-backdrop-filter: none !important;
+  border: 1px solid #e5e7eb !important; /* Borde sólido claro */
+  background-color: #ffffff !important; /* Fondo blanco sólido */
+}
+
+/* Asegurar que el contenido interno también tenga fondo blanco */
+.studex-card .p-6 {
+  background-color: #ffffff !important;
+  flex: 1; /* Tomar todo el espacio disponible */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Distribuir espacio entre elementos */
+}
+
+/* Información adicional y vendedor siempre al final */
+.studex-card .space-y-3 {
+  margin-top: auto; /* Empujar hacia abajo */
+}
+
+/* Información del vendedor con borde superior */
+.studex-card .pt-4.border-t {
+  margin-top: 1rem; /* Espacio adicional arriba */
+  border-top: 1px solid #e5e7eb !important; /* Asegurar borde visible */
+}
+
+/* Line clamp utilities personalizadas */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2; /* Propiedad estándar para compatibilidad */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3; /* Propiedad estándar para compatibilidad */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Gradientes específicos */
+.gradient-studex {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Sombras personalizadas */
+.shadow-studex-xl {
+  box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.25),
+              0 20px 25px -5px rgba(16, 185, 129, 0.1),
+              0 10px 10px -5px rgba(16, 185, 129, 0.04);
+}
+
+/* Estados de interacción para imágenes */
+img {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+img:hover {
+  filter: brightness(1.05);
+}
+
+/* Efectos para el contenedor de imagen */
+.relative {
+  overflow: hidden;
+}
+
+.relative::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.group:hover .relative::after {
+  opacity: 1;
+}
+
+/* Efectos para badges flotantes */
+.absolute {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Mejoras de accesibilidad */
+.studex-card:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2D5016, 0 0 0 4px rgba(45, 80, 22, 0.2);
+}
+
+button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #2D5016, 0 0 0 4px rgba(45, 80, 22, 0.2);
+}
+
+/* Estados de loading */
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Mejoras para móviles */
+@media (max-width: 640px) {
+  .studex-card {
+    border-radius: 0.75rem; /* rounded-xl */
+  }
+  
+  .studex-card:hover {
+    transform: none;
+  }
+  
+  .absolute.top-4.left-4 {
+    top: 0.75rem; /* top-3 */
+    left: 0.75rem; /* left-3 */
+  }
+  
+  .absolute.top-4.right-4 {
+    top: 0.75rem; /* top-3 */
+    right: 0.75rem; /* right-3 */
+  }
+  
+  .absolute.bottom-4 {
+    bottom: 0.75rem; /* bottom-3 */
+  }
+}
+
+/* Dark mode support (preparado para futuro) */
+@media (prefers-color-scheme: dark) {
+  .studex-card {
+    background-color: #1f2937; /* bg-gray-800 */
+    border-color: #374151; /* border-gray-700 */
+  }
+  
+  .studex-card:hover {
+    box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.3),
+                0 10px 25px -5px rgba(16, 185, 129, 0.2);
+  }
+}
+
+/* Performance optimizations */
+* {
+  box-sizing: border-box;
+}
+
+.studex-card * {
+  will-change: auto;
+}
+
+.studex-card:hover * {
+  will-change: transform;
+}

@@ -1,0 +1,44 @@
+/* Estilos globales optimizados para Studex */
+
+/* Animations globales */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Text truncation utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Optimizaciones de rendimiento */
+* {
+  box-sizing: border-box;
+}
+
+/* Reduce repaints */
+img {
+  will-change: transform;
+}
+
+/* Optimiza las transiciones */
+.transition-optimized {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}

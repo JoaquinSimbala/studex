@@ -1,0 +1,135 @@
+﻿<div class="min-h-screen bg-studex-gradient">
+  <header class="relative">
+    <div class="studex-container px-4 sm:px-6 lg:px-8 py-8">
+      <div class="max-w-6xl mx-auto text-center">
+        <h1 class="font-heading text-3xl sm:text-4xl font-black text-white mb-4">
+          Mis <span class="text-studex-100">Favoritos</span>
+        </h1>
+        <p class="text-studex-100 text-lg font-medium">
+          Los proyectos que has guardado para revisar más tarde
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <div class="studex-container px-4 sm:px-6 lg:px-8 pb-20">
+    <div class="max-w-6xl mx-auto">
+
+      <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+        <div class="text-center">
+          <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-white mx-auto mb-4"></div>
+          <p class="text-white font-medium">Cargando tus favoritos...</p>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading && (favorites$ | async) as favorites">
+        
+        <div class="mb-8 text-center">
+          <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-studex-lg border border-studex-200/50 modern-card inline-block">
+            <div class="flex items-center space-x-3">
+              <div class="w-12 h-12 bg-studex-gradient rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                </svg>
+              </div>
+              <div class="text-left">
+                <p class="text-2xl font-bold text-studex-900">{{ favorites.length }}</p>
+                <p class="text-sm text-studex-600 font-medium">
+                  {{ favorites.length === 1 ? 'Proyecto Favorito' : 'Proyectos Favoritos' }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div *ngIf="favorites.length === 0" class="text-center py-20">
+          <div class="max-w-lg mx-auto">
+            <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-12 shadow-studex-xl border border-studex-200/50 modern-card">
+              <div class="mb-8">
+                <div class="w-24 h-24 mx-auto bg-studex-100 rounded-full flex items-center justify-center">
+                  <svg class="w-12 h-12 text-studex-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                  </svg>
+                </div>
+              </div>
+              
+              <h3 class="text-2xl font-bold text-studex-900 mb-4">No tienes favoritos aún</h3>
+              <p class="text-studex-600 mb-8 text-lg leading-relaxed">
+                Explora proyectos increíbles y guarda los que más te interesen haciendo clic en el  corazón
+              </p>
+              
+              <a routerLink="/home" 
+                 class="inline-flex items-center px-8 py-4 bg-studex-gradient text-white font-bold rounded-2xl hover:shadow-studex-xl transition-all duration-300 transform hover:scale-105 modern-button">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+                Explorar Proyectos
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="favorites.length > 0">
+          <div class="mb-8">
+            <div class="bg-white/90 backdrop-blur-sm rounded-2xl p-6 shadow-studex-lg border border-studex-200/50 modern-card">
+              <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+                <div>
+                  <h2 class="text-xl font-bold text-studex-900">Tus Proyectos Favoritos</h2>
+                  <p class="text-studex-600">{{ favorites.length }} {{ favorites.length === 1 ? 'proyecto guardado' : 'proyectos guardados' }}</p>
+                </div>
+                
+                <button (click)="loadFavorites()" 
+                        class="inline-flex items-center px-4 py-2 bg-studex-100 text-studex-700 font-medium rounded-xl hover:bg-studex-200 transition-colors duration-200">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                  </svg>
+                  Actualizar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <app-project-card
+              *ngFor="let favorite of favorites; let i = index"
+              [project]="transformToProjectCard(favorite)"
+              [animationDelay]="i * 0.1"
+              (projectClick)="onProjectClick($event)"
+              (favoriteClick)="onFavoriteClick($event)"
+              class="slide-in-up"
+              [style.animation-delay]="(i * 0.1) + 's'">
+            </app-project-card>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading && !(favorites$ | async)" class="text-center py-20">
+        <div class="max-w-lg mx-auto">
+          <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-12 shadow-studex-xl border border-red-200/50 modern-card">
+            <div class="mb-8">
+              <div class="w-24 h-24 mx-auto bg-red-100 rounded-full flex items-center justify-center">
+                <svg class="w-12 h-12 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+                </svg>
+              </div>
+            </div>
+            
+            <h3 class="text-2xl font-bold text-studex-900 mb-4">Error al cargar favoritos</h3>
+            <p class="text-studex-600 mb-8 text-lg">
+              No pudimos cargar tus proyectos favoritos. Por favor, intenta de nuevo.
+            </p>
+            
+            <button (click)="loadFavorites()" 
+                    class="inline-flex items-center px-8 py-4 bg-studex-gradient text-white font-bold rounded-2xl hover:shadow-studex-xl transition-all duration-300 transform hover:scale-105 modern-button">
+              <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Reintentar
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

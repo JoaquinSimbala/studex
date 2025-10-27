@@ -1,0 +1,224 @@
+<!-- Navbar -->
+<app-navbar></app-navbar>
+
+<!-- Main Container -->
+<div class="min-h-screen bg-gray-50">
+  
+  <!-- Hero Section -->
+  <div class="bg-gradient-to-r from-studex-600 to-studex-700 text-white py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center">
+        <h1 class="text-4xl font-bold mb-4">Explorar Proyectos</h1>
+        <p class="text-xl text-studex-100 mb-8">Encuentra el proyecto perfecto para tu carrera universitaria</p>
+        
+        <!-- Search Bar -->
+        <div class="max-w-2xl mx-auto relative">
+          <div class="relative">
+            <input
+              type="text"
+              [(ngModel)]="searchQuery"
+              (keyup.enter)="onSearch()"
+              placeholder="Busca proyectos, tesis, software..."
+              class="w-full px-6 py-4 pl-12 pr-16 text-gray-900 bg-white rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-studex-300 text-lg">
+            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-gray-400" 
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <button
+              (click)="onSearch()"
+              class="absolute right-2 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-gradient-to-r from-studex-700 to-studex-800 text-white rounded-xl hover:from-studex-800 hover:to-studex-900 transition-all duration-300 shadow-xl hover:scale-105 flex items-center justify-center">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-8 max-w-lg mx-auto mt-12">
+          <div class="text-center">
+            <div class="text-3xl font-bold">{{stats.total}}</div>
+            <div class="text-studex-200 text-sm uppercase tracking-wide">Proyectos</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold">{{stats.universities}}</div>
+            <div class="text-studex-200 text-sm uppercase tracking-wide">Universidades</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold">{{stats.categories}}</div>
+            <div class="text-studex-200 text-sm uppercase tracking-wide">Categorías</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Section -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+      <div class="flex items-center gap-3 mb-6">
+        <svg class="w-6 h-6 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
+        </svg>
+        <h2 class="text-xl font-semibold text-gray-900">Filtros de Búsqueda</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+        <!-- Tipo -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
+          <select 
+            [(ngModel)]="filters.type" 
+            (change)="applyFilters()"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
+            <option *ngFor="let type of projectTypes" [value]="type.value">{{type.label}}</option>
+          </select>
+        </div>
+
+        <!-- Categoría -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
+          <select 
+            [(ngModel)]="filters.category" 
+            (change)="applyFilters()"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
+            <option *ngFor="let category of categoriesOptions" [value]="category.value">{{category.label}}</option>
+          </select>
+        </div>
+
+        <!-- Universidad -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Universidad</label>
+          <input 
+            type="text" 
+            [(ngModel)]="filters.university"
+            (keyup)="applyFilters()"
+            placeholder="Ej: Universidad Nacional de Ingeniería"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
+        </div>
+
+        <!-- Materia -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Materia</label>
+          <input 
+            type="text" 
+            [(ngModel)]="filters.materia"
+            (keyup)="applyFilters()"
+            placeholder="Ej: Ingeniería de Sistemas"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
+        </div>
+      </div>
+
+      <!-- Segunda fila de filtros con mejor espaciado -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Rango de Precio -->
+        <div class="lg:col-span-2">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Rango de Precio (S/)</label>
+          <div class="flex gap-3">
+            <input 
+              type="number" 
+              [(ngModel)]="filters.minPrice"
+              (keyup)="applyFilters()"
+              placeholder="Mín"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
+            <span class="flex items-center text-gray-500 px-2">-</span>
+            <input 
+              type="number" 
+              [(ngModel)]="filters.maxPrice"
+              (keyup)="applyFilters()"
+              placeholder="Máx"
+              class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
+          </div>
+        </div>
+
+        <!-- Ordenar por -->
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
+          <select 
+            [(ngModel)]="filters.orderBy" 
+            (change)="applyFilters()"
+            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
+            <option *ngFor="let order of orderOptions" [value]="order.value">{{order.label}}</option>
+          </select>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex flex-col justify-end">
+          <button 
+            (click)="clearFilters()"
+            class="w-full px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors text-sm">
+            Limpiar Filtros
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-xl font-semibold text-gray-900">
+        {{stats.total}} proyectos encontrados
+      </h3>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-16">
+      <div class="animate-spin w-12 h-12 border-4 border-studex-200 border-t-studex-600 rounded-full mx-auto mb-4"></div>
+      <p class="text-gray-600">Cargando proyectos...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error && !isLoading" class="text-center py-16">
+      <div class="text-6xl mb-4">⚠️</div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Error al cargar proyectos</h3>
+      <p class="text-gray-600 mb-6">{{error}}</p>
+      <button 
+        (click)="loadProjects()"
+        class="px-8 py-3 bg-studex-600 text-white rounded-xl hover:bg-studex-700 transition-colors">
+        Reintentar
+      </button>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && !error && projects.length === 0" class="text-center py-16">
+      <div class="text-6xl mb-4">🔍</div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">No se encontraron proyectos</h3>
+      <p class="text-gray-600 mb-6">Intenta ajustar tus filtros de búsqueda</p>
+      <button 
+        (click)="clearFilters()"
+        class="px-8 py-3 bg-studex-600 text-white rounded-xl hover:bg-studex-700 transition-colors">
+        Limpiar Filtros
+      </button>
+    </div>
+
+    <!-- Projects Grid -->
+    <div *ngIf="!isLoading && !error && projects.length > 0" 
+         class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <app-project-card
+        *ngFor="let project of projects; trackBy: trackByProjectId; let i = index"
+        [project]="project"
+        [animationDelay]="i * 0.05"
+        (projectClick)="viewProject($event)"
+        (favoriteClick)="handleFavoriteClick($event)"
+        class="slide-in-up"
+        [style.animation-delay]="(i * 0.05) + 's'">
+      </app-project-card>
+    </div>
+
+    <!-- Load More Button -->
+    <div *ngIf="!isLoading && !error && projects.length > 0 && hasMoreProjects" class="text-center mt-12">
+      <button 
+        (click)="loadMoreProjects()"
+        [disabled]="isLoadingMore"
+        class="px-8 py-3 border border-studex-600 text-studex-600 rounded-xl hover:bg-studex-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center mx-auto">
+        <svg *ngIf="isLoadingMore" class="animate-spin -ml-1 mr-3 h-5 w-5 text-studex-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        {{ isLoadingMore ? 'Cargando...' : 'Cargar Más Proyectos' }}
+      </button>
+    </div>
+
+  </div>
+</div>

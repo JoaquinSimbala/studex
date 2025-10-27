@@ -1,0 +1,14 @@
+﻿<!-- STUDEX - Aplicación Principal -->
+<router-outlet />
+
+<!-- Componente de notificaciones toast temporales -->
+<app-notifications />
+
+<!-- Modal global -->
+<app-modal
+  *ngIf="modal$ | async as modal"
+  [isOpen]="modal.isOpen"
+  [title]="modal.title"
+  [message]="modal.message"
+  (closeModal)="onCloseModal()">
+</app-modal>

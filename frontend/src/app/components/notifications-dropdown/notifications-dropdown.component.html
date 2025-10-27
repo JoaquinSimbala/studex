@@ -1,0 +1,178 @@
+<!-- Dropdown de notificaciones -->
+<div class="relative">
+  <!-- Bell Icon Button -->
+  <button 
+    (click)="toggleDropdown()"
+    class="relative p-2 text-white/80 hover:text-white hover:bg-studex-700 rounded-lg transition-all duration-300">
+    
+    <!-- Bell Icon -->
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+      </path>
+    </svg>
+    
+    <!-- Badge de contador -->
+    <span 
+      *ngIf="unreadCount > 0"
+      class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse">
+      {{ unreadCount > 99 ? '99+' : unreadCount }}
+    </span>
+  </button>
+
+  <!-- Dropdown Panel -->
+  <div 
+    *ngIf="isOpen"
+    class="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-studex-200 z-50 max-h-[85vh] sm:max-h-96 overflow-hidden dropdown-animation">
+    
+    <!-- Header -->
+    <div class="bg-gradient-to-r from-studex-600 to-studex-700 p-4 text-white">
+      <div class="flex justify-between items-center">
+        <h3 class="font-bold text-lg">Notificaciones</h3>
+        <button 
+          *ngIf="unreadCount > 0"
+          (click)="markAllAsRead()"
+          [disabled]="isMarkingAllRead"
+          class="text-sm text-studex-100 hover:text-white transition-colors px-3 py-1 rounded-md bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed">
+          <span *ngIf="!isMarkingAllRead">Marcar todas</span>
+          <span *ngIf="isMarkingAllRead" class="flex items-center space-x-1">
+            <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Marcando...</span>
+          </span>
+        </button>
+      </div>
+      <p class="text-studex-100 text-sm mt-1">
+        {{ unreadCount > 0 ? unreadCount + ' sin leer' : 'Todo al día' }}
+      </p>
+    </div>
+
+    <!-- Notifications List -->
+    <div class="max-h-64 sm:max-h-80 overflow-y-auto custom-scrollbar">
+      
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="p-6 text-center">
+        <div class="inline-flex items-center justify-center w-10 h-10 bg-studex-100 rounded-full mb-3">
+          <div class="w-6 h-6 border-2 border-studex-600 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <p class="text-studex-600 text-sm font-medium">Cargando notificaciones...</p>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!isLoading && notifications.length === 0" class="p-8 text-center">
+        <div class="w-16 h-16 bg-studex-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg class="w-8 h-8 text-studex-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+            </path>
+          </svg>
+        </div>
+        <p class="text-studex-700 font-semibold mb-1">No tienes notificaciones</p>
+        <p class="text-studex-500 text-sm">Te notificaremos sobre tus compras y ventas</p>
+      </div>
+
+      <!-- Notifications -->
+      <div *ngIf="!isLoading && notifications.length > 0">
+        <div 
+          *ngFor="let notification of notifications; let i = index"
+          (click)="openNotificationModal(notification)"
+          class="notification-item p-4 border-b border-gray-100 hover:bg-studex-25 transition-all duration-200 cursor-pointer group relative"
+          [class.notification-unread]="!notification.leida">
+          
+          <div class="flex items-start space-x-3">
+            <!-- Icon based on type -->
+            <div class="flex-shrink-0 mt-0.5">
+              <div [ngSwitch]="notification.tipo" class="notification-icon w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200">
+                
+                <!-- Compra exitosa -->
+                <div *ngSwitchCase="'compra_exitosa'" class="bg-green-100 group-hover:bg-green-200">
+                  <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                
+                <!-- Nueva venta -->
+                <div *ngSwitchCase="'nueva_venta'" class="bg-blue-100 group-hover:bg-blue-200">
+                  <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                
+                <!-- Proyecto subido -->
+                <div *ngSwitchCase="'proyecto_subido'" class="bg-purple-100 group-hover:bg-purple-200">
+                  <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                </div>
+                
+                <!-- Error -->
+                <div *ngSwitchCase="'compra_error'" class="bg-red-100 group-hover:bg-red-200">
+                  <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+                  </svg>
+                </div>
+                
+                <!-- Default -->
+                <div *ngSwitchDefault class="bg-gray-100 group-hover:bg-gray-200">
+                  <svg class="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+              <h4 class="notification-title font-semibold text-gray-900 text-sm group-hover:text-studex-700 transition-colors">
+                {{ notification.titulo }}
+              </h4>
+              <p class="notification-message text-gray-600 text-sm mt-1 line-clamp-2">
+                {{ notification.mensaje }}
+              </p>
+              <p class="notification-time text-gray-400 text-xs mt-2">
+                {{ getTimeAgo(notification.fechaCreacion) }}
+              </p>
+            </div>
+
+            <!-- Unread indicator & Arrow -->
+            <div class="flex-shrink-0 flex items-center space-x-2">
+              <div *ngIf="!notification.leida" class="w-2 h-2 bg-blue-500 rounded-full pulse-animation"></div>
+              <svg class="w-4 h-4 text-gray-400 group-hover:text-studex-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="p-3 bg-gray-50 border-t border-gray-200">
+      <button 
+        (click)="viewAllNotifications()"
+        class="w-full text-center text-studex-600 hover:text-studex-800 text-sm font-semibold transition-colors py-2 px-4 rounded-lg hover:bg-studex-50 flex items-center justify-center space-x-2">
+        <span>Ver todas las notificaciones</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Backdrop del dropdown -->
+  <div 
+    *ngIf="isOpen"
+    (click)="closeDropdown()"
+    class="fixed inset-0 z-40">
+  </div>
+</div>
+
+<!-- Modal reutilizable para detalles de notificación - FUERA del contenedor relative -->
+<app-notification-modal 
+  *ngIf="selectedNotification"
+  [notification]="selectedNotification"
+  (closeModalEvent)="closeNotificationModal()"
+  (markAsReadEvent)="markAsRead($event)">
+</app-notification-modal>

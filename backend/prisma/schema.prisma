@@ -1,0 +1,376 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      Int            @id @default(autoincrement())
+  email                   String         @unique
+  passwordHash            String         @map("password_hash")
+  nombre                  String
+  apellidos               String?
+  tipo                    UserType       @default(USER)
+  institucion             String?
+  areaEstudio             String?        @map("area_estudio")
+  descripcion             String?
+  profileImage            String?        @map("profile_image")
+  qrPago                  String?        @map("qr_pago")
+  metodoPagoPreferido     PaymentMethod? @default(YAPE) @map("metodo_pago_preferido")
+  emailVerificado         Boolean        @default(false) @map("email_verificado")
+  activo                  Boolean        @default(true)
+  bloqueado               Boolean        @default(false)
+  fechaBloqueo            DateTime?      @map("fecha_bloqueo")
+  motivoBloqueo           String?        @map("motivo_bloqueo")
+  vendedorVerificado      Boolean        @default(false) @map("vendedor_verificado")
+  calificacionVendedor    Decimal        @default(0.0) @map("calificacion_vendedor") @db.Decimal(3, 2)
+  totalVentas             Int            @default(0) @map("total_ventas")
+  fechaRegistro           DateTime       @default(now()) @map("fecha_registro")
+  fechaUltimaSesion       DateTime?      @map("fecha_ultima_sesion")
+  fechaActualizacion      DateTime       @updatedAt @map("fecha_actualizacion")
+  calificacionesDadas     Rating[]       @relation("CompradorRatings")
+  calificacionesRecibidas Rating[]       @relation("VendedorRatings")
+  favoritos               Favorite[]
+  carrito                 Cart[]
+  logsAuditoria           AuditLog[]
+  mensajesRecibidos       Message[]      @relation("ReceiverMessages")
+  mensajesEnviados        Message[]      @relation("SenderMessages")
+  notificaciones          Notification[]
+  proyectos               Project[]
+  reportes                Report[]
+  ventasComoComprador     Sale[]         @relation("CompradorSales")
+  ventasComoVendedor      Sale[]         @relation("VendedorSales")
+
+  @@map("usuarios")
+}
+
+model Category {
+  id            Int       @id @default(autoincrement())
+  nombre        String    @unique
+  descripcion   String?
+  icono         String?
+  colorHex      String    @default("#007bff") @map("color_hex")
+  activa        Boolean   @default(true)
+  ordenDisplay  Int       @default(0) @map("orden_display")
+  fechaCreacion DateTime  @default(now()) @map("fecha_creacion")
+  proyectos     Project[]
+
+  @@map("categorias_proyectos")
+}
+
+model Project {
+  id                 Int            @id(map: "projects_pkey") @default(autoincrement())
+  titulo             String
+  descripcion        String
+  precio             Decimal
+  tipo               ProjectType
+  universidad        String
+  materia            String
+  año               Int
+  vendedorId         Int            @map("vendedor_id")
+  categoriaId        Int            @map("categoria_id")
+  estado             ProjectStatus  @default(PUBLICADO)
+  vistas             Int            @default(0)
+  descargas          Int            @default(0)
+  destacado          Boolean        @default(false)
+  etiquetas          String[]
+  fechaCreacion      DateTime       @default(now()) @map("fecha_creacion")
+  fechaActualizacion DateTime       @updatedAt @map("fecha_actualizacion")
+  archivos           ProjectFile[]
+  calificaciones     Rating[]
+  favoritos          Favorite[]
+  carrito            Cart[]
+  imagenes           ProjectImage[]
+  mensajes           Message[]
+  categoria          Category       @relation(fields: [categoriaId], references: [id])
+  vendedor           User           @relation(fields: [vendedorId], references: [id], onDelete: Cascade)
+  ventas             Sale[]
+
+  @@map("proyectos")
+}
+
+model ProjectImage {
+  id             Int      @id(map: "project_images_pkey") @default(autoincrement())
+  proyectoId     Int      @map("proyecto_id")
+  nombreArchivo  String   @map("nombre_archivo")
+  urlArchivo     String   @map("url_archivo")
+  claveArchivo   String   @map("clave_archivo")
+  tamañoArchivo Int      @map("tamaño_archivo")
+  tipoMime       String   @map("tipo_mime")
+  esPrincipal    Boolean  @default(false) @map("es_principal")
+  orden          Int      @default(0)
+  fechaCreacion  DateTime @default(now()) @map("fecha_creacion")
+  proyecto       Project  @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+
+  @@map("imagenes_proyecto")
+}
+
+model ProjectFile {
+  id             Int      @id(map: "project_files_pkey") @default(autoincrement())
+  proyectoId     Int      @map("proyecto_id")
+  nombreArchivo  String   @map("nombre_archivo")
+  urlArchivo     String   @map("url_archivo")
+  claveArchivo   String   @map("clave_archivo")
+  tamañoArchivo Int      @map("tamaño_archivo")
+  tipoMime       String   @map("tipo_mime")
+  descripcion    String?
+  orden          Int      @default(0)
+  fechaCreacion  DateTime @default(now()) @map("fecha_creacion")
+  proyecto       Project  @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+
+  @@map("archivos_proyecto")
+}
+
+model Sale {
+  id                 Int            @id @default(autoincrement())
+  codigoVenta        String         @unique @map("codigo_venta")
+  proyectoId         Int            @map("proyecto_id")
+  vendedorId         Int            @map("vendedor_id")
+  compradorId        Int            @map("comprador_id")
+  precioVenta        Decimal        @map("precio_venta") @db.Decimal(10, 2)
+  comisionPlataforma Decimal        @map("comision_plataforma") @db.Decimal(10, 2)
+  gananciaVendedor   Decimal        @map("ganancia_vendedor") @db.Decimal(10, 2)
+  metodoPago         PaymentMethod  @map("metodo_pago")
+  comprobantePago    String?        @map("comprobante_pago")
+  estadoPago         PaymentStatus  @default(PENDIENTE) @map("estado_pago")
+  estadoEntrega      DeliveryStatus @default(PENDIENTE) @map("estado_entrega")
+  notasAdmin         String?        @map("notas_admin")
+  fechaVenta         DateTime       @default(now()) @map("fecha_venta")
+  fechaPago          DateTime?      @map("fecha_pago")
+  fechaEntrega       DateTime?      @map("fecha_entrega")
+  calificacion       Rating?
+  comprador          User           @relation("CompradorSales", fields: [compradorId], references: [id])
+  proyecto           Project        @relation(fields: [proyectoId], references: [id])
+  vendedor           User           @relation("VendedorSales", fields: [vendedorId], references: [id])
+
+  @@map("ventas")
+}
+
+model Rating {
+  id                   Int      @id @default(autoincrement())
+  ventaId              Int      @unique @map("venta_id")
+  proyectoId           Int      @map("proyecto_id")
+  vendedorId           Int      @map("vendedor_id")
+  compradorId          Int      @map("comprador_id")
+  calificacionProyecto Int      @map("calificacion_proyecto")
+  calificacionVendedor Int      @map("calificacion_vendedor")
+  comentarioProyecto   String?  @map("comentario_proyecto")
+  comentarioVendedor   String?  @map("comentario_vendedor")
+  visible              Boolean  @default(true)
+  reportada            Boolean  @default(false)
+  fechaCalificacion    DateTime @default(now()) @map("fecha_calificacion")
+  comprador            User     @relation("CompradorRatings", fields: [compradorId], references: [id])
+  proyecto             Project  @relation(fields: [proyectoId], references: [id])
+  vendedor             User     @relation("VendedorRatings", fields: [vendedorId], references: [id])
+  venta                Sale     @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+
+  @@map("calificaciones")
+}
+
+model Favorite {
+  usuarioId     Int      @map("usuario_id")
+  proyectoId    Int      @map("proyecto_id")
+  fechaAgregado DateTime @default(now()) @map("fecha_agregado")
+  proyecto      Project  @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  usuario       User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@id([usuarioId, proyectoId])
+  @@map("favoritos")
+}
+
+model Message {
+  id             Int         @id @default(autoincrement())
+  remitenteId    Int         @map("remitente_id")
+  destinatarioId Int         @map("destinatario_id")
+  proyectoId     Int?        @map("proyecto_id")
+  mensaje        String
+  tipo           MessageType @default(TEXTO)
+  archivoUrl     String?     @map("archivo_url")
+  leido          Boolean     @default(false)
+  fechaLeido     DateTime?   @map("fecha_leido")
+  fechaEnvio     DateTime    @default(now()) @map("fecha_envio")
+  destinatario   User        @relation("ReceiverMessages", fields: [destinatarioId], references: [id])
+  proyecto       Project?    @relation(fields: [proyectoId], references: [id])
+  remitente      User        @relation("SenderMessages", fields: [remitenteId], references: [id])
+
+  @@map("mensajes")
+}
+
+model Report {
+  id              Int          @id @default(autoincrement())
+  reportanteId    Int          @map("reportante_id")
+  tipoContenido   ContentType  @map("tipo_contenido")
+  contenidoId     Int          @map("contenido_id")
+  motivo          ReportReason
+  descripcion     String?
+  estado          ReportStatus @default(PENDIENTE)
+  respuestaAdmin  String?      @map("respuesta_admin")
+  adminId         Int?         @map("admin_id")
+  fechaReporte    DateTime     @default(now()) @map("fecha_reporte")
+  fechaResolucion DateTime?    @map("fecha_resolucion")
+  reportante      User         @relation(fields: [reportanteId], references: [id])
+
+  @@map("reportes")
+}
+
+model Notification {
+  id            Int              @id @default(autoincrement())
+  usuarioId     Int              @map("usuario_id")
+  tipo          NotificationType
+  titulo        String
+  mensaje       String
+  leida         Boolean          @default(false)
+  fechaLeida    DateTime?        @map("fecha_leida")
+  datosExtra    Json?            @map("datos_extra")
+  fechaCreacion DateTime         @default(now()) @map("fecha_creacion")
+  usuario       User             @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("notificaciones")
+}
+
+model AuditLog {
+  id              Int      @id @default(autoincrement())
+  usuarioId       Int?     @map("usuario_id")
+  accion          String
+  tablaAfectada   String?  @map("tabla_afectada")
+  registroId      Int?     @map("registro_id")
+  datosAnteriores Json?    @map("datos_anteriores")
+  datosNuevos     Json?    @map("datos_nuevos")
+  ipAddress       String?  @map("ip_address")
+  userAgent       String?  @map("user_agent")
+  fechaAccion     DateTime @default(now()) @map("fecha_accion")
+  usuario         User?    @relation(fields: [usuarioId], references: [id])
+
+  @@map("logs_auditoria")
+}
+
+enum UserType {
+  USER          @map("user")
+  VENDEDOR      @map("vendedor")
+  ADMINISTRADOR @map("administrador")
+}
+
+enum PaymentMethod {
+  YAPE      @map("yape")
+  PLIN      @map("plin")
+  BCP       @map("bcp")
+  INTERBANK @map("interbank")
+}
+
+enum ProjectType {
+  // Documentación y guías
+  MANUAL_GUIA              @map("manual_guia")
+  TUTORIAL_CURSO           @map("tutorial_curso")
+  DOCUMENTACION            @map("documentacion")
+  PLANTILLA_TEMPLATE       @map("plantilla_template")
+  
+  // Desarrollo y tecnología
+  SISTEMA_APLICACION       @map("sistema_aplicacion")
+  CODIGO_FUENTE            @map("codigo_fuente")
+  BASE_DATOS               @map("base_datos")
+  API_SERVICIO             @map("api_servicio")
+  
+  // Análisis y negocio
+  PLAN_NEGOCIO             @map("plan_negocio")
+  ANALISIS_CASO            @map("analisis_caso")
+  INVESTIGACION_ESTUDIO    @map("investigacion_estudio")
+  ANALISIS_MERCADO         @map("analisis_mercado")
+  
+  // Diseño y multimedia
+  DISEÑO_GRAFICO           @map("diseño_grafico")
+  PRESENTACION             @map("presentacion")
+  VIDEO_AUDIO              @map("video_audio")
+  MATERIAL_VISUAL          @map("material_visual")
+  
+  // Otros formatos
+  HOJA_CALCULO             @map("hoja_calculo")
+  FORMULARIO_FORMATO       @map("formulario_formato")
+  OTRO                     @map("otro")
+}
+
+enum DifficultyLevel {
+  BASICO     @map("basico")
+  INTERMEDIO @map("intermedio")
+  AVANZADO   @map("avanzado")
+}
+
+enum ProjectStatus {
+  BORRADOR  @map("borrador")
+  REVISION  @map("revision")
+  PUBLICADO @map("publicado")
+  DESTACADO @map("destacado")
+  AGOTADO   @map("agotado")
+  RECHAZADO @map("rechazado")
+  ELIMINADO @map("eliminado")
+  PAUSADO   @map("pausado")
+}
+
+enum PaymentStatus {
+  PENDIENTE  @map("pendiente")
+  COMPLETADO @map("completado")
+  FALLIDO    @map("fallido")
+}
+
+enum DeliveryStatus {
+  PENDIENTE @map("pendiente")
+  ENTREGADO @map("entregado")
+}
+
+enum MessageType {
+  TEXTO   @map("texto")
+  IMAGEN  @map("imagen")
+  ARCHIVO @map("archivo")
+}
+
+enum ContentType {
+  PROYECTO     @map("proyecto")
+  USUARIO      @map("usuario")
+  CALIFICACION @map("calificacion")
+  MENSAJE      @map("mensaje")
+}
+
+enum ReportReason {
+  CONTENIDO_INAPROPIADO @map("contenido_inapropiado")
+  SPAM                  @map("spam")
+  PLAGIO                @map("plagio")
+  PRECIO_ABUSIVO        @map("precio_abusivo")
+  ESTAFA                @map("estafa")
+  OTRO                  @map("otro")
+}
+
+enum ReportStatus {
+  PENDIENTE   @map("pendiente")
+  EN_REVISION @map("en_revision")
+  RESUELTO    @map("resuelto")
+  DESESTIMADO @map("desestimado")
+}
+
+enum NotificationType {
+  NUEVA_VENTA           @map("nueva_venta")
+  COMPRA_EXITOSA        @map("compra_exitosa")
+  COMPRA_ERROR          @map("compra_error")
+  PROYECTO_SUBIDO       @map("proyecto_subido")
+  PROYECTO_ERROR        @map("proyecto_error")
+  NUEVO_MENSAJE         @map("nuevo_mensaje")
+  CALIFICACION_RECIBIDA @map("calificacion_recibida")
+  PROYECTO_APROBADO     @map("proyecto_aprobado")
+  PROYECTO_RECHAZADO    @map("proyecto_rechazado")
+  PAGO_RECIBIDO         @map("pago_recibido")
+  SISTEMA               @map("sistema")
+}
+
+model Cart {
+  id             Int      @id @default(autoincrement())
+  usuarioId      Int      @map("usuario_id")
+  proyectoId     Int      @map("proyecto_id")
+  fechaAgregado  DateTime @default(now()) @map("fecha_agregado")
+  
+  usuario        User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  proyecto       Project  @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  
+  @@unique([usuarioId, proyectoId])
+  @@map("carrito")
+}

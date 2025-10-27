@@ -1,0 +1,224 @@
+<div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    
+    <!-- Header -->
+    <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-studex-xl border border-studex-200/50 p-6 mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div class="mb-4 sm:mb-0">
+          <h1 class="text-2xl font-bold text-gray-900">Notificaciones</h1>
+          <p class="text-gray-600 mt-1">
+            {{ unreadCount > 0 ? unreadCount + ' notificaciones sin leer' : 'Todas las notificaciones están al día' }}
+          </p>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex space-x-3">
+          <button 
+            *ngIf="unreadCount > 0"
+            (click)="markAllAsRead()"
+            [disabled]="isMarkingAllRead"
+            class="px-4 py-2 bg-studex-600 text-white rounded-lg hover:bg-studex-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-studex-sm">
+            <span *ngIf="!isMarkingAllRead">Marcar todas como leídas</span>
+            <span *ngIf="isMarkingAllRead" class="flex items-center space-x-2">
+              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span>Marcando...</span>
+            </span>
+          </button>
+          
+          <button 
+            (click)="loadNotifications()"
+            [disabled]="isLoading"
+            class="px-4 py-2 bg-studex-100 text-studex-700 rounded-lg hover:bg-studex-200 transition-colors disabled:opacity-50 shadow-studex-sm">
+            <svg class="w-4 h-4 inline mr-2" [class.animate-spin]="isLoading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+            Actualizar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+      <div class="flex flex-wrap gap-3">
+        <button 
+          (click)="setFilter('all')"
+          [class]="currentFilter === 'all' ? 'bg-studex-600 text-white' : 'bg-studex-100 text-studex-700 hover:bg-studex-200'"
+          class="px-4 py-2 rounded-lg transition-colors font-medium shadow-studex-sm">
+          Todas ({{ notifications.length }})
+        </button>
+        <button 
+          (click)="setFilter('unread')"
+          [class]="currentFilter === 'unread' ? 'bg-studex-accent text-white' : 'bg-studex-100 text-studex-700 hover:bg-studex-200'"
+          class="px-4 py-2 rounded-lg transition-colors font-medium shadow-studex-sm">
+          No leídas ({{ unreadCount }})
+        </button>
+        <button 
+          (click)="setFilter('compra_exitosa')"
+          [class]="currentFilter === 'compra_exitosa' ? 'bg-studex-700 text-white' : 'bg-studex-100 text-studex-700 hover:bg-studex-200'"
+          class="px-4 py-2 rounded-lg transition-colors font-medium shadow-studex-sm">
+          Compras
+        </button>
+        <button 
+          (click)="setFilter('nueva_venta')"
+          [class]="currentFilter === 'nueva_venta' ? 'bg-studex-accent text-white' : 'bg-studex-100 text-studex-700 hover:bg-studex-200'"
+          class="px-4 py-2 rounded-lg transition-colors font-medium shadow-studex-sm">
+          Ventas
+        </button>
+        <button 
+          (click)="setFilter('proyecto_subido')"
+          [class]="currentFilter === 'proyecto_subido' ? 'bg-studex-navbar text-white' : 'bg-studex-100 text-studex-700 hover:bg-studex-200'"
+          class="px-4 py-2 rounded-lg transition-colors font-medium shadow-studex-sm">
+          Proyectos
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-studex-600 mx-auto mb-4"></div>
+      <p class="text-gray-600">Cargando notificaciones...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && filteredNotifications.length === 0" class="bg-white rounded-xl shadow-sm p-12 text-center">
+      <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9">
+          </path>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-gray-900 mb-2">
+        {{ currentFilter === 'all' ? 'No tienes notificaciones' : 'No hay notificaciones de este tipo' }}
+      </h3>
+      <p class="text-gray-500">
+        {{ currentFilter === 'all' ? 'Te notificaremos sobre tus compras y ventas' : 'Cambia el filtro para ver otras notificaciones' }}
+      </p>
+    </div>
+
+    <!-- Notifications List -->
+    <div *ngIf="!isLoading && filteredNotifications.length > 0" class="space-y-4">
+      <div 
+        *ngFor="let notification of filteredNotifications; let i = index"
+        (click)="openNotificationModal(notification)"
+        class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer overflow-hidden"
+        [class.ring-2]="!notification.leida"
+        [class.ring-blue-500]="!notification.leida"
+        [class.ring-opacity-50]="!notification.leida">
+        
+        <div class="p-6">
+          <div class="flex items-start space-x-4">
+            
+            <!-- Icon -->
+            <div class="flex-shrink-0 mt-1">
+              <div [ngSwitch]="notification.tipo" class="w-12 h-12 rounded-full flex items-center justify-center">
+                
+                <!-- Compra exitosa -->
+                <div *ngSwitchCase="'compra_exitosa'" class="bg-studex-100">
+                  <svg class="w-6 h-6 text-studex-700" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                
+                <!-- Nueva venta -->
+                <div *ngSwitchCase="'nueva_venta'" class="bg-studex-accent-100">
+                  <svg class="w-6 h-6 text-studex-accent" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                
+                <!-- Proyecto subido -->
+                <div *ngSwitchCase="'proyecto_subido'" class="bg-studex-navbar-light">
+                  <svg class="w-6 h-6 text-studex-navbar" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                </div>
+                
+                <!-- Error -->
+                <div *ngSwitchCase="'compra_error'" class="bg-studex-200">
+                  <svg class="w-6 h-6 text-studex-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"/>
+                  </svg>
+                </div>
+                
+                <!-- Default -->
+                <div *ngSwitchDefault class="bg-studex-100">
+                  <svg class="w-6 h-6 text-studex-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ notification.titulo }}</h3>
+                  <p class="text-gray-600 text-base mb-3 line-clamp-3">{{ notification.mensaje }}</p>
+                  
+                  <!-- Extra data preview -->
+                  <div *ngIf="notification.datosExtra && hasExtraData(notification.datosExtra)" 
+                       class="flex flex-wrap gap-4 mb-3 text-sm">
+                    
+                    <span *ngIf="notification.datosExtra.proyecto" class="bg-gray-100 px-3 py-1 rounded-full text-gray-700">
+                      📁 {{ notification.datosExtra.proyecto.titulo || notification.datosExtra.proyecto.nombre }}
+                    </span>
+                    
+                    <span *ngIf="notification.datosExtra.monto" class="bg-green-100 px-3 py-1 rounded-full text-green-700 font-medium">
+                      💰 <span class="text-studex-700">\${{ notification.datosExtra.monto | number:'1.0-0' }}</span>
+                    </span>
+                  </div>
+                  
+                  <div class="flex items-center space-x-4 text-sm text-gray-500">
+                    <span class="text-studex-600">{{ getFormattedDate(notification.fechaCreacion) }}</span>
+                    <span class="flex items-center space-x-1">
+                      <div *ngIf="!notification.leida" class="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <div *ngIf="!notification.leida" class="w-2 h-2 bg-studex-accent rounded-full"></div>
+                      <span class="text-studex-700">{{ notification.leida ? 'Leída' : 'No leída' }}</span>
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Arrow -->
+                <div class="flex-shrink-0 ml-4">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load More Button -->
+    <div *ngIf="!isLoading && filteredNotifications.length > 0 && canLoadMore" class="text-center mt-8">
+      <button 
+        (click)="loadMoreNotifications()"
+        [disabled]="isLoadingMore"
+        class="px-6 py-3 bg-studex-600 text-white rounded-lg hover:bg-studex-700 transition-colors disabled:opacity-50">
+        <span *ngIf="!isLoadingMore">Cargar más notificaciones</span>
+        <span *ngIf="isLoadingMore" class="flex items-center space-x-2">
+          <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Cargando...</span>
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Reutilizable Notification Modal -->
+  <app-notification-modal 
+    [notification]="selectedNotification"
+    (closeModalEvent)="closeNotificationModal()"
+    (markAsReadEvent)="markAsRead($event)">
+  </app-notification-modal>
+</div>

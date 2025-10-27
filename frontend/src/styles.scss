@@ -1,0 +1,718 @@
+/* STUDEX - Estilos globales personalizados */
+
+/* Importar Tailwind CSS */
+@use 'tailwindcss/base';
+@use 'tailwindcss/components';
+@use 'tailwindcss/utilities';
+
+/* Fuentes modernas de Google */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+
+/* Variables CSS personalizadas para STUDEX */
+:root {
+  /* Colores primarios STUDEX - Paleta Verde Oscuro y Beige */
+  --studex-50: rgb(249, 248, 242);     /* Beige muy claro */
+  --studex-100: rgb(242, 239, 229);    /* Beige claro */
+  --studex-200: rgb(228, 220, 201);    /* Beige */
+  --studex-300: rgb(208, 196, 168);    /* Beige dorado */
+  --studex-400: rgb(176, 164, 130);    /* Beige oscuro */
+  --studex-500: rgb(120, 129, 96);     /* Verde oliva principal */
+  --studex-600: rgb(99, 107, 78);      /* Verde oliva medio */
+  --studex-700: rgb(78, 84, 61);       /* Verde oliva oscuro */
+  --studex-800: rgb(58, 63, 45);       /* Verde oliva muy oscuro */
+  --studex-900: rgb(38, 42, 30);       /* Verde oliva profundo */
+  
+  /* Color navbar - Verde oscuro como en la imagen */
+  --studex-navbar: rgb(45, 55, 40);    /* Verde muy oscuro para navbar */
+  --studex-navbar-light: rgb(52, 64, 46); /* Verde oscuro más claro */
+  
+  /* Colores complementarios */
+  --studex-accent: rgb(184, 134, 98);     /* Marrón cálido para acentos */
+  --studex-secondary: rgb(156, 142, 114); /* Taupe para elementos secundarios */
+  
+  /* Fuentes modernas */
+  --font-display: 'Space Grotesk', 'Poppins', sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Poppins', sans-serif;
+  
+  /* Sombras personalizadas con tonos verdes */
+  --shadow-studex: 0 4px 6px -1px rgba(120, 129, 96, 0.15), 0 2px 4px -1px rgba(120, 129, 96, 0.08);
+  --shadow-studex-md: 0 10px 15px -3px rgba(120, 129, 96, 0.12), 0 4px 6px -2px rgba(120, 129, 96, 0.06);
+  --shadow-studex-lg: 0 20px 25px -5px rgba(120, 129, 96, 0.14), 0 10px 10px -5px rgba(120, 129, 96, 0.06);
+  --shadow-studex-xl: 0 25px 50px -12px rgba(120, 129, 96, 0.25);
+  --shadow-navbar: 0 4px 20px -2px rgba(45, 55, 40, 0.3);
+  
+  /* Animaciones modernas */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  --bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Reset y estilos base */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  color: var(--studex-900);
+  background-color: var(--studex-50);
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.01em;
+}
+
+/* Tipografías modernas */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--studex-navbar), var(--studex-600));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
+  font-weight: 700;
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 2rem);
+  font-weight: 600;
+}
+
+/* Animaciones modernas y efectos */
+.modern-card {
+  transition: all var(--transition-normal);
+  transform-origin: center;
+  backface-visibility: hidden;
+}
+
+.modern-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: var(--shadow-studex-xl);
+}
+
+.slide-in-up {
+  animation: slideInUp 0.6s var(--bounce) both;
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease-out both;
+}
+
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Efectos de hover modernos */
+.modern-button {
+  position: relative;
+  overflow: hidden;
+  transition: all var(--transition-normal);
+  transform: translateZ(0);
+}
+
+.modern-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.modern-button:hover::before {
+  left: 100%;
+}
+
+.modern-button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-studex-lg);
+}
+
+/* Clases CSS estándar sin @apply */
+
+/* Container personalizado */
+.studex-container {
+  max-width: 80rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .studex-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .studex-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* Clases adicionales para la navbar */
+.navbar-search-input {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.navbar-search-input input {
+  height: 3rem; /* 48px - altura fija para consistencia */
+  line-height: 1.5;
+  vertical-align: middle;
+}
+
+.navbar-search-button {
+  height: 2.5rem; /* 40px - ligeramente más pequeño que el input */
+  width: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Botones STUDEX */
+.studex-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.studex-btn:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--studex-500);
+}
+
+.studex-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.studex-btn.primary {
+  background: linear-gradient(to right, var(--studex-500), var(--studex-600));
+  color: white;
+  box-shadow: var(--shadow-studex);
+}
+
+.studex-btn.primary:hover {
+  background: linear-gradient(to right, var(--studex-600), var(--studex-700));
+  box-shadow: var(--shadow-studex-md);
+}
+
+.studex-btn.secondary {
+  background: white;
+  color: var(--studex-700);
+  border: 1px solid var(--studex-200);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.studex-btn.secondary:hover {
+  background: var(--studex-50);
+  border-color: var(--studex-300);
+  box-shadow: var(--shadow-studex);
+}
+
+/* Tarjetas */
+.studex-card {
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid var(--studex-100);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
+}
+
+.studex-card:hover {
+  box-shadow: var(--shadow-studex-md);
+}
+
+.studex-card.elevated {
+  box-shadow: var(--shadow-studex-lg);
+}
+
+.studex-card.interactive {
+  cursor: pointer;
+}
+
+.studex-card.interactive:hover {
+  transform: scale(1.05) translateY(-0.25rem);
+}
+
+/* Inputs */
+.studex-input {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--studex-200);
+  border-radius: 0.5rem;
+  color: var(--studex-900);
+  background: white;
+  transition: all 0.2s;
+}
+
+.studex-input::placeholder {
+  color: var(--studex-400);
+}
+
+.studex-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--studex-500);
+  border-color: transparent;
+}
+
+.studex-input.error {
+  border-color: rgb(239, 68, 68);
+}
+
+.studex-input.error:focus {
+  box-shadow: 0 0 0 2px rgb(239, 68, 68);
+}
+
+/* Labels */
+.studex-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--studex-700);
+  margin-bottom: 0.5rem;
+}
+
+/* Enlaces */
+.studex-link {
+  color: var(--studex-600);
+  font-weight: 500;
+  transition: color 0.2s;
+  text-decoration: none;
+}
+
+.studex-link:hover {
+  color: var(--studex-800);
+}
+
+/* Badges */
+.studex-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.studex-badge.primary {
+  background: var(--studex-100);
+  color: var(--studex-800);
+}
+
+.studex-badge.success {
+  background: rgb(220, 252, 231);
+  color: rgb(22, 101, 52);
+}
+
+.studex-badge.warning {
+  background: rgb(254, 243, 199);
+  color: rgb(146, 64, 14);
+}
+
+.studex-badge.danger {
+  background: rgb(254, 226, 226);
+  color: rgb(153, 27, 27);
+}
+
+/* Navegación */
+.studex-nav-link {
+  color: var(--studex-700);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.studex-nav-link:hover {
+  color: var(--studex-900);
+  background: var(--studex-50);
+}
+
+.studex-nav-link.active {
+  background: var(--studex-100);
+  color: var(--studex-900);
+}
+
+/* Grid de proyectos */
+.studex-project-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .studex-project-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .studex-project-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .studex-project-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Tarjeta de proyecto */
+.studex-project-card {
+  background: white;
+  border-radius: 0.75rem;
+  border: 1px solid var(--studex-100);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.studex-project-card:hover {
+  box-shadow: var(--shadow-studex-lg);
+}
+
+.studex-project-image {
+  width: 100%;
+  height: 12rem;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.studex-project-card:hover .studex-project-image {
+  transform: scale(1.05);
+}
+
+/* Sidebar */
+.studex-sidebar {
+  background: white;
+  border-right: 1px solid var(--studex-200);
+  height: 100%;
+}
+
+.studex-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: var(--studex-700);
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.studex-sidebar-link:hover {
+  background: var(--studex-50);
+  color: var(--studex-900);
+}
+
+.studex-sidebar-link.active {
+  background: var(--studex-100);
+  color: var(--studex-900);
+  border-right: 2px solid var(--studex-600);
+}
+
+/* Scrollbar personalizado */
+.studex-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.studex-scrollbar::-webkit-scrollbar-track {
+  background: rgb(243, 244, 246);
+}
+
+.studex-scrollbar::-webkit-scrollbar-thumb {
+  background: rgb(156, 163, 175);
+  border-radius: 3px;
+}
+
+.studex-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgb(107, 114, 128);
+}
+
+/* Gradientes de texto */
+.studex-gradient-text {
+  background: linear-gradient(to right, var(--studex-600), var(--studex-800));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out;
+}
+
+/* Spinner de carga */
+.studex-spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid var(--studex-200);
+  border-top: 2px solid var(--studex-600);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Modal */
+.studex-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.studex-modal {
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-studex-xl);
+  max-width: 32rem;
+  width: 100%;
+  max-height: 100vh;
+  overflow: auto;
+}
+
+.studex-modal-header {
+  padding: 1.5rem 1.5rem 1rem;
+  border-bottom: 1px solid var(--studex-200);
+}
+
+.studex-modal-body {
+  padding: 1.5rem;
+}
+
+.studex-modal-footer {
+  padding: 1rem 1.5rem 1.5rem;
+  border-top: 1px solid var(--studex-200);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Responsive helpers */
+@media (max-width: 767px) {
+  .studex-mobile-hidden {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .studex-mobile-only {
+    display: none;
+  }
+}
+
+/* Mejoras de accesibilidad */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Ajuste para scroll suave */
+html {
+  scroll-padding-top: 100px;
+}
+
+/* Animaciones académicas mejoradas */
+.float-animation {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25% { transform: translateY(-10px) rotate(1deg); }
+  50% { transform: translateY(-20px) rotate(0deg); }
+  75% { transform: translateY(-10px) rotate(-1deg); }
+}
+
+.slide-in-up {
+  animation: slideInUpEnhanced 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(50px);
+}
+
+@keyframes slideInUpEnhanced {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Elementos académicos mejorados */
+.border-r-3 {
+  border-right-width: 3px;
+}
+
+.border-b-3 {
+  border-bottom-width: 3px;
+}
+
+/* Check mark personalizado para documentos */
+.check-mark {
+  width: 12px;
+  height: 20px;
+  border-right: 3px solid white;
+  border-bottom: 3px solid white;
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+/* Mejoras de glassmorphism académicos */
+.modern-card {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern-card:hover {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Gradientes académicos */
+.academic-gradient {
+  background: linear-gradient(135deg, 
+    var(--studex-600) 0%, 
+    var(--studex-navbar) 50%, 
+    var(--studex-800) 100%);
+}
+
+/* Efectos de hover académicos */
+.academic-hover:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Elementos flotantes académicos */
+.academic-float {
+  animation: academicFloat 4s ease-in-out infinite;
+}
+
+@keyframes academicFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-8px) rotate(2deg); }
+  66% { transform: translateY(-4px) rotate(-1deg); }
+}
