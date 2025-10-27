@@ -1,21 +1,12 @@
 // Modal backdrop - ensures modal is centered and above everything
+// ✅ LIMPIADO: Remover !important innecesarios
+// Las clases Tailwind ya manejan: fixed inset-0 z-[9999] flex items-center justify-center p-4
 .notification-modal {
   animation: fadeIn 0.2s ease-out;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  z-index: 9999 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
 }
 
 .modal-container {
   animation: slideIn 0.3s ease-out;
-  position: relative;
-  z-index: 10000;
 }
 
 @keyframes fadeIn {
@@ -91,8 +82,12 @@
 
 // Responsive adjustments
 @media (max-width: 640px) {
+  .notification-modal {
+    padding: 1rem !important;
+  }
+  
   .modal-container {
-    margin: 16px;
+    margin: 0 auto;
     max-height: 85vh;
   }
   
