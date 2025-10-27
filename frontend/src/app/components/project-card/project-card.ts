@@ -35,6 +35,7 @@ export interface ProjectCard {
 
 @Component({
   selector: 'app-project-card',
+  standalone: true,
   imports: [CommonModule, RouterModule],
   templateUrl: './project-card.html',
   styleUrl: './project-card.scss'

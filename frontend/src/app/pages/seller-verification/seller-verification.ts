@@ -18,6 +18,7 @@ interface SellerStatus {
 
 @Component({
   selector: 'app-seller-verification',
+  standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">

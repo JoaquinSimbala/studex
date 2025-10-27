@@ -66,6 +66,7 @@ interface ProjectStats {
 
 @Component({
   selector: 'app-seller-projects',
+  standalone: true,
   imports: [CommonModule, FormsModule],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">

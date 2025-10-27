@@ -33,6 +33,7 @@ interface Category {
 
 @Component({
   selector: 'app-explore',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, Navbar, ProjectCardComponent],
   templateUrl: './explore.html',
   styleUrl: './explore.scss'

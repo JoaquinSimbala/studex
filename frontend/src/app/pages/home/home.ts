@@ -28,6 +28,7 @@ interface CategoryDB {
 
 @Component({
   selector: 'app-home',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, Navbar, ProjectCardComponent],
   templateUrl: './home.html',
   styleUrl: './home.scss'
