@@ -64,6 +64,7 @@ interface ProjectFile {
 
 @Component({
   selector: 'app-project-detail',
+  standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, PurchaseModalComponent],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">
