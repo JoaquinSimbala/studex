@@ -199,8 +199,6 @@
         *ngFor="let project of projects; trackBy: trackByProjectId; let i = index"
         [project]="project"
         [animationDelay]="i * 0.05"
-        (projectClick)="viewProject($event)"
-        (favoriteClick)="handleFavoriteClick($event)"
         class="slide-in-up"
         [style.animation-delay]="(i * 0.05) + 's'">
       </app-project-card>

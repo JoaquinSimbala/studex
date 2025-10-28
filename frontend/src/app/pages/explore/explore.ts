@@ -306,32 +306,28 @@ export class ExploreComponent implements OnInit {
     this.loadProjects();
   }
 
-  /**
-   * Maneja el click en una tarjeta de proyecto
-   */
-  viewProject(project: ProjectCard): void {
-    // Si el usuario actual es el propietario del proyecto, navegar a vista de vendedor
-    if (this.currentUser && project.seller.id === parseInt(this.currentUser.id)) {
-      this.router.navigate(['/vendedor/proyecto', project.id]);
-    } else {
-      // Vista pública para otros usuarios
-      this.router.navigate(['/proyecto', project.id]);
-    }
-  }
-
-  /**
-   * Maneja el click en favorito
-   */
-  handleFavoriteClick(project: ProjectCard): void {
-    if (!this.currentUser) {
-      this.router.navigate(['/login']);
-      return;
-    }
-    
-    // TODO: Implementar lógica de favoritos
-    project.isFavorite = !project.isFavorite;
-    console.log('Toggle favorite:', project.id, project.isFavorite);
-  }
+  // ========================================
+  // ✅ MÉTODOS ELIMINADOS - Ya no son necesarios
+  // ========================================
+  // ProjectCardComponent ahora maneja toda la navegación y favoritos internamente
+  // Estos métodos eran duplicados e innecesarios:
+  //
+  // viewProject(project: ProjectCard): void {
+  //   if (this.currentUser && project.seller.id === parseInt(this.currentUser.id)) {
+  //     this.router.navigate(['/vendedor/proyecto', project.id]);
+  //   } else {
+  //     this.router.navigate(['/proyecto', project.id]);
+  //   }
+  // }
+  //
+  // handleFavoriteClick(project: ProjectCard): void {
+  //   if (!this.currentUser) {
+  //     this.router.navigate(['/login']);
+  //     return;
+  //   }
+  //   project.isFavorite = !project.isFavorite;
+  //   console.log('Toggle favorite:', project.id, project.isFavorite);
+  // }
 
   /**
    * Track by function para ngFor

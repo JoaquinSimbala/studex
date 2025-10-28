@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
+import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
 
 interface SellerProject {
   id: number;
@@ -67,7 +68,7 @@ interface ProjectStats {
 @Component({
   selector: 'app-seller-projects',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ProjectCardComponent],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">
       <div class="max-w-7xl mx-auto px-4">
@@ -136,92 +137,20 @@ interface ProjectStats {
 
           <!-- Projects List -->
           <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <div *ngFor="let project of projects" 
-                 class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow cursor-pointer"
-                 (click)="viewProject(project.id)">
-              
-              <!-- Image -->
-              <div class="h-48 bg-studex-100 relative overflow-hidden">
-                <img *ngIf="project.mainImage" 
-                     [src]="project.mainImage.fileUrl" 
-                     [alt]="project.title"
-                     class="w-full h-full object-cover">
-                <div *ngIf="!project.mainImage" 
-                     class="w-full h-full flex items-center justify-center">
-                  <span class="text-4xl">📄</span>
-                </div>
-                
-                <!-- Status Badge -->
-                <div class="absolute top-3 right-3">
-                  <span [class]="getStatusBadgeClass(project.status)"
-                        class="px-2 py-1 rounded-full text-xs font-semibold">
-                    {{ getStatusText(project.status) }}
-                  </span>
-                </div>
-
-                <!-- Featured Badge -->
-                <div *ngIf="project.featured" 
-                     class="absolute top-3 left-3 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
-                  ⭐ Destacado
-                </div>
-              </div>
-
-              <!-- Content -->
-              <div class="p-6">
-                <h3 class="text-xl font-bold text-studex-900 mb-2 line-clamp-2">
-                  {{ project.title }}
-                </h3>
-                <p class="text-studex-600 text-sm mb-4 line-clamp-3">
-                  {{ project.description }}
-                </p>
-
-                <!-- Category -->
-                <div class="flex items-center mb-3">
-                  <span class="text-lg mr-2">{{ project.category.icono }}</span>
-                  <span class="text-sm text-studex-500">{{ project.category.nombre }}</span>
-                </div>
-
-                <!-- Meta Info -->
-                <div class="flex items-center justify-between text-sm text-studex-500 mb-4">
-                  <div class="flex items-center space-x-4">
-                    <span>👁️ {{ project.views }}</span>
-                    <span>📥 {{ project.downloads }}</span>
-                  </div>
-                  <span class="font-semibold text-studex-700">S/ {{ project.price }}</span>
-                </div>
-
-                <!-- Files Info -->
-                <div class="flex items-center justify-between text-xs text-studex-500">
-                  <div class="flex space-x-3">
-                    <span *ngIf="project.stats.totalImages > 0">
-                      📸 {{ project.stats.totalImages }} imagen(es)
-                    </span>
-                    <span *ngIf="project.stats.totalFiles > 0">
-                      📄 {{ project.stats.totalFiles }} archivo(s)
-                    </span>
-                  </div>
-                  <span>{{ formatDate(project.createdAt) }}</span>
-                </div>
-              </div>
-            </div>
+            <app-project-card
+              *ngFor="let project of projects; let i = index"
+              [project]="transformToProjectCard(project)"
+              [showOwnerActions]="true"
+              [animationDelay]="i * 0.05"
+              class="slide-in-up"
+              [style.animation-delay]="(i * 0.05) + 's'">
+            </app-project-card>
           </div>
         </div>
       </div>
     </div>
   `,
   styles: [`
-    .line-clamp-2 {
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-    .line-clamp-3 {
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
     .animate-spin {
       animation: spin 1s linear infinite;
     }
@@ -306,36 +235,41 @@ export class SellerProjectsComponent implements OnInit {
     return this.projects.reduce((total, project) => total + project.downloads, 0);
   }
 
-  getStatusBadgeClass(status: string): string {
-    const classes = {
-      'BORRADOR': 'bg-gray-500 text-white',
-      'REVISION': 'bg-yellow-500 text-white',
-      'PUBLICADO': 'bg-green-500 text-white',
-      'DESTACADO': 'bg-blue-500 text-white',
-      'RECHAZADO': 'bg-red-500 text-white'
-    };
-    return classes[status as keyof typeof classes] || 'bg-gray-500 text-white';
-  }
+  // ========================================
+  // ✅ MÉTODOS COMENTADOS - Ya no son necesarios
+  // ========================================
+  // ProjectCardComponent maneja los badges y formatos internamente
+  
+  // getStatusBadgeClass(status: string): string {
+  //   const classes = {
+  //     'BORRADOR': 'bg-gray-500 text-white',
+  //     'REVISION': 'bg-yellow-500 text-white',
+  //     'PUBLICADO': 'bg-green-500 text-white',
+  //     'DESTACADO': 'bg-blue-500 text-white',
+  //     'RECHAZADO': 'bg-red-500 text-white'
+  //   };
+  //   return classes[status as keyof typeof classes] || 'bg-gray-500 text-white';
+  // }
 
-  getStatusText(status: string): string {
-    const statusTexts = {
-      'BORRADOR': 'Borrador',
-      'REVISION': 'En Revisión',
-      'PUBLICADO': 'Publicado',
-      'DESTACADO': 'Destacado',
-      'RECHAZADO': 'Rechazado'
-    };
-    return statusTexts[status as keyof typeof statusTexts] || status;
-  }
+  // getStatusText(status: string): string {
+  //   const statusTexts = {
+  //     'BORRADOR': 'Borrador',
+  //     'REVISION': 'En Revisión',
+  //     'PUBLICADO': 'Publicado',
+  //     'DESTACADO': 'Destacado',
+  //     'RECHAZADO': 'Rechazado'
+  //   };
+  //   return statusTexts[status as keyof typeof statusTexts] || status;
+  // }
 
-  formatDate(dateString: string): string {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  }
+  // formatDate(dateString: string): string {
+  //   const date = new Date(dateString);
+  //   return date.toLocaleDateString('es-ES', {
+  //     day: '2-digit',
+  //     month: '2-digit',
+  //     year: 'numeric'
+  //   });
+  // }
 
   calculateStats(): ProjectStats {
     return {
@@ -346,8 +280,37 @@ export class SellerProjectsComponent implements OnInit {
     };
   }
 
-  viewProject(projectId: number): void {
-    this.router.navigate(['/vendedor/proyecto', projectId]);
+  // viewProject(projectId: number): void {
+  //   this.router.navigate(['/vendedor/proyecto', projectId]);
+  // }
+
+  /**
+   * Transforma SellerProject a ProjectCard para usar con ProjectCardComponent
+   */
+  transformToProjectCard(project: SellerProject): ProjectCard {
+    return {
+      id: project.id,
+      title: project.title,
+      description: project.description,
+      price: project.price,
+      type: project.type,
+      university: project.university,
+      category: project.category.nombre,
+      year: project.year,
+      rating: 0, // Los proyectos propios no muestran rating
+      views: project.views,
+      downloads: project.downloads,
+      mainImage: project.mainImage,
+      isFavorite: false, // Los proyectos propios no tienen favorito
+      status: project.status,
+      featured: project.featured,
+      seller: {
+        id: this.currentUser ? parseInt(this.currentUser.id) : 0,
+        name: this.currentUser ? `${this.currentUser.firstName} ${this.currentUser.lastName}` : 'Tú',
+        rating: 0,
+        salesCount: 0
+      }
+    };
   }
 
   navigateToUpload(): void {

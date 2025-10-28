@@ -42,22 +42,19 @@ export class FavoritesComponent implements OnInit {
     });
   }
 
-  /**
-   * Maneja el click en favoritos (remover de la lista)
-   */
-  onFavoriteClick(project: any): void {
-    // El ProjectCardComponent ya maneja la lógica de toggle
-    // No necesitamos recargar, el servicio ya maneja la actualización automática
-    console.log('Favorito removido:', project);
-  }
-
-  /**
-   * Navegar al detalle del proyecto
-   */
-  onProjectClick(project: any): void {
-    // Implementar navegación al detalle del proyecto
-    console.log('Navegar a proyecto:', project);
-  }
+  // ========================================
+  // ✅ MÉTODOS ELIMINADOS - Ya no son necesarios
+  // ========================================
+  // ProjectCardComponent ahora maneja toda la navegación y favoritos internamente
+  // Estos métodos eran innecesarios:
+  //
+  // onFavoriteClick(project: any): void {
+  //   console.log('Favorito removido:', project);
+  // }
+  //
+  // onProjectClick(project: any): void {
+  //   console.log('Navegar a proyecto:', project);
+  // }
 
   /**
    * Convierte FavoriteProject a formato compatible con ProjectCard

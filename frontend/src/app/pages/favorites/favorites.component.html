@@ -94,8 +94,6 @@
               *ngFor="let favorite of favorites; let i = index"
               [project]="transformToProjectCard(favorite)"
               [animationDelay]="i * 0.1"
-              (projectClick)="onProjectClick($event)"
-              (favoriteClick)="onFavoriteClick($event)"
               class="slide-in-up"
               [style.animation-delay]="(i * 0.1) + 's'">
             </app-project-card>
