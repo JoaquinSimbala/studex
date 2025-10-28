@@ -219,30 +219,4 @@ button:focus-visible {
   outline-offset: -2px;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .bg-white {
-    background-color: #1f2937;
-    color: #f9fafb;
-  }
-  
-  .text-gray-900 {
-    color: #f9fafb;
-  }
-  
-  .text-gray-600 {
-    color: #d1d5db;
-  }
-  
-  .text-gray-400 {
-    color: #9ca3af;
-  }
-  
-  .border-gray-200 {
-    border-color: #374151;
-  }
-  
-  .bg-gray-50 {
-    background-color: #111827;
-  }
-}
+/* Dark mode support REMOVED - Always show light theme */
