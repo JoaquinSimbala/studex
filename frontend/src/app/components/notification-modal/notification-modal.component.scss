@@ -1,19 +1,40 @@
-// Modal backdrop - ensures modal is centered and above everything
-// ✅ LIMPIADO: Remover !important innecesarios
-// Las clases Tailwind ya manejan: fixed inset-0 z-[9999] flex items-center justify-center p-4
+/**
+ * Estilos del modal de notificación
+ * 
+ * Estructura CSS:
+ * - Backdrop con backdrop-filter para blur
+ * - Container centrado con animación de entrada
+ * - Animaciones suaves para abrir/cerrar
+ * - Scrollbar personalizado
+ * - Responsive para móviles
+ */
+
+// Modal backdrop - Asegura que el modal esté centrado y sobre todo lo demás
+// Las clases Tailwind manejan: fixed inset-0 z-[9999] flex items-center justify-center p-4
 .notification-modal {
   animation: fadeIn 0.2s ease-out;
+  
+  // Forzar centrado en todos los navegadores
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
+// Container del modal - Centrado automáticamente por flexbox del padre
 .modal-container {
   animation: slideIn 0.3s ease-out;
+  
+  // Asegurar que esté centrado incluso en navegadores antiguos
+  margin: auto;
 }
 
+// Animación de fade in para el backdrop
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
+// Animación de slide in para el modal
 @keyframes slideIn {
   from {
     opacity: 0;

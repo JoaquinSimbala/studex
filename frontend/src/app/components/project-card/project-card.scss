@@ -205,12 +205,18 @@ img:hover {
   filter: brightness(1.05);
 }
 
-/* Efectos para el contenedor de imagen */
-.relative {
+/* Efectos para el contenedor de imagen (scope sólo dentro del componente) */
+/*
+  IMPORTANTE: no usar selectores genéricos como `.relative` o `.absolute` globales
+  porque colisionan con las utilidades de Tailwind (p.ej. `relative`, `absolute`).
+  Scopeamos estas reglas al componente `.studex-card` para evitar efectos globales
+  que afectan a modales y otros elementos fuera de la tarjeta.
+*/
+.studex-card .relative {
   overflow: hidden;
 }
 
-.relative::after {
+.studex-card .relative::after {
   content: '';
   position: absolute;
   top: 0;
@@ -227,12 +233,12 @@ img:hover {
   transition: opacity 0.3s ease;
 }
 
-.group:hover .relative::after {
+.studex-card .group:hover .relative::after {
   opacity: 1;
 }
 
-/* Efectos para badges flotantes */
-.absolute {
+/* Efectos para badges flotantes (scopeado al componente) */
+.studex-card .absolute {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }

@@ -1,6 +1,8 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ViewContainerRef, ElementRef, ViewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { Overlay, OverlayRef, OverlayModule } from '@angular/cdk/overlay';
+import { ComponentPortal, TemplatePortal } from '@angular/cdk/portal';
 import { NotificationService, DbNotification } from '../../services/notification.service';
 import { NotificationModalComponent } from '../notification-modal/notification-modal.component';
 import { Subscription } from 'rxjs';
@@ -12,6 +14,7 @@ import { Subscription } from 'rxjs';
  * Al hacer clic, despliega un panel flotante con la lista de notificaciones recientes.
  * 
  * @description
+ * - Usa Angular CDK Overlay para renderizar dropdown y modal fuera del contexto del navbar
  * - Muestra las últimas notificaciones de la base de datos
  * - Contador de notificaciones no leídas en badge rojo
  * - Permite marcar notificaciones individuales como leídas
@@ -25,12 +28,12 @@ import { Subscription } from 'rxjs';
  * ```
  * 
  * @author Studex Platform
- * @version 1.0.0
+ * @version 2.0.0
  */
 @Component({
   selector: 'app-notifications-dropdown',
   standalone: true,
-  imports: [CommonModule, NotificationModalComponent],
+  imports: [CommonModule, OverlayModule],
   templateUrl: './notifications-dropdown.component.html',
   styleUrls: ['./notifications-dropdown.component.scss']
 })
@@ -41,6 +44,24 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
   
   /** Router de Angular para navegación */
   private router = inject(Router);
+  
+  /** Overlay service de Angular CDK */
+  private overlay = inject(Overlay);
+  
+  /** ViewContainerRef para crear portals */
+  private viewContainerRef = inject(ViewContainerRef);
+  
+  /** Referencia al overlay del modal */
+  private modalOverlayRef: OverlayRef | null = null;
+  
+  /** Referencia al overlay del dropdown */
+  private dropdownOverlayRef: OverlayRef | null = null;
+  
+  /** Referencia al botón de notificaciones (para posicionar dropdown) */
+  @ViewChild('notificationButton', { read: ElementRef }) notificationButton!: ElementRef;
+  
+  /** Referencia al template del dropdown (para crear portal) */
+  @ViewChild('dropdownTemplate', { read: TemplateRef }) dropdownTemplate!: TemplateRef<any>;
   
   /**
    * Lista de notificaciones de la base de datos.
@@ -126,29 +147,116 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
    * Limpia las suscripciones al destruir el componente.
    * 
    * @description
-   * Previene memory leaks desuscribiendo todos los observables activos.
+   * Previene memory leaks desuscribiendo todos los observables activos
+   * y limpiando overlays activos.
    * 
    * @returns {void}
    */
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    
+    // Limpiar modal overlay si existe
+    if (this.modalOverlayRef) {
+      this.modalOverlayRef.dispose();
+      this.modalOverlayRef = null;
+    }
+    
+    // Limpiar dropdown overlay si existe
+    if (this.dropdownOverlayRef) {
+      this.dropdownOverlayRef.dispose();
+      this.dropdownOverlayRef = null;
+    }
   }
 
   /**
    * Alterna la visibilidad del dropdown.
    * 
    * @description
-   * - Si se abre: recarga las notificaciones del servidor
-   * - Si se cierra: oculta el panel
+   * - Si se abre: crea overlay con CDK y recarga las notificaciones del servidor
+   * - Si se cierra: cierra el overlay
    * 
    * @returns {void}
    * @public
    */
   toggleDropdown(): void {
-    this.isOpen = !this.isOpen;
-    if (this.isOpen) {
-      this.loadNotifications();
+    if (this.dropdownOverlayRef) {
+      // Si ya está abierto, cerrarlo
+      this.closeDropdown();
+    } else {
+      // Si está cerrado, abrirlo
+      this.openDropdown();
     }
+  }
+
+  /**
+   * Abre el dropdown usando CDK Overlay.
+   * 
+   * @description
+   * Crea un overlay posicionado relativo al botón de notificaciones
+   * y renderiza el contenido del dropdown fuera del contexto del navbar.
+   * 
+   * @returns {void}
+   * @private
+   */
+  private openDropdown(): void {
+    // Cerrar modal si está abierto
+    this.closeNotificationModal();
+    
+    // Crear estrategia de posicionamiento conectada al botón
+    const positionStrategy = this.overlay
+      .position()
+      .flexibleConnectedTo(this.notificationButton)
+      .withPositions([
+        {
+          originX: 'end',
+          originY: 'bottom',
+          overlayX: 'end',
+          overlayY: 'top',
+          offsetY: 8
+        },
+        {
+          originX: 'end',
+          originY: 'top',
+          overlayX: 'end',
+          overlayY: 'bottom',
+          offsetY: -8
+        }
+      ])
+      .withPush(true);
+
+    // Crear configuración del overlay
+    const overlayConfig = {
+      hasBackdrop: true,
+      backdropClass: 'cdk-overlay-transparent-backdrop',
+      positionStrategy,
+      scrollStrategy: this.overlay.scrollStrategies.reposition(),
+      panelClass: 'dropdown-overlay'
+    };
+
+    // Crear el overlay
+    this.dropdownOverlayRef = this.overlay.create(overlayConfig);
+
+    // Crear el portal con el template del dropdown
+    const dropdownPortal = new TemplatePortal(
+      this.dropdownTemplate,
+      this.viewContainerRef
+    );
+
+    // Adjuntar el portal al overlay
+    this.dropdownOverlayRef.attach(dropdownPortal);
+
+    // Marcar como abierto para el template
+    this.isOpen = true;
+
+    // Cargar notificaciones
+    this.loadNotifications();
+
+    // Suscribirse a clicks en el backdrop para cerrar
+    const backdropSub = this.dropdownOverlayRef.backdropClick().subscribe(() => {
+      this.closeDropdown();
+    });
+
+    this.subscriptions.push(backdropSub);
   }
 
   /**
@@ -158,23 +266,74 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
    * @public
    */
   closeDropdown(): void {
-    this.isOpen = false;
+    if (this.dropdownOverlayRef) {
+      this.dropdownOverlayRef.dispose();
+      this.dropdownOverlayRef = null;
+      this.isOpen = false;
+    }
   }
 
   /**
-   * Abre el modal con los detalles de una notificación.
+   * Abre el modal con los detalles de una notificación usando CDK Overlay.
    * 
    * @description
-   * - Establece la notificación seleccionada
+   * - Cierra el dropdown primero para evitar superposición
+   * - Crea un overlay centrado globalmente usando CDK
+   * - Renderiza el modal usando ComponentPortal
+   * - Configura backdrop para cerrar al hacer clic fuera
    * - Marca automáticamente como leída si no lo está
-   * - No cierra el dropdown (corregido)
    * 
    * @param {DbNotification} notification - Notificación a mostrar en modal
    * @returns {void}
    * @public
    */
   openNotificationModal(notification: DbNotification): void {
-    this.selectedNotification = notification;
+    // Cerrar dropdown para que su backdrop desaparezca
+    this.isOpen = false;
+    
+    // Si ya hay un modal abierto, cerrarlo primero
+    if (this.modalOverlayRef) {
+      this.modalOverlayRef.dispose();
+    }
+    
+    // Crear overlay centrado globalmente
+    const positionStrategy = this.overlay.position()
+      .global()
+      .centerHorizontally()
+      .centerVertically();
+    
+    this.modalOverlayRef = this.overlay.create({
+      hasBackdrop: true,
+      backdropClass: 'cdk-overlay-dark-backdrop',
+      panelClass: 'notification-modal-overlay',
+      positionStrategy,
+      scrollStrategy: this.overlay.scrollStrategies.block()
+    });
+    
+    // Crear portal del componente modal
+    const modalPortal = new ComponentPortal(NotificationModalComponent, this.viewContainerRef);
+    const modalRef = this.modalOverlayRef.attach(modalPortal);
+    
+    // Pasar datos al componente modal
+    modalRef.instance.notification = notification;
+    
+    // Suscribirse al evento de cerrar
+    const closeSubscription = modalRef.instance.closeModalEvent.subscribe(() => {
+      this.closeNotificationModal();
+    });
+    
+    // Suscribirse al evento de marcar como leída
+    const markAsReadSubscription = modalRef.instance.markAsReadEvent.subscribe((notif: DbNotification) => {
+      this.markAsRead(notif);
+    });
+    
+    // Cerrar al hacer clic en el backdrop
+    const backdropSubscription = this.modalOverlayRef.backdropClick().subscribe(() => {
+      this.closeNotificationModal();
+    });
+    
+    // Guardar suscripciones para limpiar después
+    this.subscriptions.push(closeSubscription, markAsReadSubscription, backdropSubscription);
     
     // Marcar como leída si no lo está
     if (!notification.leida) {
@@ -183,13 +342,18 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Cierra el modal de detalles de notificación.
+   * Cierra el modal de detalles de notificación y limpia el overlay.
    * 
    * @returns {void}
    * @public
    */
   closeNotificationModal(): void {
     this.selectedNotification = null;
+    
+    if (this.modalOverlayRef) {
+      this.modalOverlayRef.dispose();
+      this.modalOverlayRef = null;
+    }
   }
 
   /**
@@ -334,23 +498,4 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
     return date.toLocaleDateString();
   }
 
-  /**
-   * @deprecated NO SE USA - Función comentada para posible eliminación futura
-   * 
-   * Marca una notificación como leída y cierra el modal.
-   * 
-   * @description
-   * Esta función no se está utilizando en el HTML del componente.
-   * Se mantiene comentada en caso de necesidad futura.
-   * 
-   * @param {DbNotification} notification - Notificación a marcar y cerrar
-   * @returns {void}
-   * @private
-   */
-  /*
-  markAsReadAndClose(notification: DbNotification): void {
-    this.markAsRead(notification);
-    this.closeNotificationModal();
-  }
-  */
 }

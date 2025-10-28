@@ -716,3 +716,50 @@ html {
   33% { transform: translateY(-8px) rotate(2deg); }
   66% { transform: translateY(-4px) rotate(-1deg); }
 }
+
+/* ============================================
+   Angular CDK Overlay Styles
+   ============================================ */
+
+/* Backdrop oscuro para modales CDK */
+.cdk-overlay-dark-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Backdrop transparente para dropdowns CDK */
+.cdk-overlay-transparent-backdrop {
+  background: transparent;
+}
+
+/* Container del modal de notificaciones */
+.notification-modal-overlay {
+  /* El modal ya tiene sus propios estilos, solo aseguramos el z-index */
+  z-index: 9999;
+}
+
+/* Container del dropdown de notificaciones */
+.dropdown-overlay {
+  /* El dropdown ya tiene sus propios estilos, solo aseguramos el z-index */
+  z-index: 9999;
+}
+
+/* Overlay global container */
+.cdk-overlay-container {
+  /* Asegurar que el overlay container esté en z-index alto */
+  z-index: 9999;
+}
+
+/* Animaciones para overlays */
+.cdk-overlay-pane {
+  /* Opcional: añadir animación de entrada */
+  animation: overlayFadeIn 0.2s ease-out;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
