@@ -1,18 +1,29 @@
+# Dependencies
 node_modules/
+
+# Build outputs
 dist/
 .angular/
+build/
+
+# IDE
 .vscode/launch.json
 .vscode/tasks.json
 .vscode/extensions.json
+.idea/
+
+# Logs
 *.log
+
+# Environment files
 .env.local
 .env.*.local
+
+# OS files
 .DS_Store
 *.swp
 *.swo
+
+# Coverage
 .cache/
-build/
 coverage/
-.idea/
-frontend/con
-con
