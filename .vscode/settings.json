@@ -1,0 +1,39 @@
+{
+  "search.exclude": {
+    "node_modules": true,
+    ".angular": true,
+    "dist": true,
+    "**/*.log": true,
+    "**/.git": true,
+    "**/.DS_Store": true
+  },
+  "files.exclude": {
+    "node_modules": true,
+    ".angular": true,
+    "dist": true,
+    "**/.git": true,
+    "**/*.swp": true,
+    "**/*.log": true,
+    "**/.DS_Store": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules": true,
+    "**/.angular": true,
+    "**/dist": true,
+    "**/.git": true,
+    "**/*.log": true,
+    "**/package-lock.json": true
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.preferredLocation": "ui",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": true,
+    "source.organizeImports": true
+  },
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true
+}
