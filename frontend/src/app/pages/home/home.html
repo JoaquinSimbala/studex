@@ -150,7 +150,33 @@
       </div>
 
       <!-- Grid de Proyectos Destacados usando ProjectCard -->
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      
+      <!-- Estado de carga -->
+      <div *ngIf="isLoading" class="text-center py-16">
+        <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-studex-600 mx-auto mb-6"></div>
+        <p class="text-studex-700 text-lg font-medium">Cargando proyectos destacados...</p>
+      </div>
+
+      <!-- Estado vacío -->
+      <div *ngIf="!isLoading && featuredProjects.length === 0" class="text-center py-16">
+        <div class="w-20 h-20 bg-studex-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-10 h-10 text-studex-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+            </path>
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-studex-900 mb-3">No hay proyectos destacados disponibles</h3>
+        <p class="text-studex-600 text-lg mb-6">Aún no hay proyectos publicados en la plataforma.</p>
+        <button 
+          (click)="viewAllProjects()"
+          class="studex-btn primary modern-button">
+          Explorar Todos los Proyectos
+        </button>
+      </div>
+
+      <!-- Grid de proyectos -->
+      <div *ngIf="!isLoading && featuredProjects.length > 0" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         <app-project-card
           *ngFor="let project of featuredProjects; trackBy: trackByProjectId; let i = index"
           [project]="project"
@@ -163,7 +189,7 @@
       </div>
 
       <!-- Botón para ver más proyectos -->
-      <div class="text-center mt-16 slide-in-up">
+      <div *ngIf="!isLoading && featuredProjects.length > 0" class="text-center mt-16 slide-in-up">
         <button 
           (click)="loadMoreProjects()"
           class="studex-btn primary text-lg px-10 py-4 modern-button font-bold transform hover:scale-105 transition-all duration-300">

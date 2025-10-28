@@ -131,14 +131,14 @@ export class Home implements OnInit {
         console.log('✅ Proyectos destacados cargados desde BD:', this.featuredProjects.length);
         console.log('📚 Proyectos transformados:', this.featuredProjects);
       } else {
-        console.warn('⚠️ Respuesta de API vacía o incorrecta, usando datos mock');
-        this.featuredProjects = this.getMockProjects();
+        console.warn('⚠️ No hay proyectos destacados disponibles en la BD');
+        this.featuredProjects = [];
       }
     } catch (error) {
       console.error('❌ Error cargando proyectos destacados:', error);
-      // Datos mock para desarrollo si falla la API
-      this.featuredProjects = this.getMockProjects();
-      console.log('🔄 Usando datos mock como fallback');
+      // No usar datos mock - dejar vacío si falla la API
+      this.featuredProjects = [];
+      console.log('⚠️ No se pudieron cargar proyectos destacados de la BD');
     } finally {
       this.isLoading = false;
     }
@@ -176,86 +176,6 @@ export class Home implements OnInit {
         salesCount: projectData.seller.salesCount || projectData.seller.totalVentas || 0
       }
     };
-  }
-
-  /**
-   * Obtiene datos mock para desarrollo
-   */
-  private getMockProjects(): ProjectCard[] {
-    return [
-      {
-        id: 1,
-        title: 'Sistema de Gestión de Inventarios con Laravel y Vue.js',
-        description: 'Sistema completo de gestión de inventarios para empresas medianas, desarrollado con Laravel como backend y Vue.js para el frontend. Incluye módulos de ventas, compras, reportes y dashboard administrativo con gráficos interactivos.',
-        price: 89,
-        type: 'SOFTWARE',
-        university: 'Universidad Nacional de Ingeniería (UNI)',
-        category: 'Software',
-        year: 2024,
-        rating: 4.9,
-        views: 156,
-        mainImage: {
-          fileUrl: 'https://via.placeholder.com/400x300/10B981/ffffff?text=Dashboard+Inventarios',
-          fileName: 'dashboard-inventarios.jpg'
-        },
-        isFavorite: false,
-        seller: {
-          id: 1,
-          name: 'Carlos Mendoza Silva',
-          avatar: 'https://ui-avatars.com/api/?name=Carlos+Mendoza&background=10B981&color=ffffff&size=40',
-          rating: 4.9,
-          salesCount: 23
-        }
-      },
-      {
-        id: 2,
-        title: 'Análisis de Mercado - Marketing Digital para Startups',
-        description: 'Investigación completa sobre estrategias de marketing digital para startups peruanas. Este estudio analiza las tendencias actuales del mercado digital en Perú y proporciona un marco estratégico para empresas emergentes.',
-        price: 45,
-        type: 'INVESTIGACION',
-        university: 'Pontificia Universidad Católica del Perú (PUCP)',
-        category: 'Investigación',
-        year: 2024,
-        rating: 4.7,
-        views: 89,
-        mainImage: {
-          fileUrl: 'https://via.placeholder.com/400x300/3B82F6/ffffff?text=Marketing+Research',
-          fileName: 'marketing-research.jpg'
-        },
-        isFavorite: false,
-        seller: {
-          id: 2,
-          name: 'María González Vargas',
-          avatar: 'https://ui-avatars.com/api/?name=Maria+Gonzalez&background=3B82F6&color=ffffff&size=40',
-          rating: 4.7,
-          salesCount: 18
-        }
-      },
-      {
-        id: 3,
-        title: 'Aplicación Móvil de Delivery con React Native',
-        description: 'Aplicación móvil completa para servicio de delivery de comida, desarrollada con React Native. El sistema incluye tres aplicaciones: clientes, restaurantes y repartidores, todas conectadas a un backend robusto con geolocalización en tiempo real.',
-        price: 120,
-        type: 'SOFTWARE',
-        university: 'Universidad de Lima',
-        category: 'Software',
-        year: 2024,
-        rating: 4.8,
-        views: 234,
-        mainImage: {
-          fileUrl: 'https://via.placeholder.com/400x300/8B5CF6/ffffff?text=Delivery+App',
-          fileName: 'delivery-app.jpg'
-        },
-        isFavorite: false,
-        seller: {
-          id: 3,
-          name: 'Diego Ramírez Castillo',
-          avatar: 'https://ui-avatars.com/api/?name=Diego+Ramirez&background=8B5CF6&color=ffffff&size=40',
-          rating: 4.8,
-          salesCount: 31
-        }
-      }
-    ];
   }
 
   /**
