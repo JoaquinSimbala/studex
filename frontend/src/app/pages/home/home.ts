@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -34,6 +34,9 @@ interface CategoryDB {
   styleUrl: './home.scss'
 })
 export class Home implements OnInit {
+
+  // Referencia al componente Navbar
+  @ViewChild(Navbar) navbar!: Navbar;
 
   // Usuario actual
   currentUser: User | null = null;
@@ -214,6 +217,19 @@ export class Home implements OnInit {
     this.router.navigate(['/explorar'], { 
       queryParams: { category: category.nombre }
     });
+  }
+
+  /**
+   * Abre el modal de categorías del navbar
+   * Llama al método openCategoriesModal() del componente Navbar
+   */
+  openCategoriesModal(): void {
+    if (this.navbar) {
+      this.navbar.openCategoriesModal();
+    } else {
+      console.warn('⚠️ Navbar no está disponible, navegando a /explorar como fallback');
+      this.router.navigate(['/explorar']);
+    }
   }
 
   /**
