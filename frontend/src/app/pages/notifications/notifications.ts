@@ -4,6 +4,7 @@ import { Overlay, OverlayRef, OverlayModule } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { NotificationService, DbNotification } from '../../services/notification.service';
 import { NotificationModalComponent } from '../../components/notification-modal/notification-modal.component';
+import { BackButtonComponent } from '../../components/back-button/back-button.component';
 import { Subscription } from 'rxjs';
 
 /**
@@ -35,7 +36,7 @@ import { Subscription } from 'rxjs';
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule, OverlayModule],
+  imports: [CommonModule, OverlayModule, BackButtonComponent],
   templateUrl: './notifications.html',
   styleUrls: ['./notifications.scss']
 })
