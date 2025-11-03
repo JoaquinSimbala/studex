@@ -8,19 +8,6 @@ import { FavoritesService } from '../../services/favorites.service';
 import { Navbar } from '../../components/navbar/navbar';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
 
-// ========================================
-// ❌ INTERFAZ NO UTILIZADA - Comentada para referencia futura
-// ========================================
-// Esta interfaz fue diseñada para filtros rápidos pero no se implementó en el template
-// Se mantiene comentada por si se decide implementar en el futuro
-//
-// interface QuickFilter {
-//   id: string;
-//   name: string;
-//   type: string;
-//   icon?: string;
-// }
-
 /**
  * Interfaz para categorías desde la base de datos
  * 
@@ -359,17 +346,6 @@ export class Home implements OnInit {
     });
   }
 
-  // ========================================
-  // ❌ MÉTODO NO UTILIZADO - Comentado para referencia futura
-  // ========================================
-  // Este método fue diseñado para aplicar filtros rápidos pero no se usa en el template actual
-  //
-  // applyQuickFilter(filter: QuickFilter): void {
-  //   this.router.navigate(['/explorar'], { 
-  //     queryParams: { [filter.type]: filter.id }
-  //   });
-  // }
-
   /**
    * Navega a /explorar con una categoría seleccionada como filtro
    * 
@@ -408,28 +384,6 @@ export class Home implements OnInit {
     }
   }
 
-  // ========================================
-  // ✅ MÉTODOS ELIMINADOS - Ya no son necesarios
-  // ========================================
-  // ProjectCardComponent ahora maneja toda la navegación y favoritos internamente.
-  // Estos métodos eran duplicados e innecesarios:
-  //
-  // viewProject(project: ProjectCard): void {
-  //   if (this.currentUser && project.seller.id === parseInt(this.currentUser.id)) {
-  //     this.router.navigate(['/vendedor/proyecto', project.id]);
-  //   } else {
-  //     this.router.navigate(['/proyecto', project.id]);
-  //   }
-  // }
-  //
-  // handleFavoriteClick(project: ProjectCard): void {
-  //   if (!this.currentUser) {
-  //     this.router.navigate(['/login']);
-  //     return;
-  //   }
-  //   console.log('Favorito toggled para proyecto:', project.id);
-  // }
-
   /**
    * Navega a la página de exploración de todos los proyectos
    * 
@@ -453,27 +407,4 @@ export class Home implements OnInit {
     this.router.navigate(['/explorar']);
   }
 
-  // ========================================
-  // ❌ MÉTODOS NO UTILIZADOS - Comentados para referencia futura
-  // ========================================
-  // ProjectCardComponent maneja internamente el formateo de tipos y errores de imagen
-  // Estos métodos no se usan en el template actual de home
-  //
-  // getProjectTypeLabel(type: string): string {
-  //   const typeLabels: { [key: string]: string } = {
-  //     'SOFTWARE': 'Software',
-  //     'INVESTIGACION': 'Investigación',
-  //     'PROYECTO_FINAL': 'Proyecto Final',
-  //     'TEXTO_ARGUMENTATIVO': 'Ensayo',
-  //     'PRESENTACION': 'Presentación',
-  //     'ANALISIS_CASO': 'Análisis de Caso',
-  //     'OTRO': 'Otro'
-  //   };
-  //   return typeLabels[type] || type;
-  // }
-  //
-  // onImageError(event: any): void {
-  //   console.log('Error cargando imagen, usando placeholder');
-  //   event.target.src = 'https://via.placeholder.com/400x300/e5e7eb/6b7280?text=Sin+Imagen';
-  // }
 }
