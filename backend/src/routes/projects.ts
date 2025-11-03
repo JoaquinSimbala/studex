@@ -319,29 +319,27 @@ router.get('/explore', async (req: Request, res: Response): Promise<void> => {
       featured: project.destacado
     }));
 
-    // Obtener estadísticas para la página
+    // Obtener estadísticas basadas en los filtros aplicados
+    // IMPORTANTE: Usar el mismo whereClause para que las estadísticas reflejen los resultados filtrados
     const stats = await prisma.project.aggregate({
-      where: {
-        OR: [
-          { estado: 'PUBLICADO' },
-          { estado: 'DESTACADO' }
-        ]
-      },
+      where: whereClause,
       _count: true
     });
 
     const universities = await prisma.project.findMany({
-      where: {
-        OR: [
-          { estado: 'PUBLICADO' },
-          { estado: 'DESTACADO' }
-        ]
-      },
+      where: whereClause,
       select: { universidad: true },
       distinct: ['universidad']
     });
 
-    const categories = await prisma.category.count();
+    // Contar categorías únicas en los proyectos filtrados
+    const projectsWithCategories = await prisma.project.findMany({
+      where: whereClause,
+      select: { categoriaId: true },
+      distinct: ['categoriaId']
+    });
+    
+    const categoriesCount = projectsWithCategories.length;
 
     res.json({
       success: true,
@@ -357,7 +355,7 @@ router.get('/explore', async (req: Request, res: Response): Promise<void> => {
       stats: {
         total: stats._count,
         universities: universities.length,
-        categories: categories
+        categories: categoriesCount
       }
     });
 

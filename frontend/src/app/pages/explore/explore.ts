@@ -7,30 +7,92 @@ import { AuthService, User } from '../../services/auth.service';
 import { Navbar } from '../../components/navbar/navbar';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
 
+/**
+ * Interfaz para opciones de filtrado de proyectos
+ * 
+ * @description
+ * Define todos los criterios de filtrado disponibles en la página de exploración.
+ * Se utiliza para construir los query params que se envían a la API.
+ */
 interface FilterOptions {
+  /** Tipo de proyecto (SOFTWARE, INVESTIGACION, PROYECTO_FINAL, etc.) */
   type: string;
+  /** Categoría del proyecto (Software, Investigación, Ingeniería, etc.) */
   category: string;
+  /** Universidad del proyecto (texto libre) */
   university: string;
+  /** Materia o carrera relacionada al proyecto */
   materia: string;
+  /** Precio mínimo del proyecto (null = sin límite) */
   minPrice: number | null;
+  /** Precio máximo del proyecto (null = sin límite) */
   maxPrice: number | null;
+  /** Criterio de ordenamiento (newest, oldest, price_asc, price_desc, rating, popular) */
   orderBy: string;
 }
 
+/**
+ * Interfaz para estadísticas de proyectos
+ * 
+ * @description
+ * Contiene las estadísticas generales mostradas en el hero section.
+ * Se actualiza con cada respuesta de la API.
+ */
 interface ProjectStats {
+  /** Total de proyectos que cumplen los criterios actuales */
   total: number;
+  /** Número de universidades representadas */
   universities: number;
+  /** Número de categorías disponibles */
   categories: number;
 }
 
+/**
+ * Interfaz para categorías desde la base de datos
+ * 
+ * @description
+ * Define la estructura de las categorías obtenidas desde el backend.
+ * Se utiliza para poblar el dropdown de filtros de categoría.
+ */
 interface Category {
+  /** Identificador único de la categoría */
   id: number;
+  /** Nombre de la categoría */
   nombre: string;
+  /** Descripción opcional de la categoría */
   descripcion?: string;
+  /** Emoji o icono de la categoría */
   icono?: string;
+  /** Color hexadecimal de la categoría */
   colorHex: string;
 }
 
+/**
+ * Componente de la página de exploración de proyectos de STUDEX
+ * 
+ * @description
+ * Gestiona la página principal de exploración donde los usuarios pueden:
+ * - Buscar proyectos por texto libre
+ * - Filtrar por tipo, categoría, universidad, materia y precio
+ * - Ordenar resultados por diferentes criterios
+ * - Ver estadísticas generales de la plataforma
+ * - Navegar mediante paginación infinita (Load More)
+ * 
+ * El componente se integra con:
+ * - ApiService para obtener proyectos y categorías
+ * - AuthService para obtener el usuario actual
+ * - ProjectCardComponent para mostrar cada proyecto
+ * - ActivatedRoute para pre-filtrar desde parámetros de URL
+ * 
+ * @example
+ * ```html
+ * <!-- Navegación directa -->
+ * <a routerLink="/explorar">Explorar</a>
+ * 
+ * <!-- Con parámetros de búsqueda -->
+ * <a [routerLink]="['/explorar']" [queryParams]="{q: 'tesis', category: 'Software'}">Buscar</a>
+ * ```
+ */
 @Component({
   selector: 'app-explore',
   standalone: true,
@@ -39,25 +101,111 @@ interface Category {
   styleUrl: './explore.scss'
 })
 export class ExploreComponent implements OnInit {
+  
+  /**
+   * Usuario actualmente autenticado en la plataforma
+   * 
+   * @description
+   * Se obtiene del AuthService al inicializar el componente.
+   * Null si el usuario no está autenticado.
+   */
   currentUser: User | null = null;
+
+  /**
+   * Array de proyectos mostrados en la página
+   * 
+   * @description
+   * Se carga desde la API con loadProjects().
+   * Se concatena con nuevos proyectos al cargar más (paginación).
+   */
   projects: ProjectCard[] = [];
+
+  /**
+   * Estadísticas generales de la plataforma
+   * 
+   * @description
+   * Se muestra en el hero section con tres métricas:
+   * - Total de proyectos encontrados
+   * - Número de universidades
+   * - Número de categorías
+   */
   stats: ProjectStats = {
     total: 0,
     universities: 0,
     categories: 0
   };
   
+  /**
+   * Indica si se están cargando los proyectos inicialmente
+   * 
+   * @description
+   * True durante la primera carga de proyectos.
+   * False al completar o cuando se usa paginación (Load More).
+   */
   isLoading = true;
+
+  /**
+   * Mensaje de error si falla la carga de proyectos
+   * 
+   * @description
+   * Null si no hay errores.
+   * String con el mensaje de error si falla la petición a la API.
+   */
   error: string | null = null;
+
+  /**
+   * Texto de búsqueda ingresado por el usuario
+   * 
+   * @description
+   * Se vincula con [(ngModel)] en el input de búsqueda.
+   * Se puede pre-cargar desde queryParams 'q'.
+   */
   searchQuery = '';
   
-  // Paginación
+  /**
+   * Número de página actual para paginación
+   * 
+   * @description
+   * Inicia en 1 y se incrementa al hacer "Load More".
+   * Se reinicia a 1 al aplicar filtros o cambiar búsqueda.
+   */
   currentPage = 1;
+
+  /**
+   * Número de proyectos a cargar por página
+   * 
+   * @description
+   * Define el tamaño del lote en cada petición a la API.
+   * Valor fijo de 12 proyectos por página.
+   */
   pageSize = 12;
+
+  /**
+   * Indica si hay más proyectos disponibles para cargar
+   * 
+   * @description
+   * True si la última respuesta de la API devolvió pageSize proyectos.
+   * False si devolvió menos, indicando que no hay más páginas.
+   * Se usa para mostrar/ocultar el botón "Load More".
+   */
   hasMoreProjects = true;
+
+  /**
+   * Indica si se están cargando más proyectos (paginación)
+   * 
+   * @description
+   * True durante la petición de "Load More".
+   * Controla el spinner en el botón de paginación.
+   */
   isLoadingMore = false;
   
-  // Filtros
+  /**
+   * Objeto con todos los filtros aplicados actualmente
+   * 
+   * @description
+   * Se sincronizan con los inputs del template mediante [(ngModel)].
+   * Al cambiar cualquier filtro, se llama a applyFilters().
+   */
   filters: FilterOptions = {
     type: '',
     category: '',
@@ -68,21 +216,44 @@ export class ExploreComponent implements OnInit {
     orderBy: 'newest'
   };
 
-  // Opciones para los dropdowns
-  projectTypes = [
-    { value: '', label: 'Todos' },
-    { value: 'SOFTWARE', label: 'Software' },
-    { value: 'INVESTIGACION', label: 'Investigación' },
-    { value: 'PROYECTO_FINAL', label: 'Proyecto Final' },
-    { value: 'TEXTO_ARGUMENTATIVO', label: 'Ensayo' },
-    { value: 'PRESENTACION', label: 'Presentación' },
-    { value: 'ANALISIS_CASO', label: 'Análisis de Caso' },
-    { value: 'OTRO', label: 'Otro' }
+  /**
+   * Array de opciones para el dropdown de tipo de proyecto
+   * 
+   * @description
+   * Se carga dinámicamente desde la API mediante loadProjectTypes().
+   * Contiene todos los tipos de proyecto disponibles en la base de datos.
+   * Se usa con *ngFor en el template.
+   */
+  projectTypes: Array<{ value: string; label: string }> = [
+    { value: '', label: 'Todos' }
   ];
 
+  /**
+   * Array de categorías cargadas desde la base de datos
+   * 
+   * @description
+   * Se obtiene de la API mediante loadCategories().
+   * Se usa para poblar categoriesOptions.
+   */
   categories: Category[] = [];
+
+  /**
+   * Array de opciones para el dropdown de categorías
+   * 
+   * @description
+   * Inicia con "Todas las categorías" y se complementa con las
+   * categorías obtenidas de la API.
+   */
   categoriesOptions = [{ value: '', label: 'Todas las categorías' }];
 
+  /**
+   * Array de opciones para el dropdown de ordenamiento
+   * 
+   * @description
+   * Define los criterios disponibles para ordenar los resultados.
+   * Los valores corresponden con la lógica implementada en el backend.
+   * Estos valores son estándar y no requieren cargarse desde la API.
+   */
   orderOptions = [
     { value: 'newest', label: 'Más recientes' },
     { value: 'oldest', label: 'Más antiguos' },
@@ -92,6 +263,14 @@ export class ExploreComponent implements OnInit {
     { value: 'popular', label: 'Más populares' }
   ];
 
+  /**
+   * Constructor del componente ExploreComponent
+   * 
+   * @param apiService - Servicio para realizar peticiones HTTP a la API
+   * @param authService - Servicio de autenticación de usuarios
+   * @param router - Router de Angular para navegación
+   * @param route - ActivatedRoute para acceder a queryParams
+   */
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
@@ -99,8 +278,25 @@ export class ExploreComponent implements OnInit {
     private route: ActivatedRoute
   ) {}
 
+  /**
+   * Hook de ciclo de vida que se ejecuta al inicializar el componente
+   * 
+   * @description
+   * Realiza las siguientes operaciones en orden:
+   * 1. Obtiene el usuario actual del AuthService
+   * 2. Carga los tipos de proyecto desde la API
+   * 3. Carga las categorías desde la API
+   * 4. Suscribe a queryParams para detectar navegación con parámetros
+   * 5. Pre-carga filtros si hay parámetros en la URL (q, category, etc.)
+   * 6. Carga los proyectos según los filtros aplicados
+   * 
+   * La suscripción a queryParams permite que el componente reaccione
+   * a cambios en la URL, facilitando la navegación desde otras páginas
+   * con búsquedas o filtros pre-aplicados.
+   */
   ngOnInit(): void {
     this.currentUser = this.authService.getCurrentUser();
+    this.loadProjectTypes();
     this.loadCategories();
     
     // Verificar si hay parámetros de consulta para pre-filtrar
@@ -122,7 +318,64 @@ export class ExploreComponent implements OnInit {
   }
 
   /**
-   * Carga las categorías desde la API
+   * Carga los tipos de proyecto disponibles desde la API
+   * 
+   * @description
+   * Obtiene todos los tipos de proyecto desde el endpoint /projects/types.
+   * Los tipos vienen organizados por categorías desde el backend.
+   * 
+   * Si la petición es exitosa, transforma los tipos a formato
+   * { value, label } para poblar el dropdown de filtros.
+   * 
+   * Si falla, mantiene solo la opción "Todos" para no romper
+   * la experiencia del usuario.
+   * 
+   * @private
+   * @async
+   * @returns Promise<void>
+   */
+  async loadProjectTypes(): Promise<void> {
+    try {
+      console.log('📋 Cargando tipos de proyecto desde API...');
+      const response = await this.apiService.get('/projects/types').toPromise();
+      
+      if (response?.success && response.data && Array.isArray(response.data)) {
+        // Transformar los tipos de proyecto al formato esperado
+        const types = (response.data as any[]).map((type: any) => ({
+          value: type.value,
+          label: type.label
+        }));
+        
+        this.projectTypes = [
+          { value: '', label: 'Todos' },
+          ...types
+        ];
+        
+        console.log('✅ Tipos de proyecto cargados:', this.projectTypes.length - 1); // -1 para no contar "Todos"
+      }
+    } catch (error) {
+      console.error('❌ Error cargando tipos de proyecto:', error);
+      // Mantener solo "Todos" si falla la carga
+      this.projectTypes = [{ value: '', label: 'Todos' }];
+    }
+  }
+
+  /**
+   * Carga las categorías disponibles desde la API
+   * 
+   * @description
+   * Obtiene todas las categorías de la base de datos mediante
+   * el endpoint /projects/categories.
+   * 
+   * Si la petición es exitosa, transforma las categorías a formato
+   * { value, label } para poblar el dropdown de filtros.
+   * 
+   * Si falla, usa categorías básicas como fallback para no romper
+   * la experiencia del usuario.
+   * 
+   * @private
+   * @async
+   * @returns Promise<void>
    */
   async loadCategories(): Promise<void> {
     try {
@@ -149,7 +402,27 @@ export class ExploreComponent implements OnInit {
   }
 
   /**
-   * Carga los proyectos según los filtros actuales
+   * Carga los proyectos desde la API según los filtros actuales
+   * 
+   * @description
+   * Función principal de carga de proyectos que:
+   * 1. Construye los query params desde searchQuery y filters
+   * 2. Incluye parámetros de paginación (page, limit)
+   * 3. Realiza la petición HTTP a /projects/explore
+   * 4. Transforma la respuesta en formato ProjectCard[]
+   * 5. Maneja paginación (concatena o reemplaza proyectos)
+   * 6. Actualiza estadísticas si vienen en la respuesta
+   * 7. Controla hasMoreProjects para el botón "Load More"
+   * 
+   * Si falla la petición y es la primera página, carga datos mock
+   * como fallback para desarrollo.
+   * 
+   * Controla los estados de carga mediante isLoading (primera página)
+   * e isLoadingMore (páginas siguientes).
+   * 
+   * @private
+   * @async
+   * @returns Promise<void>
    */
   async loadProjects(): Promise<void> {
     try {
@@ -213,7 +486,15 @@ export class ExploreComponent implements OnInit {
   }
 
   /**
-   * Aplica los filtros seleccionados
+   * Aplica los filtros seleccionados y recarga los proyectos
+   * 
+   * @description
+   * Se llama automáticamente cuando el usuario cambia cualquier filtro:
+   * - Select de tipo, categoría u ordenamiento (evento change)
+   * - Inputs de universidad, materia o precio (evento keyup)
+   * 
+   * Reinicia la paginación a página 1 y resetea hasMoreProjects.
+   * Luego llama a loadProjects() para obtener los resultados filtrados.
    */
   applyFilters(): void {
     // Reiniciar paginación al aplicar filtros
@@ -223,7 +504,22 @@ export class ExploreComponent implements OnInit {
   }
 
   /**
-   * Carga más proyectos (paginación)
+   * Carga la siguiente página de proyectos (paginación)
+   * 
+   * @description
+   * Se activa al hacer clic en el botón "Cargar Más Proyectos".
+   * 
+   * Verifica que:
+   * - Haya más proyectos disponibles (hasMoreProjects)
+   * - No se esté cargando actualmente (isLoadingMore)
+   * 
+   * Incrementa currentPage y llama a loadProjects() para concatenar
+   * nuevos proyectos al array existente.
+   * 
+   * Si falla la petición, revierte el incremento de página.
+   * 
+   * @async
+   * @returns Promise<void>
    */
   async loadMoreProjects(): Promise<void> {
     if (!this.hasMoreProjects || this.isLoadingMore) {
@@ -243,8 +539,27 @@ export class ExploreComponent implements OnInit {
     }
   }
 
+  // ========================================
+  // ⚠️ MÉTODO DE FALLBACK - Solo para desarrollo
+  // ========================================
+  // Este método proporciona datos mock cuando falla la API.
+  // No debería usarse en producción. Se mantiene solo como
+  // medida de seguridad durante el desarrollo.
+  //
   /**
-   * Datos mock como fallback
+   * Carga datos mock como fallback cuando falla la API
+   * 
+   * @description
+   * ⚠️ SOLO PARA DESARROLLO - No usar en producción
+   * 
+   * Proporciona un proyecto de ejemplo cuando la petición a la API falla.
+   * Esto evita que la página quede completamente vacía durante el desarrollo
+   * si el backend no está disponible.
+   * 
+   * En producción, debería mostrarse el estado de error sin datos mock.
+   * 
+   * @private
+   * @deprecated Solo para desarrollo
    */
   private loadMockData(): void {
     this.projects = [
@@ -283,14 +598,33 @@ export class ExploreComponent implements OnInit {
   }
 
   /**
-   * Maneja la búsqueda
+   * Ejecuta la búsqueda aplicando los filtros actuales
+   * 
+   * @description
+   * Se activa al:
+   * - Presionar Enter en el input de búsqueda
+   * - Hacer clic en el botón de búsqueda del hero section
+   * 
+   * Internamente llama a applyFilters() que reinicia la paginación
+   * y recarga los proyectos con el término de búsqueda actual.
    */
   onSearch(): void {
     this.applyFilters();
   }
 
   /**
-   * Limpia todos los filtros
+   * Limpia todos los filtros y búsqueda, reseteando a estado inicial
+   * 
+   * @description
+   * Se activa al hacer clic en el botón "Limpiar Filtros".
+   * 
+   * Resetea:
+   * - Todos los campos de filters a valores por defecto
+   * - searchQuery a string vacío
+   * - orderBy a 'newest' (más recientes)
+   * 
+   * Luego recarga los proyectos sin filtros aplicados,
+   * mostrando todos los proyectos disponibles ordenados por fecha.
    */
   clearFilters(): void {
     this.filters = {
@@ -307,10 +641,11 @@ export class ExploreComponent implements OnInit {
   }
 
   // ========================================
-  // ✅ MÉTODOS ELIMINADOS - Ya no son necesarios
+  // ❌ MÉTODOS NO UTILIZADOS - Comentados
   // ========================================
-  // ProjectCardComponent ahora maneja toda la navegación y favoritos internamente
-  // Estos métodos eran duplicados e innecesarios:
+  // ProjectCardComponent ahora maneja toda la navegación y favoritos internamente.
+  // Estos métodos eran duplicados e innecesarios, ya que el componente hijo
+  // gestiona estos eventos de forma independiente.
   //
   // viewProject(project: ProjectCard): void {
   //   if (this.currentUser && project.seller.id === parseInt(this.currentUser.id)) {
@@ -330,17 +665,31 @@ export class ExploreComponent implements OnInit {
   // }
 
   /**
-   * Track by function para ngFor
+   * Función trackBy para optimizar el renderizado de la lista de proyectos
+   * 
+   * @description
+   * Angular usa esta función para determinar qué elementos de la lista han cambiado,
+   * mejorando el rendimiento al re-renderizar solo los elementos modificados.
+   * 
+   * Esencial para listas grandes con paginación, evita re-renderizar todos
+   * los proyectos al cargar más páginas.
+   * 
+   * @param index - Índice del elemento en el array
+   * @param project - Objeto del proyecto
+   * @returns ID único del proyecto para tracking
    */
   trackByProjectId(index: number, project: ProjectCard): number {
     return project.id;
   }
 
-  /**
-   * Obtiene la etiqueta del tipo de proyecto
-   */
-  getProjectTypeLabel(type: string): string {
-    const typeObj = this.projectTypes.find(t => t.value === type);
-    return typeObj ? typeObj.label : type;
-  }
+  // ========================================
+  // ❌ MÉTODO NO UTILIZADO EN EL TEMPLATE
+  // ========================================
+  // Este método no se usa en explore.html ni en ningún componente hijo.
+  // El tipo de proyecto se muestra directamente o se formatea en ProjectCardComponent.
+  //
+  // getProjectTypeLabel(type: string): string {
+  //   const typeObj = this.projectTypes.find(t => t.value === type);
+  //   return typeObj ? typeObj.label : type;
+  // }
 }
