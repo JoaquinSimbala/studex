@@ -104,29 +104,24 @@ interface ProjectFile {
                       (click)="addToCart()"
                       [disabled]="isAddingToCart"
                       [class]="isInCart ? 
-                        'px-4 py-2 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-all flex items-center space-x-2' :
-                        'px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all flex items-center space-x-2'">
-                <span *ngIf="!isAddingToCart">{{ isInCart ? '🗑️' : '🛒' }}</span>
-                <span *ngIf="isAddingToCart" class="animate-spin">⏳</span>
-                <span>{{ 
-                  isAddingToCart ? 'Procesando...' :
-                  isInCart ? 'Remover del carrito' : 
-                  'Agregar al carrito' 
-                }}</span>
+                        'px-6 py-3 bg-white border-2 border-red-500 text-red-600 rounded-lg font-semibold hover:bg-red-50 transition-all' :
+                        'px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all'">
+                <span *ngIf="isAddingToCart">Procesando...</span>
+                <span *ngIf="!isAddingToCart">{{ isInCart ? 'Remover del carrito' : 'Agregar al carrito' }}</span>
               </button>
 
               <!-- Botón de compra (solo vista pública) -->
               <button *ngIf="showPurchasePrompt()" 
                       (click)="purchaseProject()"
-                      class="px-6 py-3 bg-gradient-to-r from-studex-600 to-studex-700 text-white rounded-xl font-bold text-lg hover:from-studex-700 hover:to-studex-800 transition-all transform hover:scale-105 shadow-lg">
-                💳 Comprar por S/ {{ project.price }}
+                      class="px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all">
+                Comprar por S/ {{ project.price }}
               </button>
               
               <!-- Mensaje de login requerido -->
               <button *ngIf="showLoginPrompt()" 
                       (click)="router.navigate(['/login'])"
-                      class="px-6 py-3 bg-gray-600 text-white rounded-xl font-bold text-lg hover:bg-gray-700 transition-all transform hover:scale-105 shadow-lg">
-                🔐 Iniciar Sesión para Comprar
+                      class="px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all">
+                Iniciar Sesión para Comprar
               </button>
               
               <!-- Estado de acceso concedido -->
@@ -138,14 +133,8 @@ interface ProjectFile {
               <!-- Badge de estado (solo para propietarios) -->
               <span *ngIf="isOwnerView"
                     [class]="getStatusBadgeClass(project.status)"
-                    class="px-3 py-1 rounded-full text-sm font-semibold">
-                {{ getStatusText(project.status) }}
-              </span>
-              
-              <!-- Badge destacado -->
-              <span *ngIf="project.featured" 
-                    class="bg-yellow-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                ⭐ Destacado
+                    class="px-4 py-2 rounded-full text-2xl font-semibold shadow-md">
+                {{ getStatusIcon(project.status) }}
               </span>
             </div>
           </div>
@@ -157,14 +146,58 @@ interface ProjectFile {
             <div class="lg:col-span-2">
               <!-- Main Image -->
               <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-6">
-                <div class="h-80 bg-studex-100 relative">
-                  <img *ngIf="selectedImage" 
-                       [src]="selectedImage.fileUrl" 
-                       [alt]="selectedImage.fileName"
-                       class="w-full h-full object-contain">
+                <div class="relative h-80 bg-studex-100">
+                  <!-- Image Container with Zoom and Pan -->
+                  <div *ngIf="selectedImage" 
+                       class="w-full h-full overflow-hidden relative"
+                       [class.cursor-move]="imageZoom > 1"
+                       [class.cursor-zoom-in]="imageZoom === 1"
+                       (mousedown)="onImageMouseDown($event)"
+                       (mousemove)="onImageMouseMove($event)"
+                       (mouseup)="onImageMouseUp()"
+                       (mouseleave)="onImageMouseUp()"
+                       (wheel)="onImageWheel($event)">
+                    <img [src]="selectedImage.fileUrl" 
+                         [alt]="selectedImage.fileName"
+                         [style.transform]="'scale(' + imageZoom + ') translate(' + (imagePosition.x / imageZoom) + 'px, ' + (imagePosition.y / imageZoom) + 'px)'"
+                         class="w-full h-full object-contain select-none"
+                         [class.transition-transform]="!isDragging"
+                         [class.duration-200]="!isDragging"
+                         draggable="false">
+                  </div>
+                  
+                  <!-- Placeholder cuando no hay imagen -->
                   <div *ngIf="!selectedImage && project.images.length === 0" 
                        class="w-full h-full flex items-center justify-center">
                     <span class="text-6xl text-studex-300">📄</span>
+                  </div>
+                  
+                  <!-- Zoom Controls -->
+                  <div *ngIf="selectedImage" class="absolute top-4 right-4 flex flex-col gap-2 bg-white bg-opacity-90 rounded-lg p-2 shadow-lg">
+                    <button (click)="zoomIn()"
+                            [disabled]="imageZoom >= maxZoom"
+                            class="w-8 h-8 flex items-center justify-center rounded hover:bg-studex-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Acercar">
+                      <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path>
+                      </svg>
+                    </button>
+                    
+                    <button (click)="resetZoom()"
+                            [disabled]="imageZoom === 1"
+                            class="w-8 h-8 flex items-center justify-center rounded hover:bg-studex-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold text-studex-600"
+                            title="Restablecer">
+                      {{ (imageZoom * 100).toFixed(0) }}%
+                    </button>
+                    
+                    <button (click)="zoomOut()"
+                            [disabled]="imageZoom <= minZoom"
+                            class="w-8 h-8 flex items-center justify-center rounded hover:bg-studex-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Alejar">
+                      <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+                      </svg>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -254,10 +287,7 @@ interface ProjectFile {
                   <!-- Category -->
                   <div class="flex items-center justify-between">
                     <span class="text-studex-600">Categoría:</span>
-                    <div class="flex items-center">
-                      <span class="mr-2">{{ project.category.icono }}</span>
-                      <span class="font-medium">{{ project.category.nombre }}</span>
-                    </div>
+                    <span class="font-medium text-right">{{ project.category.nombre }}</span>
                   </div>
 
                   <!-- Type -->
@@ -368,21 +398,16 @@ interface ProjectFile {
                         (click)="addToCart()"
                         [disabled]="isAddingToCart"
                         [class]="isInCart ? 
-                          'px-6 py-3 bg-orange-600 text-white rounded-xl font-medium hover:bg-orange-700 transition-all flex items-center justify-center space-x-2' :
-                          'px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all flex items-center justify-center space-x-2'">
-                  <span *ngIf="!isAddingToCart">{{ isInCart ? '🗑️' : '🛒' }}</span>
-                  <span *ngIf="isAddingToCart" class="animate-spin">⏳</span>
-                  <span>{{ 
-                    isAddingToCart ? 'Procesando...' :
-                    isInCart ? 'Remover del carrito' : 
-                    'Agregar al carrito' 
-                  }}</span>
+                          'px-6 py-3 bg-white border-2 border-red-500 text-red-600 rounded-lg font-semibold hover:bg-red-50 transition-all' :
+                          'px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all'">
+                  <span *ngIf="isAddingToCart">Procesando...</span>
+                  <span *ngIf="!isAddingToCart">{{ isInCart ? 'Remover del carrito' : 'Agregar al carrito' }}</span>
                 </button>
                 
                 <!-- Botón de compra directa -->
                 <button (click)="purchaseProject()"
-                        class="px-8 py-3 bg-gradient-to-r from-studex-600 to-studex-700 text-white rounded-xl font-bold text-lg hover:from-studex-700 hover:to-studex-800 transition-all transform hover:scale-105 shadow-lg">
-                  💳 Comprar Ahora
+                        class="px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all">
+                  Comprar Ahora
                 </button>
               </div>
               
@@ -401,8 +426,8 @@ interface ProjectFile {
               <h3 class="text-lg font-semibold text-orange-800 mb-2">Inicia Sesión</h3>
               <p class="text-orange-700 mb-4">Debes iniciar sesión para comprar y acceder a este proyecto.</p>
               <button (click)="router.navigate(['/login'])"
-                      class="px-8 py-3 bg-gray-600 text-white rounded-xl font-bold text-lg hover:bg-gray-700 transition-all transform hover:scale-105 shadow-lg">
-                🔐 Iniciar Sesión
+                      class="px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all">
+                Iniciar Sesión
               </button>
             </div>
           </div>
@@ -426,6 +451,12 @@ interface ProjectFile {
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
+    .cursor-zoom-in {
+      cursor: zoom-in;
+    }
+    .cursor-move {
+      cursor: move;
+    }
   `]
 })
 export class ProjectDetailComponent implements OnInit {
@@ -435,6 +466,14 @@ export class ProjectDetailComponent implements OnInit {
   isLoading = true;
   error: string | null = null;
   downloadingFiles: Set<number> = new Set(); // Track downloading files
+  
+  // Zoom and pan controls
+  imageZoom = 1;
+  imagePosition = { x: 0, y: 0 };
+  isDragging = false;
+  dragStart = { x: 0, y: 0 };
+  minZoom = 1;
+  maxZoom = 3;
   
   // Control de permisos y vista
   isOwnerView = false; // Si es vista del propietario
@@ -600,6 +639,103 @@ export class ProjectDetailComponent implements OnInit {
 
   selectImage(image: ProjectImage): void {
     this.selectedImage = image;
+    // Reset zoom and position when changing images
+    this.resetZoom();
+  }
+
+  // Image Zoom and Pan Methods
+  zoomIn(): void {
+    if (this.imageZoom < this.maxZoom) {
+      this.imageZoom = Math.min(this.imageZoom + 0.25, this.maxZoom);
+      this.constrainImagePosition();
+    }
+  }
+
+  zoomOut(): void {
+    if (this.imageZoom > this.minZoom) {
+      this.imageZoom = Math.max(this.imageZoom - 0.25, this.minZoom);
+      // Reset position when zooming out to 1x
+      if (this.imageZoom === this.minZoom) {
+        this.imagePosition = { x: 0, y: 0 };
+      } else {
+        this.constrainImagePosition();
+      }
+    }
+  }
+
+  resetZoom(): void {
+    this.imageZoom = 1;
+    this.imagePosition = { x: 0, y: 0 };
+  }
+
+  /**
+   * Calcula y aplica límites al desplazamiento de la imagen
+   * para evitar que se salga del contenedor visible
+   */
+  constrainImagePosition(): void {
+    if (this.imageZoom <= 1) {
+      this.imagePosition = { x: 0, y: 0 };
+      return;
+    }
+
+    // Calcular el área visible del contenedor (320px de altura)
+    const containerWidth = 800; // Aproximado del contenedor
+    const containerHeight = 320; // h-80 = 320px
+    
+    // Cuando hacemos zoom, la imagen se expande en todos los lados
+    // Por ejemplo, con zoom 2x, la imagen es el doble de grande
+    // Entonces hay "containerWidth * (zoom - 1) / 2" de contenido extra en cada lado
+    
+    // El límite debe permitir mover la imagen hasta que los bordes sean visibles
+    // La fórmula correcta es: podemos mover (tamaño_ampliado - tamaño_contenedor) / 2
+    const scaledWidth = containerWidth * this.imageZoom;
+    const scaledHeight = containerHeight * this.imageZoom;
+    
+    // Cuánto podemos mover en cada dirección para ver todos los bordes
+    const maxOffsetX = (scaledWidth - containerWidth) / 2;
+    const maxOffsetY = (scaledHeight - containerHeight) / 2;
+    
+    // Aplicar límites - ahora sí llegarás a los bordes de la imagen
+    this.imagePosition.x = Math.max(-maxOffsetX, Math.min(maxOffsetX, this.imagePosition.x));
+    this.imagePosition.y = Math.max(-maxOffsetY, Math.min(maxOffsetY, this.imagePosition.y));
+  }
+
+  onImageWheel(event: WheelEvent): void {
+    event.preventDefault();
+    
+    // Zoom in/out based on wheel direction
+    if (event.deltaY < 0) {
+      this.zoomIn();
+    } else {
+      this.zoomOut();
+    }
+  }
+
+  onImageMouseDown(event: MouseEvent): void {
+    if (this.imageZoom > 1) {
+      this.isDragging = true;
+      this.dragStart = {
+        x: event.clientX - this.imagePosition.x,
+        y: event.clientY - this.imagePosition.y
+      };
+      event.preventDefault();
+    }
+  }
+
+  onImageMouseMove(event: MouseEvent): void {
+    if (this.isDragging && this.imageZoom > 1) {
+      // Calcular nueva posición
+      const newX = event.clientX - this.dragStart.x;
+      const newY = event.clientY - this.dragStart.y;
+      
+      // Aplicar con restricciones
+      this.imagePosition = { x: newX, y: newY };
+      this.constrainImagePosition();
+    }
+  }
+
+  onImageMouseUp(): void {
+    this.isDragging = false;
   }
 
   async downloadFile(fileUrl: string, fileName: string, event?: Event, fileId?: number): Promise<void> {
@@ -701,14 +837,19 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   getStatusBadgeClass(status: string): string {
-    const classes = {
-      'BORRADOR': 'bg-gray-500 text-white',
-      'REVISION': 'bg-yellow-500 text-white',
-      'PUBLICADO': 'bg-green-500 text-white',
-      'DESTACADO': 'bg-blue-500 text-white',
-      'RECHAZADO': 'bg-red-500 text-white'
+    // Todos los badges tienen el mismo estilo para que destaque el emoji
+    return 'bg-studex-100 text-studex-800';
+  }
+
+  getStatusIcon(status: string): string {
+    const icons = {
+      'BORRADOR': '📝',
+      'REVISION': '🔍',
+      'PUBLICADO': '✅',
+      'DESTACADO': '⭐',
+      'RECHAZADO': '❌'
     };
-    return classes[status as keyof typeof classes] || 'bg-gray-500 text-white';
+    return icons[status as keyof typeof icons] || '📄';
   }
 
   getStatusText(status: string): string {

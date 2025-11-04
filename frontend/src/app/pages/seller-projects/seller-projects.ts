@@ -6,6 +6,7 @@ import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
+import { BackButtonComponent } from '../../components/back-button/back-button.component';
 
 interface SellerProject {
   id: number;
@@ -68,7 +69,7 @@ interface ProjectStats {
 @Component({
   selector: 'app-seller-projects',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProjectCardComponent],
+  imports: [CommonModule, FormsModule, ProjectCardComponent, BackButtonComponent],
   template: `
     <div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">
       <div class="max-w-7xl mx-auto px-4">
@@ -79,10 +80,7 @@ interface ProjectStats {
             <h1 class="text-4xl font-bold text-studex-900 mb-2">📚 Mis Proyectos</h1>
             <p class="text-studex-600">Gestiona y visualiza todos tus proyectos publicados</p>
           </div>
-          <button (click)="goBack()" 
-                  class="px-6 py-3 bg-studex-600 text-white font-semibold rounded-lg hover:bg-studex-700 transition-colors">
-            ← Volver al Panel
-          </button>
+          <app-back-button></app-back-button>
         </div>
 
         <!-- Loading -->
@@ -122,15 +120,15 @@ interface ProjectStats {
               <div class="text-sm text-studex-500">Total Proyectos</div>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-              <div class="text-3xl font-bold text-green-600">{{ getPublishedCount() }}</div>
+              <div class="text-3xl font-bold text-studex-accent-400">{{ getPublishedCount() }}</div>
               <div class="text-sm text-studex-500">Publicados</div>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-              <div class="text-3xl font-bold text-blue-600">{{ getTotalViews() }}</div>
+              <div class="text-3xl font-bold text-studex-600">{{ getTotalViews() }}</div>
               <div class="text-sm text-studex-500">Vistas Totales</div>
             </div>
             <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-              <div class="text-3xl font-bold text-purple-600">{{ getTotalDownloads() }}</div>
+              <div class="text-3xl font-bold text-studex-accent-400">{{ getTotalDownloads() }}</div>
               <div class="text-sm text-studex-500">Descargas</div>
             </div>
           </div>
@@ -235,42 +233,6 @@ export class SellerProjectsComponent implements OnInit {
     return this.projects.reduce((total, project) => total + project.downloads, 0);
   }
 
-  // ========================================
-  // ✅ MÉTODOS COMENTADOS - Ya no son necesarios
-  // ========================================
-  // ProjectCardComponent maneja los badges y formatos internamente
-  
-  // getStatusBadgeClass(status: string): string {
-  //   const classes = {
-  //     'BORRADOR': 'bg-gray-500 text-white',
-  //     'REVISION': 'bg-yellow-500 text-white',
-  //     'PUBLICADO': 'bg-green-500 text-white',
-  //     'DESTACADO': 'bg-blue-500 text-white',
-  //     'RECHAZADO': 'bg-red-500 text-white'
-  //   };
-  //   return classes[status as keyof typeof classes] || 'bg-gray-500 text-white';
-  // }
-
-  // getStatusText(status: string): string {
-  //   const statusTexts = {
-  //     'BORRADOR': 'Borrador',
-  //     'REVISION': 'En Revisión',
-  //     'PUBLICADO': 'Publicado',
-  //     'DESTACADO': 'Destacado',
-  //     'RECHAZADO': 'Rechazado'
-  //   };
-  //   return statusTexts[status as keyof typeof statusTexts] || status;
-  // }
-
-  // formatDate(dateString: string): string {
-  //   const date = new Date(dateString);
-  //   return date.toLocaleDateString('es-ES', {
-  //     day: '2-digit',
-  //     month: '2-digit',
-  //     year: 'numeric'
-  //   });
-  // }
-
   calculateStats(): ProjectStats {
     return {
       total: this.projects.length,
@@ -279,10 +241,6 @@ export class SellerProjectsComponent implements OnInit {
       totalDownloads: this.projects.reduce((sum, p) => sum + p.downloads, 0)
     };
   }
-
-  // viewProject(projectId: number): void {
-  //   this.router.navigate(['/vendedor/proyecto', projectId]);
-  // }
 
   /**
    * Transforma SellerProject a ProjectCard para usar con ProjectCardComponent
@@ -317,7 +275,4 @@ export class SellerProjectsComponent implements OnInit {
     this.router.navigate(['/vendedor/subir-proyecto']);
   }
 
-  goBack(): void {
-    this.router.navigate(['/vender']);
-  }
 }
