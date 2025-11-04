@@ -10,7 +10,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { FavoritesComponent } from './pages/favorites/favorites.component';
 import { CartComponent } from './pages/cart/cart.component';
 import { NotificationsComponent } from './pages/notifications/notifications';
-import { AuthCallbackComponent } from './pages/auth-callback/auth-callback.component';
+import { AuthCallbackComponent } from './pages/auth-callback/auth-callback';
 
 export const routes: Routes = [
   { path: '', component: Home },
