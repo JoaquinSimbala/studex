@@ -278,6 +278,158 @@
           </div>
         </div>
 
+        <!-- Categorías de Interés -->
+        <div class="bg-white rounded-2xl shadow-lg border border-studex-100 overflow-hidden">
+          
+          <!-- Header -->
+          <div class="flex items-center justify-between px-6 py-4 border-b border-studex-100 bg-studex-50">
+            <div>
+              <h2 class="text-xl font-bold text-studex-900">Categorías de Interés</h2>
+              <p class="text-studex-600 text-sm">Selecciona de 1 a 3 categorías de tu interés</p>
+            </div>
+            <div *ngIf="!isEditingCategories">
+              <button 
+                (click)="enableCategoriesEdit()"
+                class="flex items-center space-x-2 px-4 py-2 bg-studex-600 text-white rounded-lg hover:bg-studex-700 transition-colors text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                </svg>
+                <span>Editar</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Contenido -->
+          <div class="p-6">
+            
+            <!-- Mensaje de categorías -->
+            <div *ngIf="categoriesMessage" 
+                 class="mb-6 p-4 rounded-lg text-sm font-medium"
+                 [ngClass]="{'bg-green-50 text-green-800 border border-green-200': categoriesSuccess, 'bg-red-50 text-red-800 border border-red-200': !categoriesSuccess}">
+              {{ categoriesMessage }}
+            </div>
+
+            <!-- Vista de solo lectura -->
+            <div *ngIf="!isEditingCategories">
+              <div *ngIf="userCategories.length > 0" class="flex flex-wrap gap-3">
+                <div *ngFor="let category of userCategories" 
+                     class="inline-flex items-center space-x-2 px-4 py-2 rounded-full border-2 border-studex-200 bg-studex-50 hover:bg-studex-100 transition-colors">
+                  <span class="text-lg" [style.color]="category.colorHex || '#10B981'">
+                    {{ category.icono }}
+                  </span>
+                  <span class="font-medium text-studex-900">{{ category.nombre }}</span>
+                </div>
+              </div>
+              
+              <div *ngIf="userCategories.length === 0" class="text-center py-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-studex-100 rounded-full mb-4">
+                  <svg class="w-8 h-8 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                  </svg>
+                </div>
+                <h3 class="text-lg font-medium text-studex-900 mb-2">Sin categorías seleccionadas</h3>
+                <p class="text-studex-600">Haz clic en "Editar" para seleccionar tus categorías de interés.</p>
+              </div>
+            </div>
+
+            <!-- Vista de edición -->
+            <div *ngIf="isEditingCategories">
+              
+              <!-- Contador de selección -->
+              <div class="mb-6 p-4 rounded-lg"
+                   [ngClass]="{
+                     'bg-green-50 border border-green-200': areCategoriesValid(),
+                     'bg-yellow-50 border border-yellow-200': !areCategoriesValid()
+                   }">
+                <div class="flex items-center space-x-2">
+                  <svg class="w-5 h-5" 
+                       [ngClass]="{
+                         'text-green-600': areCategoriesValid(),
+                         'text-yellow-600': !areCategoriesValid()
+                       }"
+                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span class="font-medium"
+                        [ngClass]="{
+                          'text-green-800': areCategoriesValid(),
+                          'text-yellow-800': !areCategoriesValid()
+                        }">
+                    {{ selectedCategoryIds.length }} de 3 categorías seleccionadas
+                  </span>
+                </div>
+                <p class="text-sm mt-1"
+                   [ngClass]="{
+                     'text-green-700': areCategoriesValid(),
+                     'text-yellow-700': !areCategoriesValid()
+                   }">
+                  {{ areCategoriesValid() ? '¡Perfecto! Puedes guardar tus cambios.' : 'Debes seleccionar al menos 1 categoría.' }}
+                </p>
+              </div>
+
+              <!-- Grid de categorías - Diseño compacto -->
+              <div class="flex flex-wrap gap-3 mb-6">
+                <button 
+                  type="button"
+                  *ngFor="let category of categories"
+                  (click)="toggleCategory(category.id)"
+                  class="inline-flex items-center space-x-2 px-4 py-2.5 rounded-full border-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-studex-400 focus:ring-offset-2"
+                  [ngClass]="{
+                    'border-studex-500 bg-studex-500 text-white shadow-md hover:bg-studex-600 hover:border-studex-600': isCategorySelected(category.id),
+                    'border-studex-200 bg-white text-studex-700 hover:border-studex-400 hover:bg-studex-50': !isCategorySelected(category.id) && canAddMoreCategories(),
+                    'border-studex-200 bg-studex-100 text-studex-400 cursor-not-allowed': !isCategorySelected(category.id) && !canAddMoreCategories()
+                  }"
+                  [disabled]="!isCategorySelected(category.id) && !canAddMoreCategories()">
+                  
+                  <!-- Icono de categoría -->
+                  <span class="text-lg" 
+                        [ngClass]="{
+                          'opacity-100': isCategorySelected(category.id) || canAddMoreCategories(),
+                          'opacity-50': !isCategorySelected(category.id) && !canAddMoreCategories()
+                        }">
+                    {{ category.icono }}
+                  </span>
+                  
+                  <!-- Nombre de categoría -->
+                  <span class="font-medium text-sm">{{ category.nombre }}</span>
+                  
+                  <!-- Icono de selección -->
+                  <svg *ngIf="isCategorySelected(category.id)" 
+                       class="w-4 h-4" 
+                       fill="none" 
+                       stroke="currentColor" 
+                       viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Botones de acción -->
+              <div class="flex space-x-4 pt-4">
+                <button 
+                  type="button"
+                  (click)="saveCategories()"
+                  [disabled]="isLoadingCategories || !areCategoriesValid()"
+                  class="flex items-center space-x-2 px-6 py-3 bg-studex-600 text-white rounded-lg hover:bg-studex-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium">
+                  <div *ngIf="isLoadingCategories" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                  <svg *ngIf="!isLoadingCategories" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+                  <span>{{ isLoadingCategories ? 'Guardando...' : 'Guardar Cambios' }}</span>
+                </button>
+                
+                <button 
+                  type="button"
+                  (click)="cancelCategoriesEdit()"
+                  [disabled]="isLoadingCategories"
+                  class="px-6 py-3 border-2 border-studex-300 text-studex-700 rounded-lg hover:bg-studex-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Cambiar contraseña -->
         <div class="bg-white rounded-2xl shadow-lg border border-studex-100 overflow-hidden">
           

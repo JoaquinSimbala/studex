@@ -18,6 +18,15 @@ export class ProfileComponent implements OnInit {
   profileForm: FormGroup;
   passwordForm: FormGroup;
   
+  // Categorías
+  categories: any[] = [];
+  userCategories: any[] = [];
+  selectedCategoryIds: number[] = [];
+  isEditingCategories = false;
+  isLoadingCategories = false;
+  categoriesMessage = '';
+  categoriesSuccess = false;
+  
   // Estados de la aplicación
   isEditingProfile = false;
   isChangingPassword = false;
@@ -61,6 +70,8 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit() {
     this.loadUserProfile();
+    this.loadCategories();
+    this.loadUserCategories();
   }
 
   // Cargar datos del usuario
@@ -283,6 +294,137 @@ export class ProfileComponent implements OnInit {
       control?.markAsTouched();
     });
   }
+
+  // ==================== GESTIÓN DE CATEGORÍAS ====================
+
+  /**
+   * Carga todas las categorías disponibles
+   */
+  async loadCategories() {
+    try {
+      const response = await this.apiService.getCategories().toPromise();
+      if (response && response.success && response.data) {
+        this.categories = response.data;
+      }
+    } catch (error) {
+      console.error('Error cargando categorías:', error);
+    }
+  }
+
+  /**
+   * Carga las categorías preferidas del usuario
+   */
+  async loadUserCategories() {
+    try {
+      const response = await this.apiService.getPreferredCategories().toPromise();
+      if (response && response.success && response.data) {
+        this.userCategories = response.data;
+        this.selectedCategoryIds = this.userCategories.map(cat => cat.id);
+      }
+    } catch (error) {
+      console.error('Error cargando categorías del usuario:', error);
+    }
+  }
+
+  /**
+   * Activa el modo de edición de categorías
+   */
+  enableCategoriesEdit() {
+    this.isEditingCategories = true;
+    this.categoriesMessage = '';
+    // Inicializar con las categorías actuales
+    this.selectedCategoryIds = [...this.userCategories.map(cat => cat.id)];
+  }
+
+  /**
+   * Cancela la edición de categorías
+   */
+  cancelCategoriesEdit() {
+    this.isEditingCategories = false;
+    this.categoriesMessage = '';
+    // Restaurar categorías originales
+    this.selectedCategoryIds = this.userCategories.map(cat => cat.id);
+  }
+
+  /**
+   * Alterna la selección de una categoría
+   */
+  toggleCategory(categoryId: number) {
+    const index = this.selectedCategoryIds.indexOf(categoryId);
+    
+    if (index > -1) {
+      // Ya está seleccionada, la removemos
+      this.selectedCategoryIds.splice(index, 1);
+    } else {
+      // No está seleccionada, la agregamos si no excede el límite
+      if (this.selectedCategoryIds.length < 3) {
+        this.selectedCategoryIds.push(categoryId);
+      }
+    }
+  }
+
+  /**
+   * Verifica si una categoría está seleccionada
+   */
+  isCategorySelected(categoryId: number): boolean {
+    return this.selectedCategoryIds.includes(categoryId);
+  }
+
+  /**
+   * Verifica si se puede agregar más categorías
+   */
+  canAddMoreCategories(): boolean {
+    return this.selectedCategoryIds.length < 3;
+  }
+
+  /**
+   * Verifica si las categorías son válidas (1-3)
+   */
+  areCategoriesValid(): boolean {
+    return this.selectedCategoryIds.length >= 1 && this.selectedCategoryIds.length <= 3;
+  }
+
+  /**
+   * Guarda las categorías preferidas del usuario
+   */
+  async saveCategories() {
+    if (!this.areCategoriesValid()) {
+      this.categoriesSuccess = false;
+      this.categoriesMessage = 'Debes seleccionar entre 1 y 3 categorías';
+      return;
+    }
+
+    this.isLoadingCategories = true;
+    this.categoriesMessage = '';
+
+    try {
+      const response = await this.apiService.updatePreferredCategories(this.selectedCategoryIds).toPromise();
+      
+      if (response && response.success) {
+        this.categoriesSuccess = true;
+        this.categoriesMessage = 'Categorías actualizadas correctamente';
+        this.isEditingCategories = false;
+        
+        // Actualizar categorías del usuario
+        if (response.data) {
+          this.userCategories = response.data;
+        }
+        
+        // Limpiar mensaje después de 3 segundos
+        setTimeout(() => {
+          this.categoriesMessage = '';
+          this.categoriesSuccess = false;
+        }, 3000);
+      }
+    } catch (error: any) {
+      this.categoriesSuccess = false;
+      this.categoriesMessage = error.message || 'Error al actualizar las categorías';
+    } finally {
+      this.isLoadingCategories = false;
+    }
+  }
+
+  // ==================== FIN GESTIÓN DE CATEGORÍAS ====================
 
   // Obtener mensaje de error para un campo
   getFieldError(formGroup: FormGroup, fieldName: string): string {

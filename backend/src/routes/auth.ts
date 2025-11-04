@@ -708,4 +708,155 @@ router.get('/google/callback',
   }
 );
 
+/**
+ * GET /auth/preferred-categories
+ * Obtiene las categorías preferidas del usuario actual
+ */
+router.get('/preferred-categories', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user.id;
+    
+    console.log('📊 Obteniendo categorías preferidas del usuario:', userId);
+
+    // Obtener categorías preferidas del usuario con información de las categorías
+    const userWithCategories = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        categoriasPreferidas: {
+          include: {
+            categoria: true
+          }
+        }
+      }
+    });
+
+    if (!userWithCategories) {
+      res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+      return;
+    }
+
+    // Formatear categorías
+    const preferredCategories = userWithCategories.categoriasPreferidas.map(pc => ({
+      id: pc.categoria.id,
+      nombre: pc.categoria.nombre,
+      descripcion: pc.categoria.descripcion,
+      icono: pc.categoria.icono,
+      colorHex: pc.categoria.colorHex,
+      fechaAgregado: pc.fechaAgregado
+    }));
+
+    console.log('✅ Categorías preferidas obtenidas:', preferredCategories.length);
+
+    res.status(200).json({
+      success: true,
+      data: preferredCategories
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo categorías preferidas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
+/**
+ * PUT /auth/preferred-categories
+ * Actualiza las categorías preferidas del usuario (entre 1 y 3)
+ */
+router.put('/preferred-categories', authenticateToken, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user.id;
+    const { categoryIds } = req.body;
+
+    console.log('📝 Actualizando categorías preferidas del usuario:', userId, categoryIds);
+
+    // Validar que categoryIds sea un array
+    if (!Array.isArray(categoryIds)) {
+      res.status(400).json({
+        success: false,
+        message: 'categoryIds debe ser un array'
+      });
+      return;
+    }
+
+    // Validar que haya entre 1 y 3 categorías
+    if (categoryIds.length < 1 || categoryIds.length > 3) {
+      res.status(400).json({
+        success: false,
+        message: 'Debe seleccionar entre 1 y 3 categorías'
+      });
+      return;
+    }
+
+    // Verificar que todas las categorías existan y estén activas
+    const categories = await prisma.category.findMany({
+      where: {
+        id: { in: categoryIds },
+        activa: true
+      }
+    });
+
+    if (categories.length !== categoryIds.length) {
+      res.status(400).json({
+        success: false,
+        message: 'Una o más categorías seleccionadas no son válidas'
+      });
+      return;
+    }
+
+    // Eliminar categorías preferidas actuales
+    await prisma.userPreferredCategory.deleteMany({
+      where: { usuarioId: userId }
+    });
+
+    // Crear nuevas categorías preferidas
+    await prisma.userPreferredCategory.createMany({
+      data: categoryIds.map(categoryId => ({
+        usuarioId: userId,
+        categoriaId: categoryId
+      }))
+    });
+
+    // Obtener las nuevas categorías con su información completa
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        categoriasPreferidas: {
+          include: {
+            categoria: true
+          }
+        }
+      }
+    });
+
+    const preferredCategories = updatedUser?.categoriasPreferidas.map(pc => ({
+      id: pc.categoria.id,
+      nombre: pc.categoria.nombre,
+      descripcion: pc.categoria.descripcion,
+      icono: pc.categoria.icono,
+      colorHex: pc.categoria.colorHex
+    })) || [];
+
+    console.log('✅ Categorías preferidas actualizadas exitosamente');
+
+    res.status(200).json({
+      success: true,
+      message: 'Categorías preferidas actualizadas exitosamente',
+      data: preferredCategories
+    });
+
+  } catch (error) {
+    console.error('❌ Error actualizando categorías preferidas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
 export default router;

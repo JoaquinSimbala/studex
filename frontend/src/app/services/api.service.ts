@@ -499,4 +499,20 @@ export class ApiService {
       catchError(this.handleError.bind(this))
     );
   }
+
+  // ==================== CATEGORÍAS PREFERIDAS ====================
+
+  /**
+   * Obtiene las categorías preferidas del usuario actual
+   */
+  getPreferredCategories(): Observable<ApiResponse<any[]>> {
+    return this.get('/auth/preferred-categories');
+  }
+
+  /**
+   * Actualiza las categorías preferidas del usuario (1-3 categorías)
+   */
+  updatePreferredCategories(categoryIds: number[]): Observable<ApiResponse<any[]>> {
+    return this.put('/auth/preferred-categories', { categoryIds });
+  }
 }
