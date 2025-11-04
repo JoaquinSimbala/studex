@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "docs": "typedoc",
+    "docs:serve": "typedoc && npx http-server docs -o -p 8081"
   },
   "prettier": {
     "printWidth": 100,
@@ -44,6 +46,7 @@
     "@angular/compiler-cli": "^20.3.0",
     "@types/jasmine": "~5.1.0",
     "autoprefixer": "^10.4.21",
+    "http-server": "^14.1.1",
     "jasmine-core": "~5.9.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",
@@ -51,6 +54,7 @@
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
     "postcss": "^8.5.6",
+    "typedoc": "^0.28.14",
     "typescript": "~5.9.2"
   }
 }

@@ -54,19 +54,23 @@
         <span class="text-studex-700 font-medium">{{ project.year }}</span>
       </div>
       
-      <div class="flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-          <span class="studex-badge primary modern-button">{{ project.category }}</span>
-          <span class="studex-badge modern-button" 
-                [ngClass]="getTypeBadgeClass(project.type)">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+          <span class="studex-badge primary modern-button truncate max-w-[120px]" 
+                [title]="project.category">
+            {{ project.category }}
+          </span>
+          <span class="studex-badge modern-button truncate max-w-[100px]" 
+                [ngClass]="getTypeBadgeClass(project.type)"
+                [title]="getProjectTypeLabel(project.type)">
             {{ getProjectTypeLabel(project.type) }}
           </span>
         </div>
         
-        <div class="flex items-center space-x-4">
+        <div class="flex items-center gap-3 flex-shrink-0">
           <!-- Estadísticas -->
-          <div class="flex items-center space-x-1 text-studex-600">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-center gap-1 text-studex-600">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
             </svg>
@@ -74,8 +78,8 @@
           </div>
 
           <!-- Descargas (solo para proyectos propios) -->
-          <div *ngIf="shouldShowOwnerActions && project.downloads !== undefined" class="flex items-center space-x-1 text-studex-600">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div *ngIf="shouldShowOwnerActions && project.downloads !== undefined" class="flex items-center gap-1 text-studex-600">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
             <span class="text-sm font-medium">{{ project.downloads }}</span>

@@ -68,6 +68,18 @@
   font-weight: 600;
   line-height: 1rem;
   transition: all 0.2s ease-in-out;
+  white-space: nowrap; /* Prevenir saltos de línea */
+  overflow: hidden; /* Ocultar texto que sobresale */
+  text-overflow: ellipsis; /* Mostrar puntos suspensivos */
+  max-width: 100%; /* Respetar el límite del contenedor */
+}
+
+/* Asegurar que el contenedor de badges no se desborde */
+.studex-badge:hover {
+  overflow: visible; /* Mostrar texto completo en hover */
+  z-index: 10; /* Asegurar que esté sobre otros elementos */
+  white-space: normal; /* Permitir saltos de línea en hover */
+  max-width: none; /* Permitir expansión en hover */
 }
 
 .studex-badge.primary {
@@ -104,6 +116,19 @@
 .studex-badge:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+}
+
+/* Truncate utility para badges con max-width */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tooltip para mostrar texto completo en hover */
+.studex-badge[title]:hover {
+  position: relative;
+  cursor: help;
 }
 
 /* Efectos modernos para botones */
