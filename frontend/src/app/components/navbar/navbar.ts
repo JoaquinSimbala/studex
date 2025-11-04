@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
@@ -31,7 +32,27 @@ interface Category {
   standalone: true,
   imports: [CommonModule, FormsModule, RouterModule, NotificationsDropdownComponent],
   templateUrl: './navbar.html',
-  styleUrls: ['./navbar.scss']
+  styleUrls: ['./navbar.scss'],
+  animations: [
+    trigger('slideIn', [
+      transition(':enter', [
+        style({ transform: 'translateX(100%)' }),
+        animate('300ms ease-out', style({ transform: 'translateX(0)' }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ transform: 'translateX(100%)' }))
+      ])
+    ]),
+    trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('300ms ease-out', style({ opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ opacity: 0 }))
+      ])
+    ])
+  ]
 })
 export class Navbar implements OnInit, OnDestroy {
 
@@ -45,6 +66,7 @@ export class Navbar implements OnInit, OnDestroy {
   showSearchResults = false;
   showCart = false;
   showCategoriesModal = false;
+  isClosingCategories = false;
 
   // Búsqueda
   searchQuery = '';
@@ -239,7 +261,11 @@ export class Navbar implements OnInit, OnDestroy {
     if (except !== 'cart') this.showCart = false;
     if (except !== 'mobile') this.showMobileMenu = false;
     if (except !== 'search') this.showSearchResults = false;
-    if (except !== 'categories') this.showCategoriesModal = false;
+    if (except !== 'categories') {
+      if (this.showCategoriesModal) {
+        this.closeCategoriesModal();
+      }
+    }
   }
 
   /**
@@ -295,11 +321,10 @@ export class Navbar implements OnInit, OnDestroy {
    * Abre el modal de categorías
    */
   openCategoriesModal(): void {
-    console.log('🔍 Abriendo modal de categorías...');
-    this.closeAllMenus(); // Cerrar otros menús abiertos primero
+    this.closeOtherMenus('categories'); // Cerrar otros menús pero no el de categorías
+    this.isClosingCategories = false;
     this.showCategoriesModal = true;
-    this.cdr.detectChanges(); // Forzar detección de cambios
-    console.log('📖 showCategoriesModal:', this.showCategoriesModal);
+    this.cdr.detectChanges();
     this.loadCategoriesForModal();
   }
 
@@ -307,7 +332,15 @@ export class Navbar implements OnInit, OnDestroy {
    * Cierra el modal de categorías
    */
   closeCategoriesModal(): void {
-    this.showCategoriesModal = false;
+    this.isClosingCategories = true;
+    this.cdr.detectChanges();
+    
+    // Esperar a que termine la animación antes de ocultar
+    setTimeout(() => {
+      this.showCategoriesModal = false;
+      this.isClosingCategories = false;
+      this.cdr.detectChanges();
+    }, 300); // Mismo tiempo que la duración de la animación
   }
 
   /**
@@ -316,50 +349,23 @@ export class Navbar implements OnInit, OnDestroy {
   async loadCategoriesForModal(): Promise<void> {
     try {
       this.loadingCategories = true;
+      this.cdr.detectChanges();
       
       const response = await this.apiService.get('/projects/categories').toPromise();
       
       if (response?.success && response.data) {
         this.modalCategories = response.data as Category[];
-        console.log('✅ Categorías cargadas para modal:', this.modalCategories.length);
       } else {
-        throw new Error('No se pudieron cargar las categorías');
+        // Si no hay respuesta exitosa, dejar el array vacío
+        this.modalCategories = [];
       }
     } catch (error) {
-      console.error('Error cargando categorías para modal:', error);
-      // Fallback a categorías básicas
-      this.modalCategories = [
-        {
-          id: 1,
-          nombre: 'Software',
-          descripcion: 'Aplicaciones, sistemas y desarrollo de software',
-          icono: '💻',
-          colorHex: '#3B82F6'
-        },
-        {
-          id: 2,
-          nombre: 'Investigación',
-          descripcion: 'Tesis, investigaciones y trabajos académicos',
-          icono: '🔬',
-          colorHex: '#10B981'
-        },
-        {
-          id: 3,
-          nombre: 'Ingeniería',
-          descripcion: 'Proyectos de ingeniería y ciencias aplicadas',
-          icono: '⚙️',
-          colorHex: '#F59E0B'
-        },
-        {
-          id: 4,
-          nombre: 'Marketing',
-          descripcion: 'Estrategias de marketing y publicidad',
-          icono: '📈',
-          colorHex: '#EF4444'
-        }
-      ];
+      console.error('Error cargando categorías:', error);
+      // En caso de error, dejar el array vacío para mostrar el estado vacío
+      this.modalCategories = [];
     } finally {
       this.loadingCategories = false;
+      this.cdr.detectChanges();
     }
   }
 

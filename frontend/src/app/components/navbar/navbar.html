@@ -226,7 +226,7 @@
         </a>
         
         <button (click)="openCategoriesModal()" 
-           class="flex items-center space-x-3 px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
+           class="flex items-center space-x-3 w-full px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors text-left">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
@@ -256,93 +256,105 @@
   </div>
 </nav>
 
-<!-- Modal de Categorías -->
-<div *ngIf="showCategoriesModal" class="fixed inset-0 z-[60] overflow-y-auto">
+<!-- Menú Lateral de Categorías -->
+<div [hidden]="!showCategoriesModal && !isClosingCategories" class="fixed inset-0 z-[60]">
   <!-- Backdrop -->
-  <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
+  <div class="fixed inset-0 bg-black bg-opacity-50"
+       [class.animate-fade-in]="showCategoriesModal && !isClosingCategories"
+       [class.animate-fade-out]="isClosingCategories"
        (click)="closeCategoriesModal()"></div>
   
-  <!-- Modal -->
-  <div class="flex min-h-screen items-center justify-center p-4">
-    <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl transform transition-all">
-      
-      <!-- Header -->
-      <div class="px-6 py-4 border-b border-gray-200">
-        <div class="flex items-center justify-between">
-          <h3 class="text-xl font-bold text-gray-900">Selecciona una Categoría</h3>
-          <button (click)="closeCategoriesModal()" 
-                  class="text-gray-400 hover:text-gray-600 transition-colors">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
+  <!-- Sidebar -->
+  <div class="fixed top-0 right-0 h-full w-full sm:w-96 md:w-[28rem] bg-white shadow-2xl flex flex-col"
+       [class.animate-slide-in-right]="showCategoriesModal && !isClosingCategories"
+       [class.animate-slide-out-right]="isClosingCategories">
+    
+    <!-- Header Fijo -->
+    <div class="bg-gradient-to-r from-studex-600 to-studex-700 px-6 py-5 shadow-lg">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="text-xl font-bold text-white">Categorías</h3>
+          <p class="text-studex-100 text-sm mt-1">Explora proyectos por categoría</p>
         </div>
-        <p class="text-gray-600 mt-2">Explora proyectos por categoría</p>
-      </div>
-
-      <!-- Content -->
-      <div class="px-6 py-6">
-        
-        <!-- Loading State -->
-        <div *ngIf="loadingCategories" class="text-center py-8">
-          <div class="animate-spin w-8 h-8 border-4 border-studex-200 border-t-studex-600 rounded-full mx-auto mb-4"></div>
-          <p class="text-gray-600">Cargando categorías...</p>
-        </div>
-
-        <!-- Categories Grid -->
-        <div *ngIf="!loadingCategories" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button 
-            *ngFor="let category of modalCategories"
-            (click)="selectCategory(category)"
-            class="flex items-center p-4 border border-gray-200 rounded-xl hover:border-studex-500 hover:bg-studex-50 transition-all duration-300 text-left group">
-            
-            <!-- Icono de categoría -->
-            <div class="w-12 h-12 rounded-lg flex items-center justify-center mr-4 transition-all"
-                 [style.background-color]="category.colorHex + '20'"
-                 [style.color]="category.colorHex">
-              <span class="text-xl">{{ category.icono || '📂' }}</span>
-            </div>
-            
-            <!-- Info de categoría -->
-            <div class="flex-1">
-              <h4 class="font-semibold text-gray-900 group-hover:text-studex-700 transition-colors">
-                {{ category.nombre }}
-              </h4>
-              <p class="text-sm text-gray-600 mt-1" *ngIf="category.descripcion">
-                {{ category.descripcion }}
-              </p>
-            </div>
-
-            <!-- Flecha -->
-            <svg class="w-5 h-5 text-gray-400 group-hover:text-studex-600 transition-colors" 
-                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Empty State -->
-        <div *ngIf="!loadingCategories && modalCategories.length === 0" class="text-center py-8">
-          <div class="text-4xl mb-4">📂</div>
-          <h3 class="text-lg font-semibold text-gray-900 mb-2">No hay categorías disponibles</h3>
-          <p class="text-gray-600">No se pudieron cargar las categorías en este momento.</p>
-        </div>
-
+        <button (click)="closeCategoriesModal()" 
+                class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-all duration-200">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
       </div>
       
-      <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-        <div class="flex justify-between items-center">
-          <p class="text-sm text-gray-600">
-            {{ modalCategories.length }} {{ modalCategories.length === 1 ? 'categoría' : 'categorías' }} disponible{{ modalCategories.length === 1 ? '' : 's' }}
-          </p>
-          <button 
-            (click)="closeCategoriesModal()"
-            class="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
-            Cerrar
-          </button>
-        </div>
+      <!-- Contador de categorías -->
+      <div class="mt-3 flex items-center space-x-2 text-studex-100 text-xs">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+        </svg>
+        <span *ngIf="!loadingCategories">
+          {{ modalCategories.length }} {{ modalCategories.length === 1 ? 'categoría' : 'categorías' }} disponible{{ modalCategories.length === 1 ? '' : 's' }}
+        </span>
       </div>
+    </div>
+
+    <!-- Content Scrollable -->
+    <div class="flex-1 overflow-y-auto">
+      
+      <!-- Loading State -->
+      <div *ngIf="loadingCategories" class="flex flex-col items-center justify-center h-full py-12">
+        <div class="animate-spin w-12 h-12 border-4 border-studex-200 border-t-studex-600 rounded-full mb-4"></div>
+        <p class="text-studex-600 font-medium">Cargando categorías...</p>
+      </div>
+
+      <!-- Categories List -->
+      <div *ngIf="!loadingCategories && modalCategories.length > 0" class="p-4 space-y-3">
+        <button 
+          *ngFor="let category of modalCategories; let i = index"
+          (click)="selectCategory(category)"
+          class="w-full flex items-center p-4 bg-white border-2 border-studex-100 rounded-xl hover:border-studex-500 hover:bg-studex-50 hover:shadow-md transition-all duration-300 text-left group transform hover:scale-[1.02]"
+          [style.animation-delay]="i * 50 + 'ms'">
+          
+          <!-- Icono de categoría -->
+          <div class="w-14 h-14 rounded-xl flex items-center justify-center mr-4 transition-all group-hover:scale-110 shadow-sm"
+               [style.background-color]="category.colorHex + '20'"
+               [style.border]="'2px solid ' + category.colorHex + '40'">
+            <span class="text-2xl">{{ category.icono || '📂' }}</span>
+          </div>
+          
+          <!-- Info de categoría -->
+          <div class="flex-1 min-w-0">
+            <h4 class="font-bold text-studex-900 group-hover:text-studex-700 transition-colors text-base mb-1">
+              {{ category.nombre }}
+            </h4>
+            <p class="text-xs text-studex-600 line-clamp-2" *ngIf="category.descripcion">
+              {{ category.descripcion }}
+            </p>
+          </div>
+
+          <!-- Flecha indicadora -->
+          <svg class="w-5 h-5 text-studex-400 group-hover:text-studex-600 group-hover:translate-x-1 transition-all flex-shrink-0 ml-2" 
+               fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!loadingCategories && modalCategories.length === 0" class="flex flex-col items-center justify-center h-full py-12 px-6 text-center">
+        <div class="w-20 h-20 bg-studex-100 rounded-full flex items-center justify-center mb-4">
+          <svg class="w-10 h-10 text-studex-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-studex-900 mb-2">No hay categorías disponibles</h3>
+        <p class="text-studex-600 text-sm">No se pudieron cargar las categorías en este momento. Por favor, intenta más tarde.</p>
+      </div>
+
+    </div>
+    
+    <!-- Footer Fijo -->
+    <div class="border-t border-studex-200 bg-studex-50 px-6 py-4">
+      <p class="text-center text-sm text-studex-600">
+        Haz clic en una categoría para explorar proyectos
+      </p>
     </div>
   </div>
 </div>
