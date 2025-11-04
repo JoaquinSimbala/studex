@@ -8,55 +8,57 @@ datasource db {
 }
 
 model User {
-  id                      Int            @id @default(autoincrement())
-  email                   String         @unique
-  passwordHash            String         @map("password_hash")
+  id                      Int                     @id @default(autoincrement())
+  email                   String                  @unique
+  passwordHash            String                  @map("password_hash")
   nombre                  String
   apellidos               String?
-  tipo                    UserType       @default(USER)
+  tipo                    UserType                @default(USER)
   institucion             String?
-  areaEstudio             String?        @map("area_estudio")
+  areaEstudio             String?                 @map("area_estudio")
   descripcion             String?
-  profileImage            String?        @map("profile_image")
-  qrPago                  String?        @map("qr_pago")
-  metodoPagoPreferido     PaymentMethod? @default(YAPE) @map("metodo_pago_preferido")
-  emailVerificado         Boolean        @default(false) @map("email_verificado")
-  activo                  Boolean        @default(true)
-  bloqueado               Boolean        @default(false)
-  fechaBloqueo            DateTime?      @map("fecha_bloqueo")
-  motivoBloqueo           String?        @map("motivo_bloqueo")
-  vendedorVerificado      Boolean        @default(false) @map("vendedor_verificado")
-  calificacionVendedor    Decimal        @default(0.0) @map("calificacion_vendedor") @db.Decimal(3, 2)
-  totalVentas             Int            @default(0) @map("total_ventas")
-  fechaRegistro           DateTime       @default(now()) @map("fecha_registro")
-  fechaUltimaSesion       DateTime?      @map("fecha_ultima_sesion")
-  fechaActualizacion      DateTime       @updatedAt @map("fecha_actualizacion")
-  calificacionesDadas     Rating[]       @relation("CompradorRatings")
-  calificacionesRecibidas Rating[]       @relation("VendedorRatings")
+  profileImage            String?                 @map("profile_image")
+  qrPago                  String?                 @map("qr_pago")
+  metodoPagoPreferido     PaymentMethod?          @default(YAPE) @map("metodo_pago_preferido")
+  emailVerificado         Boolean                 @default(false) @map("email_verificado")
+  activo                  Boolean                 @default(true)
+  bloqueado               Boolean                 @default(false)
+  fechaBloqueo            DateTime?               @map("fecha_bloqueo")
+  motivoBloqueo           String?                 @map("motivo_bloqueo")
+  vendedorVerificado      Boolean                 @default(false) @map("vendedor_verificado")
+  calificacionVendedor    Decimal                 @default(0.0) @map("calificacion_vendedor") @db.Decimal(3, 2)
+  totalVentas             Int                     @default(0) @map("total_ventas")
+  fechaRegistro           DateTime                @default(now()) @map("fecha_registro")
+  fechaUltimaSesion       DateTime?               @map("fecha_ultima_sesion")
+  fechaActualizacion      DateTime                @updatedAt @map("fecha_actualizacion")
+  calificacionesDadas     Rating[]                @relation("CompradorRatings")
+  calificacionesRecibidas Rating[]                @relation("VendedorRatings")
   favoritos               Favorite[]
   carrito                 Cart[]
   logsAuditoria           AuditLog[]
-  mensajesRecibidos       Message[]      @relation("ReceiverMessages")
-  mensajesEnviados        Message[]      @relation("SenderMessages")
+  mensajesRecibidos       Message[]               @relation("ReceiverMessages")
+  mensajesEnviados        Message[]               @relation("SenderMessages")
   notificaciones          Notification[]
   proyectos               Project[]
   reportes                Report[]
-  ventasComoComprador     Sale[]         @relation("CompradorSales")
-  ventasComoVendedor      Sale[]         @relation("VendedorSales")
+  ventasComoComprador     Sale[]                  @relation("CompradorSales")
+  ventasComoVendedor      Sale[]                  @relation("VendedorSales")
+  categoriasPreferidas    UserPreferredCategory[]
 
   @@map("usuarios")
 }
 
 model Category {
-  id            Int       @id @default(autoincrement())
-  nombre        String    @unique
-  descripcion   String?
-  icono         String?
-  colorHex      String    @default("#007bff") @map("color_hex")
-  activa        Boolean   @default(true)
-  ordenDisplay  Int       @default(0) @map("orden_display")
-  fechaCreacion DateTime  @default(now()) @map("fecha_creacion")
-  proyectos     Project[]
+  id                   Int                     @id @default(autoincrement())
+  nombre               String                  @unique
+  descripcion          String?
+  icono                String?
+  colorHex             String                  @default("#007bff") @map("color_hex")
+  activa               Boolean                 @default(true)
+  ordenDisplay         Int                     @default(0) @map("orden_display")
+  fechaCreacion        DateTime                @default(now()) @map("fecha_creacion")
+  proyectos            Project[]
+  usuariosInteresados  UserPreferredCategory[]
 
   @@map("categorias_proyectos")
 }
@@ -373,4 +375,17 @@ model Cart {
   
   @@unique([usuarioId, proyectoId])
   @@map("carrito")
+}
+
+model UserPreferredCategory {
+  id             Int      @id @default(autoincrement())
+  usuarioId      Int      @map("usuario_id")
+  categoriaId    Int      @map("categoria_id")
+  fechaAgregado  DateTime @default(now()) @map("fecha_agregado")
+  
+  usuario        User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  categoria      Category @relation(fields: [categoriaId], references: [id], onDelete: Cascade)
+  
+  @@unique([usuarioId, categoriaId])
+  @@map("categorias_preferidas_usuario")
 }

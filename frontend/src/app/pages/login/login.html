@@ -41,24 +41,19 @@
         <!-- Email -->
         <div class="mb-6">
           <label class="block text-studex-700 font-medium mb-2">
-            Email Universitario
+            Email
           </label>
           <div class="relative">
             <input 
               type="email" 
               formControlName="email"
-              placeholder="tu.email@universidad.edu.pe"
-              class="studex-input pl-12"
+              placeholder="ejemplo@universidad.edu.pe o ejemplo@gmail.com"
+              class="studex-input"
               [class.border-red-300]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
-            <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-              <svg class="w-5 h-5 text-studex-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
-              </svg>
-            </div>
           </div>
           <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" 
                class="text-red-500 text-sm mt-1">
-            Email universitario requerido
+            Email válido requerido
           </div>
         </div>
 
@@ -72,13 +67,8 @@
               [type]="showPassword ? 'text' : 'password'" 
               formControlName="password"
               placeholder="••••••••"
-              class="studex-input pl-12 pr-12"
+              class="studex-input pr-12"
               [class.border-red-300]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
-            <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-              <svg class="w-5 h-5 text-studex-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-              </svg>
-            </div>
             <button 
               type="button"
               (click)="togglePassword()"
@@ -100,9 +90,9 @@
 
         <!-- Recordar / Olvidé contraseña -->
         <div class="flex items-center justify-between mb-6">
-          <label class="flex items-center">
-            <input type="checkbox" formControlName="rememberMe" class="studex-checkbox">
-            <span class="text-studex-700 text-sm">Recordarme</span>
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" formControlName="rememberMe" class="studex-checkbox w-4 h-4 flex-shrink-0">
+            <span class="text-studex-700 text-sm select-none">Recordarme</span>
           </label>
           <a href="#" class="text-studex-500 text-sm hover:text-studex-700 transition-colors">
             ¿Olvidaste tu contraseña?
@@ -134,6 +124,7 @@
         <!-- Google Login -->
         <button 
           type="button"
+          (click)="loginWithGoogle()"
           class="w-full flex items-center justify-center px-4 py-3 border border-studex-200 rounded-lg hover:bg-studex-50 transition-colors">
           <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -181,48 +172,59 @@
 
         <!-- Email -->
         <div class="mb-6">
-          <label class="block text-studex-700 font-medium mb-2">Email Universitario</label>
+          <label class="block text-studex-700 font-medium mb-2">Email</label>
           <div class="relative">
             <input 
               type="email" 
               formControlName="email"
-              placeholder="tu.email@universidad.edu.pe"
-              class="studex-input pl-12"
+              placeholder="ejemplo@universidad.edu.pe o ejemplo@gmail.com"
+              class="studex-input"
               [class.border-red-300]="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">
-            <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-              <svg class="w-5 h-5 text-studex-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
-              </svg>
-            </div>
           </div>
           <div *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched" 
                class="text-red-500 text-sm mt-1">
-            Email universitario válido requerido
+            Email válido requerido
           </div>
         </div>
 
-        <!-- Universidad -->
+        <!-- Categorías Preferidas -->
         <div class="mb-6">
-          <label class="block text-studex-700 font-medium mb-2">Universidad</label>
-          <select 
-            formControlName="university"
-            class="studex-input"
-            [class.border-red-300]="registerForm.get('university')?.invalid && registerForm.get('university')?.touched">
-            <option value="">Selecciona tu universidad</option>
-            <option value="PUCP">Pontificia Universidad Católica del Perú</option>
-            <option value="UNI">Universidad Nacional de Ingeniería</option>
-            <option value="UNMSM">Universidad Nacional Mayor de San Marcos</option>
-            <option value="UPC">Universidad Peruana de Ciencias Aplicadas</option>
-            <option value="USIL">Universidad San Ignacio de Loyola</option>
-            <option value="ULima">Universidad de Lima</option>
-            <option value="UTEC">Universidad de Ingeniería y Tecnología</option>
-            <option value="UP">Universidad del Pacífico</option>
-            <option value="ESAN">Universidad ESAN</option>
-            <option value="Otro">Otra universidad</option>
-          </select>
-          <div *ngIf="registerForm.get('university')?.invalid && registerForm.get('university')?.touched" 
-               class="text-red-500 text-sm mt-1">
-            Selecciona tu universidad
+          <label class="block text-studex-700 font-medium mb-2">
+            Categorías de Interés 
+            <span class="text-studex-500 text-sm font-normal">(Selecciona entre 1 y 3)</span>
+          </label>
+          
+          <!-- Grid de categorías -->
+          <div class="grid grid-cols-2 gap-3">
+            <button
+              *ngFor="let category of categories"
+              type="button"
+              (click)="toggleCategory(category.id)"
+              [class.border-studex-500]="isCategorySelected(category.id)"
+              [class.bg-studex-50]="isCategorySelected(category.id)"
+              [class.text-studex-700]="isCategorySelected(category.id)"
+              [class.border-studex-200]="!isCategorySelected(category.id)"
+              [class.text-studex-600]="!isCategorySelected(category.id)"
+              [disabled]="!isCategorySelected(category.id) && selectedCategories.length >= 3"
+              class="p-3 border-2 rounded-lg text-center transition-all hover:border-studex-400 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-sm font-medium flex-1 text-left">{{ category.nombre }}</span>
+                <svg *ngIf="isCategorySelected(category.id)" class="w-5 h-5 text-studex-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+              </div>
+            </button>
+          </div>
+          
+          <!-- Contador y mensaje de error -->
+          <div class="mt-2">
+            <p class="text-studex-600 text-xs">
+              {{ selectedCategories.length }} de 3 categorías seleccionadas
+            </p>
+            <div *ngIf="registerForm.get('preferredCategories')?.invalid && registerForm.get('preferredCategories')?.touched" 
+                 class="text-red-500 text-sm mt-1">
+              Debes seleccionar entre 1 y 3 categorías
+            </div>
           </div>
         </div>
 
@@ -279,13 +281,8 @@
               [type]="showPassword ? 'text' : 'password'" 
               formControlName="password"
               placeholder="••••••••"
-              class="studex-input pl-12 pr-12"
+              class="studex-input pr-12"
               [class.border-red-300]="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
-            <div class="absolute left-4 top-1/2 transform -translate-y-1/2">
-              <svg class="w-5 h-5 text-studex-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-              </svg>
-            </div>
             <button 
               type="button"
               (click)="togglePassword()"
@@ -322,9 +319,9 @@
 
         <!-- Términos y Condiciones -->
         <div class="mb-6">
-          <label class="flex items-start">
-            <input type="checkbox" formControlName="acceptTerms" class="studex-checkbox mt-1">
-            <span class="text-studex-700 text-sm leading-5">
+          <label class="flex items-start gap-2 cursor-pointer">
+            <input type="checkbox" formControlName="acceptTerms" class="studex-checkbox w-4 h-4 flex-shrink-0 mt-1">
+            <span class="text-studex-700 text-sm leading-5 select-none">
               Acepto los <a href="#" class="text-studex-500 hover:text-studex-700">términos de uso</a> 
               y la <a href="#" class="text-studex-500 hover:text-studex-700">política de privacidad</a>
             </span>

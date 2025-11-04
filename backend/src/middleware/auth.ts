@@ -4,12 +4,10 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Extender la interfaz Request para incluir user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
+// Extender Request para incluir user
+declare module 'express-serve-static-core' {
+  interface Request {
+    user?: any;
   }
 }
 

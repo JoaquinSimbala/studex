@@ -387,6 +387,13 @@ export class AuthService {
   }
 
   /**
+   * Verifica el token actual (alias de checkAuthStatus)
+   */
+  async verifyToken(): Promise<boolean> {
+    return this.checkAuthStatus();
+  }
+
+  /**
    * Verifica si el usuario tiene un rol específico
    */
   hasRole(role: 'STUDENT' | 'SELLER' | 'ADMIN'): boolean {

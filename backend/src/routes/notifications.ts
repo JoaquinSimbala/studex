@@ -14,7 +14,7 @@ router.use(authMiddleware);
  */
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req.user as any)?.id;
     if (!userId) {
       res.status(401).json({ 
         success: false, 
@@ -54,7 +54,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
  */
 router.get('/unread-count', async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req.user as any)?.id;
     if (!userId) {
       res.status(401).json({ 
         success: false, 
@@ -89,7 +89,7 @@ router.get('/unread-count', async (req: Request, res: Response): Promise<void> =
  */
 router.put('/:id/read', async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req.user as any)?.id;
     if (!userId) {
       res.status(401).json({ 
         success: false, 
@@ -137,7 +137,7 @@ router.put('/:id/read', async (req: Request, res: Response): Promise<void> => {
  */
 router.put('/mark-all-read', async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.user?.id;
+    const userId = (req.user as any)?.id;
     if (!userId) {
       res.status(401).json({ 
         success: false, 

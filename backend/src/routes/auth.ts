@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 import multer from 'multer';
 import { uploadToCloudinary, deleteFromCloudinary, extractPublicIdFromUrl } from '../services/cloudinary';
+import passport from '../config/passport';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -29,13 +30,13 @@ const upload = multer({
  */
 router.post('/register', upload.single('profileImage'), async (req: Request, res: Response): Promise<void> => {
   try {
-    const { firstName, lastName, email, university, password } = req.body;
+    const { firstName, lastName, email, university, password, preferredCategories } = req.body;
     const profileImageFile = req.file;
 
-    console.log('📝 Datos de registro recibidos:', { firstName, lastName, email, university, hasImage: !!profileImageFile });
+    console.log('📝 Datos de registro recibidos:', { firstName, lastName, email, university, preferredCategories, hasImage: !!profileImageFile });
 
     // Validaciones básicas
-    if (!firstName || !lastName || !email || !university || !password) {
+    if (!firstName || !lastName || !email || !password) {
       res.status(400).json({
         success: false,
         message: 'Todos los campos son obligatorios'
@@ -43,11 +44,46 @@ router.post('/register', upload.single('profileImage'), async (req: Request, res
       return;
     }
 
-    // Validar email universitario
-    if (!email.endsWith('.edu.pe') && !email.includes('@pucp.') && !email.includes('@uni.') && !email.includes('@unmsm.') && !email.includes('@upc.')) {
+    // Validar categorías preferidas (entre 1 y 3)
+    let categoryIds: number[] = [];
+    if (preferredCategories) {
+      try {
+        categoryIds = typeof preferredCategories === 'string' 
+          ? JSON.parse(preferredCategories) 
+          : preferredCategories;
+        
+        if (!Array.isArray(categoryIds) || categoryIds.length < 1 || categoryIds.length > 3) {
+          res.status(400).json({
+            success: false,
+            message: 'Debe seleccionar entre 1 y 3 categorías preferidas'
+          });
+          return;
+        }
+      } catch (error) {
+        res.status(400).json({
+          success: false,
+          message: 'Formato de categorías inválido'
+        });
+        return;
+      }
+    } else {
       res.status(400).json({
         success: false,
-        message: 'Debe usar un email universitario válido'
+        message: 'Debe seleccionar al menos 1 categoría preferida'
+      });
+      return;
+    }
+
+    // Validar email universitario
+    const commonDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'live.com', 'icloud.com', 'protonmail.com'];
+    const emailDomain = email.split('@')[1]?.toLowerCase();
+    const isUniversityEmail = email.endsWith('.edu.pe') || email.includes('@pucp.') || email.includes('@uni.') || email.includes('@unmsm.') || email.includes('@upc.');
+    const isCommonEmail = commonDomains.includes(emailDomain);
+    
+    if (!isUniversityEmail && !isCommonEmail) {
+      res.status(400).json({
+        success: false,
+        message: 'Debe usar un email válido'
       });
       return;
     }
@@ -61,6 +97,22 @@ router.post('/register', upload.single('profileImage'), async (req: Request, res
       res.status(409).json({
         success: false,
         message: 'El email ya está registrado'
+      });
+      return;
+    }
+
+    // Verificar que todas las categorías existen
+    const categories = await prisma.category.findMany({
+      where: {
+        id: { in: categoryIds },
+        activa: true
+      }
+    });
+
+    if (categories.length !== categoryIds.length) {
+      res.status(400).json({
+        success: false,
+        message: 'Una o más categorías seleccionadas no son válidas'
       });
       return;
     }
@@ -91,17 +143,29 @@ router.post('/register', upload.single('profileImage'), async (req: Request, res
       }
     }
 
-    // Crear nuevo usuario en la base de datos
+    // Crear nuevo usuario en la base de datos con sus categorías preferidas
     const newUser = await prisma.user.create({
       data: {
         email,
         nombre: firstName,
         apellidos: lastName,
-        institucion: university,
+        institucion: university || null, // Universidad opcional
         profileImage: profileImageUrl,
         passwordHash: hashedPassword,
         tipo: 'USER',
-        emailVerificado: false
+        emailVerificado: false,
+        categoriasPreferidas: {
+          create: categoryIds.map(categoryId => ({
+            categoriaId: categoryId
+          }))
+        }
+      },
+      include: {
+        categoriasPreferidas: {
+          include: {
+            categoria: true
+          }
+        }
       }
     });
 
@@ -119,7 +183,12 @@ router.post('/register', upload.single('profileImage'), async (req: Request, res
       verified: newUser.emailVerificado,
       createdAt: newUser.fechaRegistro,
       areaEstudio: newUser.areaEstudio,
-      descripcion: newUser.descripcion
+      descripcion: newUser.descripcion,
+      preferredCategories: newUser.categoriasPreferidas.map(pc => ({
+        id: pc.categoria.id,
+        nombre: pc.categoria.nombre,
+        icono: pc.categoria.icono
+      }))
     };
     
     res.status(201).json({
@@ -587,5 +656,56 @@ router.post('/profile/image', upload.single('profileImage'), authenticateToken, 
     });
   }
 });
+
+/**
+ * GET /auth/google
+ * Inicia el flujo de autenticación con Google
+ */
+router.get('/google',
+  passport.authenticate('google', {
+    scope: ['profile', 'email']
+  })
+);
+
+/**
+ * GET /auth/google/callback
+ * Callback de Google OAuth - recibe el código de autorización
+ */
+router.get('/google/callback',
+  passport.authenticate('google', { 
+    failureRedirect: '/login',
+    session: false 
+  }),
+  async (req: Request, res: Response): Promise<void> => {
+    try {
+      const user = req.user as any;
+      
+      if (!user) {
+        res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:4200'}/login?error=auth_failed`);
+        return;
+      }
+
+      // Generar token JWT
+      const token = jwt.sign(
+        { 
+          userId: user.id, 
+          email: user.email 
+        },
+        process.env.JWT_SECRET || 'studex-secret-key',
+        { 
+          expiresIn: '30d' 
+        }
+      );
+
+      console.log('✅ Google OAuth exitoso:', user.email);
+
+      // Redirigir al frontend con el token
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:4200'}/auth/callback?token=${token}`);
+    } catch (error) {
+      console.error('❌ Error en callback de Google:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:4200'}/login?error=server_error`);
+    }
+  }
+);
 
 export default router;

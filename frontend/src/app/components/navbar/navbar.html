@@ -164,10 +164,12 @@
         <ng-template #guestMenu>
           <div class="flex items-center space-x-3">
             <a routerLink="/login" 
+               [queryParams]="{mode: 'login'}"
                class="text-white/90 hover:text-white font-medium transition-all duration-300 modern-button px-4 py-2 rounded-lg">
               Iniciar Sesión
             </a>
             <a routerLink="/login" 
+               [queryParams]="{mode: 'register'}"
                class="bg-studex-accent hover:bg-studex-accent/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 modern-button shadow-md">
               Registrarse
             </a>
@@ -243,10 +245,12 @@
 
         <div *ngIf="!currentUser" class="border-t border-studex-100 pt-4 mt-4">
           <a routerLink="/login" 
+             [queryParams]="{mode: 'login'}"
              class="block px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
             Iniciar Sesión
           </a>
           <a routerLink="/login" 
+             [queryParams]="{mode: 'register'}"
              class="block px-4 py-3 text-white bg-studex-500 hover:bg-studex-600 rounded-lg transition-colors mt-2">
             Registrarse
           </a>
