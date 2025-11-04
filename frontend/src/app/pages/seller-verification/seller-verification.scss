@@ -1,0 +1,43 @@
+// STUDEX - Seller Verification Component Styles
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { 
+    transform: rotate(0deg); 
+  }
+  to { 
+    transform: rotate(360deg); 
+  }
+}
+
+/* Sobrescribir estilos globales de h1 para el header */
+.header-title {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: unset !important;
+  background-clip: unset !important;
+  color: white !important;
+}
+
+/* Estilos personalizados para el botón back-button en header verde */
+::ng-deep .back-button-white button {
+  background-color: white !important;
+  color: #78996c !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+::ng-deep .back-button-white button:hover {
+  background-color: rgba(255, 255, 255, 0.9) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateX(-2px);
+}
+
+::ng-deep .back-button-white button svg {
+  color: #78996c !important;
+}
