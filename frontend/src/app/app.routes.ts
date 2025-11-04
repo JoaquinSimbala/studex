@@ -3,7 +3,7 @@ import { Home } from './pages/home/home';
 import { Login } from './pages/login/login';
 import { ExploreComponent } from './pages/explore/explore';
 import { SellerVerificationComponent } from './pages/seller-verification/seller-verification';
-import { UploadProjectComponent } from './pages/upload-project/upload-project.component';
+import { UploadProjectComponent } from './pages/upload-project/upload-project';
 import { SellerProjectsComponent } from './pages/seller-projects/seller-projects';
 import { ProjectDetailComponent } from './pages/project-detail/project-detail';
 import { ProfileComponent } from './pages/profile/profile.component';
