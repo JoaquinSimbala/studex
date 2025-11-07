@@ -1,11 +1,31 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+// import { Router } from '@angular/router'; // ❌ COMENTADO: No se usa Router en este componente
 import { AuthService, User } from '../../services/auth.service';
-import { ApiService, ApiResponse } from '../../services/api.service';
+import { ApiService } from '../../services/api.service';
 import { BackButtonComponent } from '../../components/back-button/back-button.component';
 
+/**
+ * Componente de perfil de usuario
+ * 
+ * @description
+ * Gestiona la visualización y edición del perfil del usuario, incluyendo:
+ * - Información personal (nombre, apellido, email, universidad, etc.)
+ * - Imagen de perfil con soporte para Google OAuth y Cloudinary
+ * - Categorías de interés (1-3 categorías)
+ * - Cambio de contraseña (solo para usuarios con autenticación LOCAL)
+ * 
+ * @features
+ * - Skeleton loading durante la carga inicial
+ * - Validación de formularios con mensajes de error
+ * - Soporte para autenticación Google OAuth y Local
+ * - Manejo de errores de carga de imágenes con fallback
+ * - Actualización reactiva del usuario desde AuthService
+ * 
+ * @author Studex Team
+ * @version 2.0.0
+ */
 @Component({
   selector: 'app-profile',
   standalone: true,
@@ -14,41 +34,94 @@ import { BackButtonComponent } from '../../components/back-button/back-button.co
   styleUrls: ['./profile.component.scss']
 })
 export class ProfileComponent implements OnInit {
+  
+  // ==================== PROPIEDADES DE USUARIO ====================
+  
+  /** Usuario actual autenticado */
   currentUser: User | null = null;
+  
+  /** Formulario de edición de perfil */
   profileForm: FormGroup;
+  
+  /** Formulario de cambio de contraseña */
   passwordForm: FormGroup;
   
-  // Categorías
+  // ==================== PROPIEDADES DE CATEGORÍAS ====================
+  
+  /** Lista de todas las categorías disponibles */
   categories: any[] = [];
+  
+  /** Categorías preferidas del usuario actual */
   userCategories: any[] = [];
+  
+  /** IDs de categorías seleccionadas (temporal durante edición) */
   selectedCategoryIds: number[] = [];
+  
+  /** Indica si el usuario está editando sus categorías */
   isEditingCategories = false;
+  
+  /** Indica si se está guardando las categorías */
   isLoadingCategories = false;
+  
+  /** Mensaje de feedback para operaciones de categorías */
   categoriesMessage = '';
+  
+  /** Indica si la última operación de categorías fue exitosa */
   categoriesSuccess = false;
   
-  // Estados de la aplicación
+  // ==================== ESTADOS DE CARGA Y EDICIÓN ====================
+  
+  /** Indica si se está cargando el perfil del usuario (skeleton) */
+  isLoadingUser = true;
+  
+  /** Indica si el usuario está editando su perfil */
   isEditingProfile = false;
+  
+  /** Indica si el usuario está cambiando su contraseña */
   isChangingPassword = false;
+  
+  /** Indica si se está guardando el perfil */
   isLoadingProfile = false;
+  
+  /** Indica si se está cambiando la contraseña */
   isLoadingPassword = false;
+  
+  /** Indica si se está subiendo una imagen de perfil */
   isUploadingImage = false;
   
-  // Mensajes
+  // ==================== MENSAJES DE FEEDBACK ====================
+  
+  /** Mensaje de feedback para operaciones de perfil */
   profileMessage = '';
+  
+  /** Mensaje de feedback para operaciones de contraseña */
   passwordMessage = '';
+  
+  /** Mensaje de feedback para operaciones de imagen */
   imageMessage = '';
   
-  // Estados de éxito/error
+  // ==================== ESTADOS DE ÉXITO/ERROR ====================
+  
+  /** Indica si la última operación de perfil fue exitosa */
   profileSuccess = false;
+  
+  /** Indica si la última operación de contraseña fue exitosa */
   passwordSuccess = false;
+  
+  /** Indica si la última operación de imagen fue exitosa */
   imageSuccess = false;
   
+  /**
+   * Constructor del componente
+   * 
+   * @param fb - FormBuilder para crear formularios reactivos
+   * @param authService - Servicio de autenticación para gestionar el usuario actual
+   * @param apiService - Servicio API para comunicación con el backend
+   */
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private apiService: ApiService,
-    private router: Router
+    private apiService: ApiService
   ) {
     // Formulario de perfil
     this.profileForm = this.fb.group({
@@ -68,32 +141,72 @@ export class ProfileComponent implements OnInit {
     }, { validators: this.passwordMatchValidator });
   }
 
+  /**
+   * Hook de inicialización del componente
+   * 
+   * @description
+   * - Espera a que AuthService esté inicializado
+   * - Carga el perfil del usuario
+   * - Carga todas las categorías disponibles
+   * - Carga las categorías preferidas del usuario
+   */
   ngOnInit() {
-    this.loadUserProfile();
+    // Esperar a que el AuthService esté inicializado antes de cargar el perfil
+    this.authService.isInitialized$.subscribe(isInitialized => {
+      if (isInitialized) {
+        this.loadUserProfile();
+      }
+    });
+    
     this.loadCategories();
     this.loadUserCategories();
   }
 
-  // Cargar datos del usuario
+  // ==================== GESTIÓN DE PERFIL ====================
+
+  /**
+   * Carga el perfil del usuario actual
+   * 
+   * @description
+   * Se suscribe al observable currentUser$ del AuthService para obtener
+   * actualizaciones en tiempo real del usuario. Actualiza el formulario
+   * con los datos del usuario.
+   */
   async loadUserProfile() {
     try {
-      this.currentUser = this.authService.getCurrentUser();
-      if (this.currentUser) {
-        this.profileForm.patchValue({
-          firstName: this.currentUser.firstName,
-          lastName: this.currentUser.lastName,
-          email: this.currentUser.email,
-          university: this.currentUser.university || '',
-          areaEstudio: this.currentUser.areaEstudio || '',
-          descripcion: this.currentUser.descripcion || ''
-        });
-      }
+      this.isLoadingUser = true;
+      
+      // Suscribirse al observable del usuario para actualizaciones en tiempo real
+      this.authService.currentUser$.subscribe(user => {
+        if (user) {
+          this.currentUser = user;
+          this.profileForm.patchValue({
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            email: user.email || '',
+            university: user.university || '',
+            areaEstudio: user.areaEstudio || '',
+            descripcion: user.descripcion || ''
+          });
+          console.log('✅ Perfil de usuario cargado:', user.email);
+          this.isLoadingUser = false;
+        } else {
+          console.log('⚠️ No hay usuario autenticado');
+          this.isLoadingUser = false;
+        }
+      });
     } catch (error) {
       console.error('Error loading user profile:', error);
+      this.isLoadingUser = false;
     }
   }
 
-  // Validador para confirmar contraseña
+  /**
+   * Validador personalizado para confirmar que las contraseñas coincidan
+   * 
+   * @param form - FormGroup que contiene los campos de contraseña
+   * @returns Object con error si no coinciden, null si coinciden
+   */
   passwordMatchValidator(form: FormGroup) {
     const newPassword = form.get('newPassword');
     const confirmPassword = form.get('confirmPassword');
@@ -106,20 +219,30 @@ export class ProfileComponent implements OnInit {
     return null;
   }
 
-  // Activar edición de perfil
+  /**
+   * Activa el modo de edición del perfil
+   */
   enableProfileEdit() {
     this.isEditingProfile = true;
     this.profileMessage = '';
   }
 
-  // Cancelar edición de perfil
+  /**
+   * Cancela la edición del perfil y restaura los valores originales
+   */
   cancelProfileEdit() {
     this.isEditingProfile = false;
     this.loadUserProfile(); // Restaurar valores originales
     this.profileMessage = '';
   }
 
-  // Guardar cambios de perfil
+  /**
+   * Guarda los cambios del perfil
+   * 
+   * @description
+   * Valida el formulario y envía los datos actualizados al backend.
+   * Actualiza el usuario en el AuthService si la operación es exitosa.
+   */
   async saveProfile() {
     if (this.profileForm.valid) {
       this.isLoadingProfile = true;
@@ -157,20 +280,32 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  // Activar cambio de contraseña
+  // ==================== GESTIÓN DE CONTRASEÑA ====================
+
+  /**
+   * Activa el modo de cambio de contraseña
+   */
   enablePasswordChange() {
     this.isChangingPassword = true;
     this.passwordMessage = '';
   }
 
-  // Cancelar cambio de contraseña
+  /**
+   * Cancela el cambio de contraseña y limpia el formulario
+   */
   cancelPasswordChange() {
     this.isChangingPassword = false;
     this.passwordForm.reset();
     this.passwordMessage = '';
   }
 
-  // Cambiar contraseña
+  /**
+   * Cambia la contraseña del usuario
+   * 
+   * @description
+   * Solo disponible para usuarios con autenticación LOCAL.
+   * Valida el formulario y envía la solicitud al backend.
+   */
   async changePassword() {
     if (this.passwordForm.valid) {
       this.isLoadingPassword = true;
@@ -203,7 +338,17 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  // Subir imagen de perfil
+  // ==================== GESTIÓN DE IMAGEN DE PERFIL ====================
+
+  /**
+   * Maneja la selección y carga de una nueva imagen de perfil
+   * 
+   * @param event - Evento del input file
+   * 
+   * @description
+   * Valida el tipo de archivo (solo imágenes) y el tamaño (máx 5MB).
+   * Sube la imagen a Cloudinary y actualiza el usuario.
+   */
   async onImageSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
@@ -268,37 +413,79 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  // Obtener URL de imagen de perfil con fallback y cache busting
+  /**
+   * Obtiene la URL de la imagen de perfil con manejo inteligente de fuentes
+   * 
+   * @returns URL de la imagen de perfil o avatar generado
+   * 
+   * @description
+   * Maneja diferentes fuentes de imágenes:
+   * - Google OAuth (googleusercontent.com) → Sin modificar
+   * - Cloudinary → Sin modificar (ya tiene cache control)
+   * - Otras imágenes → Agrega timestamp si es necesario
+   * - Fallback → Avatar generado con iniciales del usuario
+   */
   getProfileImageUrl(): string {
     if (this.currentUser?.profileImage) {
-      // Si la imagen ya tiene timestamp, la usamos tal como está
-      if (this.currentUser.profileImage.includes('?t=')) {
-        return this.currentUser.profileImage;
+      const profileImage = this.currentUser.profileImage;
+      
+      // Si es una imagen de Google (googleusercontent.com), usarla directamente
+      if (profileImage.includes('googleusercontent.com')) {
+        return profileImage;
       }
-      // Si no tiene timestamp, agregamos uno para evitar cache
-      const separator = this.currentUser.profileImage.includes('?') ? '&' : '?';
-      return `${this.currentUser.profileImage}${separator}t=${Date.now()}`;
+      
+      // Si ya tiene timestamp, usarla tal como está
+      if (profileImage.includes('?t=') || profileImage.includes('&t=')) {
+        return profileImage;
+      }
+      
+      // Para imágenes de Cloudinary (nuestro servidor), NO agregar timestamp
+      // porque ya tienen control de cache adecuado
+      if (profileImage.includes('cloudinary.com')) {
+        return profileImage;
+      }
+      
+      // Para otras imágenes, agregar timestamp solo si es necesario
+      const separator = profileImage.includes('?') ? '&' : '?';
+      return `${profileImage}${separator}t=${Date.now()}`;
     }
     
+    // Fallback a avatar generado con iniciales
     if (this.currentUser) {
-      return `https://ui-avatars.com/api/?name=${this.currentUser.firstName}+${this.currentUser.lastName}&background=10B981&color=fff&size=128`;
+      const firstName = this.currentUser.firstName || 'Usuario';
+      const lastName = this.currentUser.lastName || '';
+      return `https://ui-avatars.com/api/?name=${encodeURIComponent(firstName)}+${encodeURIComponent(lastName)}&background=10B981&color=fff&size=200`;
     }
     
-    return 'https://ui-avatars.com/api/?name=Usuario&background=10B981&color=fff&size=128';
+    return 'https://ui-avatars.com/api/?name=Usuario&background=10B981&color=fff&size=200';
   }
 
-  // Marcar todos los campos como tocados para mostrar errores
-  markFormGroupTouched(formGroup: FormGroup) {
-    Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
-    });
+  /**
+   * Maneja errores de carga de imagen de perfil
+   * 
+   * @param event - Evento de error de la imagen
+   * 
+   * @description
+   * Si la imagen falla al cargar (URL expirada, error de red, etc.),
+   * automáticamente cambia a un avatar generado con las iniciales del usuario.
+   */
+  onImageError(event: Event): void {
+    const imgElement = event.target as HTMLImageElement;
+    const name = encodeURIComponent(
+      `${this.currentUser?.firstName || ''} ${this.currentUser?.lastName || ''}`.trim() || 'Usuario'
+    );
+    imgElement.src = `https://ui-avatars.com/api/?name=${name}&size=200&background=4F46E5&color=fff&bold=true`;
+    console.error('Error al cargar imagen de perfil, usando fallback');
   }
 
   // ==================== GESTIÓN DE CATEGORÍAS ====================
 
   /**
-   * Carga todas las categorías disponibles
+   * Carga todas las categorías disponibles del sistema
+   * 
+   * @description
+   * Obtiene la lista completa de categorías desde el backend
+   * para mostrarlas en el selector de categorías de interés.
    */
   async loadCategories() {
     try {
@@ -312,7 +499,11 @@ export class ProfileComponent implements OnInit {
   }
 
   /**
-   * Carga las categorías preferidas del usuario
+   * Carga las categorías preferidas del usuario actual
+   * 
+   * @description
+   * Obtiene las categorías que el usuario ha seleccionado como
+   * sus áreas de interés (máximo 3).
    */
   async loadUserCategories() {
     try {
@@ -328,6 +519,10 @@ export class ProfileComponent implements OnInit {
 
   /**
    * Activa el modo de edición de categorías
+   * 
+   * @description
+   * Inicializa el array temporal de categorías seleccionadas
+   * con las categorías actuales del usuario.
    */
   enableCategoriesEdit() {
     this.isEditingCategories = true;
@@ -337,7 +532,7 @@ export class ProfileComponent implements OnInit {
   }
 
   /**
-   * Cancela la edición de categorías
+   * Cancela la edición de categorías y restaura las originales
    */
   cancelCategoriesEdit() {
     this.isEditingCategories = false;
@@ -348,6 +543,12 @@ export class ProfileComponent implements OnInit {
 
   /**
    * Alterna la selección de una categoría
+   * 
+   * @param categoryId - ID de la categoría a alternar
+   * 
+   * @description
+   * Si la categoría está seleccionada, la remueve.
+   * Si no está seleccionada y hay espacio (< 3), la agrega.
    */
   toggleCategory(categoryId: number) {
     const index = this.selectedCategoryIds.indexOf(categoryId);
@@ -365,20 +566,27 @@ export class ProfileComponent implements OnInit {
 
   /**
    * Verifica si una categoría está seleccionada
+   * 
+   * @param categoryId - ID de la categoría a verificar
+   * @returns true si la categoría está seleccionada, false en caso contrario
    */
   isCategorySelected(categoryId: number): boolean {
     return this.selectedCategoryIds.includes(categoryId);
   }
 
   /**
-   * Verifica si se puede agregar más categorías
+   * Verifica si se pueden agregar más categorías
+   * 
+   * @returns true si se pueden agregar más (< 3), false si ya tiene 3
    */
   canAddMoreCategories(): boolean {
     return this.selectedCategoryIds.length < 3;
   }
 
   /**
-   * Verifica si las categorías son válidas (1-3)
+   * Verifica si la selección de categorías es válida
+   * 
+   * @returns true si hay entre 1 y 3 categorías seleccionadas
    */
   areCategoriesValid(): boolean {
     return this.selectedCategoryIds.length >= 1 && this.selectedCategoryIds.length <= 3;
@@ -386,6 +594,10 @@ export class ProfileComponent implements OnInit {
 
   /**
    * Guarda las categorías preferidas del usuario
+   * 
+   * @description
+   * Valida que haya entre 1 y 3 categorías seleccionadas,
+   * envía la actualización al backend y recarga las categorías del usuario.
    */
   async saveCategories() {
     if (!this.areCategoriesValid()) {
@@ -424,9 +636,35 @@ export class ProfileComponent implements OnInit {
     }
   }
 
-  // ==================== FIN GESTIÓN DE CATEGORÍAS ====================
+  // ==================== UTILIDADES ====================
 
-  // Obtener mensaje de error para un campo
+  /**
+   * Marca todos los campos de un formulario como tocados
+   * 
+   * @param formGroup - FormGroup cuyos campos se marcarán como tocados
+   * 
+   * @description
+   * Útil para mostrar errores de validación cuando el usuario
+   * intenta enviar un formulario inválido.
+   */
+  markFormGroupTouched(formGroup: FormGroup) {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+    });
+  }
+
+  /**
+   * Obtiene el mensaje de error para un campo específico del formulario
+   * 
+   * @param formGroup - FormGroup que contiene el campo
+   * @param fieldName - Nombre del campo a validar
+   * @returns Mensaje de error localizado o string vacío si no hay error
+   * 
+   * @description
+   * Traduce los errores de validación de Angular a mensajes
+   * amigables en español.
+   */
   getFieldError(formGroup: FormGroup, fieldName: string): string {
     const field = formGroup.get(fieldName);
     if (field?.touched && field?.errors) {

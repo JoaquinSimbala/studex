@@ -28,11 +28,15 @@ passport.use(
         });
 
         if (user) {
-          // Usuario ya existe - actualizar última sesión
+          // Usuario ya existe - actualizar última sesión y googleId si no lo tiene
           console.log('✅ Usuario existente encontrado:', user.email);
           await prisma.user.update({
             where: { id: user.id },
-            data: { fechaUltimaSesion: new Date() }
+            data: { 
+              fechaUltimaSesion: new Date(),
+              googleId: profile.id,
+              authProvider: 'GOOGLE'
+            } as any
           });
         } else {
           // Crear nuevo usuario con datos de Google
@@ -49,11 +53,13 @@ passport.use(
               nombre: firstName,
               apellidos: lastName,
               profileImage,
-              passwordHash: '', // Sin contraseña para usuarios de Google OAuth
+              googleId: profile.id,
+              authProvider: 'GOOGLE',
+              passwordHash: null,
               tipo: 'USER',
               emailVerificado: true, // Google ya verificó el email
               institucion: null
-            }
+            } as any
           });
 
           console.log('✅ Usuario creado exitosamente:', user.email);

@@ -16,6 +16,7 @@ export interface User {
   createdAt: Date;
   areaEstudio?: string;  // Área de estudio (carrera)
   descripcion?: string;  // Biografía/descripción personal
+  authProvider?: 'LOCAL' | 'GOOGLE';  // Proveedor de autenticación
 }
 
 export interface AuthResponse {
@@ -371,8 +372,16 @@ export class AuthService {
 
       if (response?.success && response.user) {
         console.log('✅ Token verificado con el backend');
+        
+        // Actualizar el usuario en el subject Y en el storage
         this.currentUserSubject.next(response.user);
         this.isAuthenticatedSubject.next(true);
+        
+        // Actualizar en el storage correspondiente
+        const storageType = localStorage.getItem(this.TOKEN_KEY) ? localStorage : sessionStorage;
+        storageType.setItem(this.USER_KEY, JSON.stringify(response.user));
+        console.log('💾 Usuario actualizado en storage desde verificación');
+        
         return true;
       } else {
         console.log('❌ Token inválido según el backend');

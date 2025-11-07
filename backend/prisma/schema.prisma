@@ -10,7 +10,9 @@ datasource db {
 model User {
   id                      Int                     @id @default(autoincrement())
   email                   String                  @unique
-  passwordHash            String                  @map("password_hash")
+  passwordHash            String?                 @map("password_hash")
+  googleId                String?                 @unique @map("google_id")
+  authProvider            AuthProvider            @default(LOCAL) @map("auth_provider")
   nombre                  String
   apellidos               String?
   tipo                    UserType                @default(USER)
@@ -388,4 +390,9 @@ model UserPreferredCategory {
   
   @@unique([usuarioId, categoriaId])
   @@map("categorias_preferidas_usuario")
+}
+
+enum AuthProvider {
+  LOCAL  @map("local")
+  GOOGLE @map("google")
 }

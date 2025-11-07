@@ -9,6 +9,24 @@ import passport from '../config/passport';
 const router = Router();
 const prisma = new PrismaClient();
 
+/**
+ * Formatea la respuesta del usuario para el frontend
+ */
+const formatUserResponse = (user: any) => ({
+  id: user.id,
+  email: user.email,
+  firstName: user.nombre,
+  lastName: user.apellidos,
+  university: user.institucion,
+  profileImage: user.profileImage,
+  userType: user.tipo,
+  verified: user.emailVerificado,
+  createdAt: user.fechaRegistro,
+  areaEstudio: user.areaEstudio,
+  descripcion: user.descripcion,
+  authProvider: user.authProvider || 'LOCAL'
+});
+
 // Configurar multer para archivos en memoria
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -173,17 +191,7 @@ router.post('/register', upload.single('profileImage'), async (req: Request, res
 
     // Respuesta exitosa (sin incluir la contraseña)
     const userResponse = {
-      id: newUser.id,
-      email: newUser.email,
-      firstName: newUser.nombre,
-      lastName: newUser.apellidos,
-      university: newUser.institucion,
-      profileImage: newUser.profileImage,
-      userType: newUser.tipo,
-      verified: newUser.emailVerificado,
-      createdAt: newUser.fechaRegistro,
-      areaEstudio: newUser.areaEstudio,
-      descripcion: newUser.descripcion,
+      ...formatUserResponse(newUser),
       preferredCategories: newUser.categoriasPreferidas.map(pc => ({
         id: pc.categoria.id,
         nombre: pc.categoria.nombre,
@@ -238,6 +246,24 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Verificar que el usuario use autenticación local
+    if ((user as any).authProvider === 'GOOGLE') {
+      res.status(400).json({
+        success: false,
+        message: 'Esta cuenta usa Google para iniciar sesión. Por favor, usa el botón "Continuar con Google".'
+      });
+      return;
+    }
+
+    // Verificar que tenga contraseña
+    if (!user.passwordHash) {
+      res.status(400).json({
+        success: false,
+        message: 'Esta cuenta no tiene contraseña configurada'
+      });
+      return;
+    }
+
     // Verificar contraseña
     const isValidPassword = await bcrypt.compare(password, user.passwordHash);
     if (!isValidPassword) {
@@ -269,25 +295,11 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     console.log('✅ Login exitoso:', user.email);
 
     // Respuesta exitosa (sin incluir la contraseña)
-    const userResponse = {
-      id: user.id,
-      email: user.email,
-      firstName: user.nombre,
-      lastName: user.apellidos,
-      university: user.institucion,
-      profileImage: user.profileImage,
-      userType: user.tipo,
-      verified: user.emailVerificado,
-      createdAt: user.fechaRegistro,
-      areaEstudio: user.areaEstudio,
-      descripcion: user.descripcion
-    };
-
     res.status(200).json({
       success: true,
       message: 'Login exitoso',
       token,
-      user: userResponse
+      user: formatUserResponse(user)
     });
 
   } catch (error) {
@@ -352,24 +364,10 @@ router.get('/verify', authenticateToken, async (req: Request, res: Response): Pr
     const user = (req as any).user;
     
     // Respuesta exitosa con datos del usuario
-    const userResponse = {
-      id: user.id,
-      email: user.email,
-      firstName: user.nombre,
-      lastName: user.apellidos,
-      university: user.institucion,
-      profileImage: user.profileImage,
-      userType: user.tipo,
-      verified: user.emailVerificado,
-      createdAt: user.fechaRegistro,
-      areaEstudio: user.areaEstudio,
-      descripcion: user.descripcion
-    };
-    
     res.status(200).json({
       success: true,
       message: 'Token válido',
-      user: userResponse
+      user: formatUserResponse(user)
     });
   } catch (error) {
     console.error('❌ Error en verificación:', error);
@@ -388,23 +386,9 @@ router.get('/me', authenticateToken, async (req: Request, res: Response): Promis
   try {
     const user = (req as any).user;
     
-    const userResponse = {
-      id: user.id,
-      email: user.email,
-      firstName: user.nombre,
-      lastName: user.apellidos,
-      university: user.institucion,
-      profileImage: user.profileImage,
-      userType: user.tipo,
-      verified: user.emailVerificado,
-      createdAt: user.fechaRegistro,
-      areaEstudio: user.areaEstudio,
-      descripcion: user.descripcion
-    };
-    
     res.status(200).json({
       success: true,
-      user: userResponse
+      user: formatUserResponse(user)
     });
   } catch (error) {
     console.error('❌ Error obteniendo usuario:', error);
@@ -451,24 +435,10 @@ router.put('/profile', authenticateToken, async (req: Request, res: Response): P
     });
 
     // Respuesta exitosa
-    const userResponse = {
-      id: updatedUser.id,
-      email: updatedUser.email,
-      firstName: updatedUser.nombre,
-      lastName: updatedUser.apellidos,
-      university: updatedUser.institucion,
-      profileImage: updatedUser.profileImage,
-      userType: updatedUser.tipo,
-      verified: updatedUser.emailVerificado,
-      createdAt: updatedUser.fechaRegistro,
-      areaEstudio: updatedUser.areaEstudio,
-      descripcion: updatedUser.descripcion
-    };
-
     res.status(200).json({
       success: true,
       message: 'Perfil actualizado exitosamente',
-      user: userResponse
+      user: formatUserResponse(updatedUser)
     });
 
   } catch (error) {
@@ -527,6 +497,24 @@ router.put('/password', authenticateToken, async (req: Request, res: Response): 
       res.status(404).json({
         success: false,
         message: 'Usuario no encontrado'
+      });
+      return;
+    }
+
+    // Verificar que el usuario no use autenticación de Google
+    if ((user as any).authProvider === 'GOOGLE') {
+      res.status(400).json({
+        success: false,
+        message: 'No puedes cambiar la contraseña porque iniciaste sesión con Google'
+      });
+      return;
+    }
+
+    // Verificar que tenga contraseña
+    if (!user.passwordHash) {
+      res.status(400).json({
+        success: false,
+        message: 'Tu cuenta no tiene contraseña configurada'
       });
       return;
     }
@@ -632,19 +620,7 @@ router.post('/profile/image', upload.single('profileImage'), authenticateToken, 
       message: 'Imagen de perfil actualizada exitosamente',
       data: {
         imageUrl: profileImageUrl,
-        user: {
-          id: updatedUser.id,
-          email: updatedUser.email,
-          firstName: updatedUser.nombre,
-          lastName: updatedUser.apellidos,
-          university: updatedUser.institucion,
-          profileImage: updatedUser.profileImage,
-          userType: updatedUser.tipo,
-          verified: updatedUser.emailVerificado,
-          createdAt: updatedUser.fechaRegistro,
-          areaEstudio: updatedUser.areaEstudio,
-          descripcion: updatedUser.descripcion
-        }
+        user: formatUserResponse(updatedUser)
       }
     });
 
