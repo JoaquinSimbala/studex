@@ -2,7 +2,6 @@ import { Component, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FavoritesService } from '../../services/favorites.service';
-import { ModalService } from '../../services/modal.service';
 import { AuthService } from '../../services/auth.service';
 
 /**
@@ -111,12 +110,6 @@ export class ProjectCardComponent implements OnInit {
    * @private
    */
   private favoritesService = inject(FavoritesService);
-  
-  /**
-   * Servicio para mostrar modales informativos
-   * @private
-   */
-  private modalService = inject(ModalService);
   
   /**
    * Servicio de autenticación para validar usuario actual
@@ -251,9 +244,8 @@ export class ProjectCardComponent implements OnInit {
         },
         error: (error) => {
           console.error('❌ Error agregando:', error);
-          if (error.error && error.error.code === 'OWN_PROJECT') {
-            this.showOwnProjectAlert();
-          }
+          // El backend ya valida si es proyecto propio
+          // No se necesita modal ya que el botón está oculto para proyectos propios
           this.isLoadingFavorite = false;
         }
       });
@@ -274,21 +266,6 @@ export class ProjectCardComponent implements OnInit {
         }
       });
     }
-  }
-
-  /**
-   * Muestra modal cuando el usuario intenta agregar su propio proyecto a favoritos
-   * 
-   * @private
-   * @description
-   * Informa al usuario que los favoritos son para guardar proyectos de otros,
-   * no los propios.
-   */
-  private showOwnProjectAlert(): void {
-    this.modalService.showModal(
-      'No puedes agregar a favoritos',
-      'Los favoritos son para guardar proyectos de otros usuarios que te interesen. No puedes agregar tus propios proyectos.'
-    );
   }
 
   /**
