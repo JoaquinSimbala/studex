@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 import { ApiService } from './api.service';
+import { LoggerService } from './logger.service';
 
 export interface Purchase {
   id: string;
@@ -54,7 +55,8 @@ export class PurchaseService {
   constructor(
     private http: HttpClient,
     private authService: AuthService,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private logger: LoggerService
   ) {
     // Cargar compras cuando el usuario se autentica
     this.authService.currentUser$.subscribe(user => {
@@ -71,7 +73,7 @@ export class PurchaseService {
    */
   async purchaseFromCart(projects: Array<{projectId: number, amount: number}>, paymentMethod: 'YAPE' | 'PLIN' | 'BANCARIO'): Promise<PurchaseResponse> {
     try {
-      console.log('🛒 Procesando compra desde carrito:', { projects, paymentMethod });
+      this.logger.log('Procesando compra desde carrito');
 
       // Agregar todos los proyectos a compras en progreso
       projects.forEach(project => this.addPendingPurchase(project.projectId));
@@ -161,11 +163,7 @@ export class PurchaseService {
   hasUserPurchased(projectId: number): boolean {
     const currentPurchases = this.userPurchasesSubject.value;
     const hasPurchased = currentPurchases.projectIds.includes(projectId);
-    console.log('🔍 Verificando compra:', {
-      projectId,
-      projectIds: currentPurchases.projectIds,
-      hasPurchased
-    });
+    this.logger.debug('Verificando compra', { projectId, hasPurchased });
     return hasPurchased;
   }
 
@@ -197,15 +195,13 @@ export class PurchaseService {
     try {
       const user = this.authService.getCurrentUser();
       if (!user) {
-        console.log('❌ No hay usuario logueado');
+        this.logger.log('No hay usuario logueado');
         return;
       }
 
-      console.log('📥 Cargando compras para usuario:', user.id);
+      this.logger.log('Cargando compras del usuario');
       // Siempre cargar desde backend
       const response = await this.apiService.getUserPurchases(user.id).toPromise();
-      
-      console.log('📊 Respuesta del backend:', response);
       
       if (response?.success && response.data) {
         const purchases = response.data;
@@ -213,19 +209,16 @@ export class PurchaseService {
           .filter((p: Purchase) => p.status === 'COMPLETED')
           .map((p: Purchase) => p.projectId);
         
-        console.log('✅ Compras cargadas:', {
-          totalPurchases: purchases.length,
-          completedProjectIds: projectIds
-        });
+        this.logger.success('Compras cargadas', purchases.length);
         
         this.userPurchasesSubject.next({ purchases, projectIds });
       } else {
-        console.log('⚠️ Sin datos de compras o respuesta inválida');
+        this.logger.warn('Sin datos de compras');
         // Si no hay datos o hay error, mantener cache vacío
         this.userPurchasesSubject.next({ purchases: [], projectIds: [] });
       }
     } catch (error) {
-      console.error('❌ Error cargando compras del usuario:', error);
+      this.logger.error('Error cargando compras del usuario', error);
       // En caso de error, también mantener cache vacío
       this.userPurchasesSubject.next({ purchases: [], projectIds: [] });
     }

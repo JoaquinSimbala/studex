@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FavoritesService } from '../../services/favorites.service';
 import { AuthService } from '../../services/auth.service';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Interfaz que define la estructura de datos de una tarjeta de proyecto
@@ -124,6 +125,12 @@ export class ProjectCardComponent implements OnInit {
   private router = inject(Router);
   
   /**
+   * Servicio de logging para desarrollo/producción
+   * @private
+   */
+  private logger = inject(LoggerService);
+  
+  /**
    * Indica si hay una operación de favorito en curso
    * 
    * @description
@@ -176,7 +183,7 @@ export class ProjectCardComponent implements OnInit {
         this.project.isFavorite = true;
       }
       
-      console.log(`🔍 Estado inicial proyecto ${this.project.id}:`, this.project.isFavorite ? 'Favorito' : 'No favorito');
+      this.logger.debug('Estado inicial proyecto', { id: this.project.id, isFavorite: this.project.isFavorite });
     }
   }
 
@@ -233,35 +240,33 @@ export class ProjectCardComponent implements OnInit {
     // Lógica directa: si no es favorito → agregar, si es favorito → remover
     if (!this.project.isFavorite) {
       // AGREGAR a favoritos
-      console.log('➕ Agregando a favoritos...');
+      this.logger.log('Agregando a favoritos');
       this.favoritesService.addToFavorites(this.project.id).subscribe({
         next: (response) => {
           if (response.success) {
-            this.project.isFavorite = true; // Corazón rojo
-            console.log('✅ Agregado a favoritos - Corazón rojo');
+            this.project.isFavorite = true;
+            this.logger.success('Agregado a favoritos');
           }
           this.isLoadingFavorite = false;
         },
         error: (error) => {
-          console.error('❌ Error agregando:', error);
-          // El backend ya valida si es proyecto propio
-          // No se necesita modal ya que el botón está oculto para proyectos propios
+          this.logger.error('Error agregando a favoritos', error);
           this.isLoadingFavorite = false;
         }
       });
     } else {
       // REMOVER de favoritos  
-      console.log('➖ Removiendo de favoritos...');
+      this.logger.log('Removiendo de favoritos');
       this.favoritesService.removeFromFavorites(this.project.id).subscribe({
         next: (response) => {
           if (response.success) {
-            this.project.isFavorite = false; // Corazón sin rojo
-            console.log('✅ Removido de favoritos - Corazón sin rojo');
+            this.project.isFavorite = false;
+            this.logger.success('Removido de favoritos');
           }
           this.isLoadingFavorite = false;
         },
         error: (error) => {
-          console.error('❌ Error removiendo:', error);
+          this.logger.error('Error removiendo de favoritos', error);
           this.isLoadingFavorite = false;
         }
       });

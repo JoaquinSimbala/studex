@@ -7,6 +7,7 @@ import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { FavoritesService } from '../../services/favorites.service';
 import { SearchHistoryService, SearchHistoryItem, PopularSearch } from '../../services/search-history.service';
+import { LoggerService } from '../../services/logger.service';
 import { Navbar } from '../../components/navbar/navbar';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
 
@@ -123,6 +124,24 @@ export class Home implements OnInit {
   loadingCategories = false;
 
   /**
+   * Mensaje de error al cargar proyectos destacados
+   * 
+   * @description
+   * Se muestra cuando falla la petición HTTP de proyectos.
+   * Permite al usuario reintentar la carga.
+   */
+  errorLoadingProjects: string | null = null;
+
+  /**
+   * Mensaje de error al cargar categorías populares
+   * 
+   * @description
+   * Se muestra cuando falla la petición HTTP de categorías.
+   * Permite al usuario reintentar la carga.
+   */
+  errorLoadingCategories: string | null = null;
+
+  /**
    * Array de búsquedas recientes del usuario autenticado
    * 
    * @description
@@ -169,7 +188,8 @@ export class Home implements OnInit {
     private apiService: ApiService,
     private router: Router,
     private sanitizer: DomSanitizer,
-    private searchHistoryService: SearchHistoryService
+    private searchHistoryService: SearchHistoryService,
+    private logger: LoggerService
   ) {}
 
   /**
@@ -229,20 +249,21 @@ export class Home implements OnInit {
    * 2. Si NO está autenticado:
    *    - Carga las 6 categorías ordenadas por ordenDisplay
    * 
-   * @private
+   * @public
    * @async
    */
-  private async loadPopularCategories(): Promise<void> {
+  async loadPopularCategories(): Promise<void> {
     this.loadingCategories = true;
+    this.errorLoadingCategories = null; // Limpiar error anterior
     
     try {
-      console.log('🔄 Cargando categorías populares desde API...');
+      this.logger.log('Cargando categorías populares');
       
       // Obtener todas las categorías disponibles
       const response = await this.apiService.get('/projects/categories').toPromise();
 
       if (!response?.success || !response.data) {
-        console.warn('⚠️ No se pudieron cargar categorías desde la API');
+        this.logger.warn('No se pudieron cargar categorías desde la API');
         this.popularCategories = [];
         return;
       }
@@ -256,17 +277,17 @@ export class Home implements OnInit {
           const preferredResponse = await this.apiService.get(`/auth/user/${this.currentUser.id}/preferred-categories`).toPromise();
           
           if (preferredResponse?.success && Array.isArray(preferredResponse.data) && preferredResponse.data.length > 0) {
-            console.log('✅ Categorías preferidas del usuario:', preferredResponse.data);
+            this.logger.debug('Categorías preferidas obtenidas', preferredResponse.data.length);
             
             // Agregar las categorías preferidas primero
             const preferredCategoryIds = preferredResponse.data.map((pc: any) => pc.categoriaId);
             const preferredCategories = allCategories.filter(cat => preferredCategoryIds.includes(cat.id));
             selectedCategories.push(...preferredCategories);
             
-            console.log(`📌 ${preferredCategories.length} categorías preferidas agregadas`);
+            this.logger.debug('Categorías preferidas agregadas', preferredCategories.length);
           }
         } catch (error) {
-          console.warn('⚠️ No se pudieron cargar categorías preferidas:', error);
+          this.logger.warn('No se pudieron cargar categorías preferidas');
           // Continuar sin categorías preferidas
         }
       }
@@ -281,15 +302,15 @@ export class Home implements OnInit {
           .slice(0, remainingSlots);
         
         selectedCategories.push(...remainingCategories);
-        console.log(`➕ ${remainingCategories.length} categorías adicionales por orden_display`);
+        this.logger.debug('Categorías adicionales agregadas', remainingCategories.length);
       }
 
       this.popularCategories = selectedCategories.slice(0, 6);
-      console.log('✅ Total de categorías cargadas:', this.popularCategories.length);
-      console.log('📂 Categorías finales:', this.popularCategories.map(c => c.nombre));
+      this.logger.success('Categorías cargadas correctamente', this.popularCategories.length);
       
     } catch (error) {
-      console.error('❌ Error cargando categorías populares:', error);
+      this.logger.error('Error cargando categorías populares', error);
+      this.errorLoadingCategories = 'No se pudieron cargar las categorías. Por favor, intenta nuevamente.';
       this.popularCategories = [];
     } finally {
       this.loadingCategories = false;
@@ -309,17 +330,16 @@ export class Home implements OnInit {
    * 
    * Siempre se muestran hasta 6 proyectos en total.
    * 
-   * @private
+   * @public
    * @async
    */
-  private async loadFeaturedProjects(): Promise<void> {
+  async loadFeaturedProjects(): Promise<void> {
     this.isLoading = true;
+    this.errorLoadingProjects = null; // Limpiar error anterior
     
     try {
-      console.log('🔄 Cargando proyectos destacados desde API...');
-      const response = await this.apiService.getFeaturedProjects(20).toPromise(); // Cargar más para tener opciones
-
-      console.log('📡 Respuesta de API:', response);
+      this.logger.log('Cargando proyectos destacados');
+      const response = await this.apiService.getFeaturedProjects(20).toPromise();
 
       if (response?.success && response.data) {
         let allProjects = response.data;
@@ -334,10 +354,10 @@ export class Home implements OnInit {
         // Si el usuario está autenticado, priorizar por categorías preferidas
         if (this.currentUser && this.popularCategories.length > 0) {
           const preferredCategoryNames = this.popularCategories
-            .slice(0, 3) // Solo las primeras 3 que son las preferidas del usuario
+            .slice(0, 3)
             .map(cat => cat.nombre.toLowerCase());
 
-          console.log('📌 Categorías preferidas para filtrar:', preferredCategoryNames);
+          this.logger.debug('Aplicando filtro de categorías preferidas', preferredCategoryNames.length);
 
           // Separar proyectos en dos grupos
           const preferredProjects = allProjects.filter((project: any) => 
@@ -348,8 +368,7 @@ export class Home implements OnInit {
             !preferredCategoryNames.includes(project.category?.nombre?.toLowerCase() || '')
           );
 
-          console.log(`✅ Proyectos de categorías preferidas: ${preferredProjects.length}`);
-          console.log(`📦 Otros proyectos destacados: ${otherProjects.length}`);
+          this.logger.debug('Proyectos filtrados', { preferred: preferredProjects.length, other: otherProjects.length });
 
           // Combinar: primero preferidos, luego el resto, y transformar
           const combinedProjects = [...preferredProjects, ...otherProjects].slice(0, 6);
@@ -359,16 +378,15 @@ export class Home implements OnInit {
           this.featuredProjects = allProjects.slice(0, 6).map((projectData: any) => this.transformProjectData(projectData));
         }
 
-        console.log('✅ Proyectos destacados cargados desde BD:', this.featuredProjects.length);
-        console.log('📚 Proyectos finales:', this.featuredProjects.map(p => `${p.title} (${p.category})`));
+        this.logger.success('Proyectos destacados cargados', this.featuredProjects.length);
       } else {
-        console.warn('⚠️ No hay proyectos destacados disponibles en la BD');
+        this.logger.warn('No hay proyectos destacados disponibles');
         this.featuredProjects = [];
       }
     } catch (error) {
-      console.error('❌ Error cargando proyectos destacados:', error);
+      this.logger.error('Error cargando proyectos destacados', error);
+      this.errorLoadingProjects = 'No se pudieron cargar los proyectos destacados. Por favor, intenta nuevamente.';
       this.featuredProjects = [];
-      console.log('⚠️ No se pudieron cargar proyectos destacados de la BD');
     } finally {
       this.isLoading = false;
     }
@@ -500,12 +518,12 @@ export class Home implements OnInit {
   removeRecentSearch(searchId: number): void {
     this.searchHistoryService.removeSearch(searchId).subscribe(
       () => {
-        console.log('✅ Búsqueda eliminada exitosamente');
+        this.logger.log('Búsqueda eliminada');
         // Recargar las búsquedas recientes para traer la siguiente disponible
         this.loadRecentSearches();
       },
       error => {
-        console.error('❌ Error al eliminar búsqueda:', error);
+        this.logger.error('Error al eliminar búsqueda', error);
       }
     );
   }

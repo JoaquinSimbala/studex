@@ -2,6 +2,7 @@ import { Injectable, inject, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, interval, Subscription } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from './auth.service';
+import { LoggerService } from './logger.service';
 import { environment } from '../../environments/environment';
 
 export interface Notification {
@@ -51,6 +52,7 @@ export class NotificationService implements OnDestroy {
   
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private logger = inject(LoggerService);
   
   // Subscripción de polling - DEBE ser limpiada
   private pollingSubscription: Subscription | null = null;
@@ -104,7 +106,7 @@ export class NotificationService implements OnDestroy {
   ngOnDestroy(): void {
     if (this.pollingSubscription) {
       this.pollingSubscription.unsubscribe();
-      console.log('🧹 Polling de notificaciones detenido');
+      this.logger.log('Polling de notificaciones detenido');
     }
   }
 
@@ -184,9 +186,7 @@ export class NotificationService implements OnDestroy {
    * Cargar notificaciones de la base de datos
    */
   loadDbNotifications(): Observable<any> {
-    console.log('🔄 Cargando notificaciones de la BD...');
-    console.log('🔑 Token disponible:', !!this.authService.getToken());
-    console.log('📡 URL:', `${environment.apiUrl}/notifications?limit=20`);
+    this.logger.log('Cargando notificaciones');
     
     return new Observable(observer => {
       const headers: any = {};
@@ -194,9 +194,9 @@ export class NotificationService implements OnDestroy {
       
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
-        console.log('🔐 Headers con autenticación agregados');
+        this.logger.debug('Headers con autenticación agregados');
       } else {
-        console.warn('⚠️ No hay token de autenticación');
+        this.logger.warn('No hay token de autenticación');
         observer.error('No authenticated');
         return;
       }
@@ -204,22 +204,18 @@ export class NotificationService implements OnDestroy {
       this.http.get<any>(`${environment.apiUrl}/notifications?limit=20`, { headers })
         .subscribe({
           next: (response) => {
-            console.log('✅ Respuesta recibida:', response);
             if (response.success) {
-              console.log('📋 Notificaciones encontradas:', response.data?.length || 0);
-              console.log('📝 Datos:', response.data);
+              this.logger.success('Notificaciones cargadas', response.data?.length || 0);
               this.dbNotificationsSubject.next(response.data || []);
             } else {
-              console.warn('⚠️ Respuesta no exitosa:', response);
+              this.logger.warn('Respuesta no exitosa');
               this.dbNotificationsSubject.next([]);
             }
             observer.next(response);
             observer.complete();
           },
           error: (error) => {
-            console.error('❌ Error cargando notificaciones:', error);
-            console.error('📊 Status:', error.status);
-            console.error('📝 Message:', error.message);
+            this.logger.error('Error cargando notificaciones', error);
             this.dbNotificationsSubject.next([]);
             observer.error(error);
           }
@@ -231,7 +227,7 @@ export class NotificationService implements OnDestroy {
    * Cargar conteo de notificaciones no leídas
    */
   loadUnreadCount(): Observable<any> {
-    console.log('🔢 Cargando conteo de no leídas...');
+    this.logger.log('Cargando conteo de no leídas');
     
     return new Observable(observer => {
       const headers: any = {};
@@ -240,7 +236,7 @@ export class NotificationService implements OnDestroy {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       } else {
-        console.warn('⚠️ No hay token para conteo no leídas');
+        this.logger.warn('No hay token para conteo no leídas');
         observer.error('No authenticated');
         return;
       }
@@ -248,17 +244,16 @@ export class NotificationService implements OnDestroy {
       this.http.get<any>(`${environment.apiUrl}/notifications/unread-count`, { headers })
         .subscribe({
           next: (response) => {
-            console.log('✅ Conteo recibido:', response);
             if (response.success) {
               const count = response.data?.unreadCount || 0;
-              console.log('🔢 No leídas:', count);
+              this.logger.debug('Notificaciones no leídas', count);
               this.unreadCountSubject.next(count);
             }
             observer.next(response);
             observer.complete();
           },
           error: (error) => {
-            console.error('❌ Error cargando conteo no leídas:', error);
+            this.logger.error('Error cargando conteo no leídas', error);
             observer.error(error);
           }
         });

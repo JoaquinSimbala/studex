@@ -141,8 +141,24 @@
             <p class="text-studex-600 mt-2">Cargando categorías...</p>
           </div>
           
+          <!-- Mensaje de error -->
+          <div *ngIf="!loadingCategories && errorLoadingCategories" class="flex flex-col items-center justify-center py-12 bg-red-50 rounded-2xl">
+            <svg class="w-16 h-16 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-red-700 font-semibold mb-4">{{ errorLoadingCategories }}</p>
+            <button 
+              (click)="loadPopularCategories()"
+              class="studex-btn primary modern-button px-6 py-2">
+              <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+              </svg>
+              Reintentar
+            </button>
+          </div>
+          
           <!-- Categorías cargadas -->
-          <div *ngIf="!loadingCategories" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
+          <div *ngIf="!loadingCategories && !errorLoadingCategories" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
             <button 
               *ngFor="let category of popularCategories"
               (click)="selectPopularCategory(category)"
@@ -162,10 +178,6 @@
             </button>
           </div>
           
-          <!-- Fallback si no hay categorías -->
-          <div *ngIf="!loadingCategories && popularCategories.length === 0" class="text-center py-8">
-            <p class="text-studex-600">No hay categorías disponibles en este momento.</p>
-          </div>
         </div>
       </div>
     </div>
@@ -198,8 +210,25 @@
         <p class="text-studex-700 text-lg font-medium">Cargando proyectos destacados...</p>
       </div>
 
+      <!-- Mensaje de error -->
+      <div *ngIf="!isLoading && errorLoadingProjects" class="flex flex-col items-center justify-center py-16 bg-red-50 rounded-3xl">
+        <svg class="w-20 h-20 text-red-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <h3 class="text-2xl font-bold text-red-700 mb-3">{{ errorLoadingProjects }}</h3>
+        <p class="text-red-600 mb-6">Verifica tu conexión a internet e inténtalo nuevamente.</p>
+        <button 
+          (click)="loadFeaturedProjects()"
+          class="studex-btn primary modern-button px-8 py-3">
+          <svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+          Reintentar
+        </button>
+      </div>
+
       <!-- Estado vacío -->
-      <div *ngIf="!isLoading && featuredProjects.length === 0" class="text-center py-16">
+      <div *ngIf="!isLoading && !errorLoadingProjects && featuredProjects.length === 0" class="text-center py-16">
         <div class="w-20 h-20 bg-studex-100 rounded-full flex items-center justify-center mx-auto mb-6">
           <svg class="w-10 h-10 text-studex-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
@@ -217,7 +246,7 @@
       </div>
 
       <!-- Grid de proyectos -->
-      <div *ngIf="!isLoading && featuredProjects.length > 0" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div *ngIf="!isLoading && !errorLoadingProjects && featuredProjects.length > 0" class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         <app-project-card
           *ngFor="let project of featuredProjects; trackBy: trackByProjectId; let i = index"
           [project]="project"
@@ -228,7 +257,7 @@
       </div>
 
       <!-- Botón para ver más proyectos -->
-      <div *ngIf="!isLoading && featuredProjects.length > 0" class="text-center mt-16 slide-in-up">
+      <div *ngIf="!isLoading && !errorLoadingProjects && featuredProjects.length > 0" class="text-center mt-16 slide-in-up">
         <button 
           (click)="loadMoreProjects()"
           class="studex-btn primary text-lg px-10 py-4 modern-button font-bold transform hover:scale-105 transition-all duration-300">

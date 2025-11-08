@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
+import { LoggerService } from './logger.service';
 
 export interface CartItem {
   id: number;
@@ -51,6 +52,7 @@ export class CartService {
   
   private http = inject(HttpClient);
   private authService = inject(AuthService);
+  private logger = inject(LoggerService);
 
   // Estado del carrito
   private cartSubject = new BehaviorSubject<CartItem[]>([]);
@@ -82,7 +84,7 @@ export class CartService {
    * Cargar carrito desde el servidor
    */
   loadCart(): Observable<CartSummary> {
-    console.log('🛒 Cargando carrito...');
+    this.logger.log('Cargando carrito');
     
     return new Observable(observer => {
       const headers: any = {};
@@ -91,7 +93,7 @@ export class CartService {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       } else {
-        console.warn('⚠️ No hay token para cargar carrito');
+        this.logger.warn('No hay token para cargar carrito');
         observer.error('No authenticated');
         return;
       }
@@ -99,9 +101,9 @@ export class CartService {
       this.http.get<any>(`${environment.apiUrl}/cart`, { headers })
         .subscribe({
           next: (response) => {
-            console.log('✅ Carrito cargado:', response);
             if (response.success && response.data) {
               const cartData = response.data as CartSummary;
+              this.logger.success('Carrito cargado', cartData.count);
               this.cartSubject.next(cartData.items);
               this.cartCountSubject.next(cartData.count);
               this.totalSubject.next(cartData.total);

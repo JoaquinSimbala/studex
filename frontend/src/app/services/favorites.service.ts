@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { LoggerService } from './logger.service';
 
 export interface FavoriteProject {
   id: number;
@@ -47,7 +48,8 @@ export class FavoritesService {
 
   constructor(
     private http: HttpClient,
-    private authService: AuthService
+    private authService: AuthService,
+    private logger: LoggerService
   ) {
     // Cargar favoritos al inicializar si hay usuario autenticado
     this.authService.currentUser$.subscribe(user => {
@@ -89,24 +91,24 @@ export class FavoritesService {
    * Agrega un proyecto a favoritos
    */
   addToFavorites(projectId: number): Observable<any> {
-    console.log('➕ Agregando proyecto a favoritos:', projectId);
+    this.logger.log('Agregando proyecto a favoritos');
     
     const headers = this.getHeaders();
     if (!headers) {
-      console.error('❌ No hay headers de autenticación');
+      this.logger.error('No hay headers de autenticación');
       return new Observable(observer => observer.error('No authenticated'));
     }
 
     return this.http.post<any>(`${this.baseUrl}/favorites`, { projectId }, { headers }).pipe(
       tap(response => {
-        console.log('✅ Proyecto agregado exitosamente a favoritos');
         if (response.success) {
+          this.logger.success('Proyecto agregado a favoritos');
           // Solo actualizar el estado interno después de confirmación del servidor
           this.favoriteProjectIds.add(projectId);
         }
       }),
       catchError(error => {
-        console.error('❌ Error agregando a favoritos:', error);
+        this.logger.error('Error agregando a favoritos', error);
         throw error;
       })
     );
@@ -116,24 +118,24 @@ export class FavoritesService {
    * Remueve un proyecto de favoritos
    */
   removeFromFavorites(projectId: number): Observable<any> {
-    console.log('➖ Removiendo proyecto de favoritos:', projectId);
+    this.logger.log('Removiendo proyecto de favoritos');
     
     const headers = this.getHeaders();
     if (!headers) {
-      console.error('❌ No hay headers de autenticación');
+      this.logger.error('No hay headers de autenticación');
       return new Observable(observer => observer.error('No authenticated'));
     }
 
     return this.http.delete<any>(`${this.baseUrl}/favorites/${projectId}`, { headers }).pipe(
       tap(response => {
-        console.log('✅ Proyecto removido exitosamente de favoritos');
         if (response.success) {
+          this.logger.success('Proyecto removido de favoritos');
           // Solo actualizar el estado interno después de confirmación del servidor
           this.favoriteProjectIds.delete(projectId);
         }
       }),
       catchError(error => {
-        console.error('❌ Error removiendo de favoritos:', error);
+        this.logger.error('Error removiendo de favoritos', error);
         throw error;
       })
     );
@@ -143,19 +145,18 @@ export class FavoritesService {
    * Toggle favorito (agregar/remover)
    */
   toggleFavorite(projectId: number): Observable<any> {
-    console.log('🔄 Toggle favorito para proyecto:', projectId);
-    console.log('🔍 ¿Está en favoritos actualmente?', this.isFavorite(projectId));
+    this.logger.log('Toggle favorito');
     
     if (!projectId) {
-      console.error('❌ ID de proyecto no válido');
+      this.logger.error('ID de proyecto no válido');
       return new Observable(observer => observer.error('ID de proyecto no válido'));
     }
     
     if (this.isFavorite(projectId)) {
-      console.log('➖ Removiendo de favoritos...');
+      this.logger.log('Removiendo de favoritos');
       return this.removeFromFavorites(projectId);
     } else {
-      console.log('➕ Agregando a favoritos...');
+      this.logger.log('Agregando a favoritos');
       return this.addToFavorites(projectId);
     }
   }
