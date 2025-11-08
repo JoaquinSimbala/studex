@@ -5,86 +5,128 @@
   <app-navbar></app-navbar>
 
   <!-- Hero Section con Búsqueda -->
-  <section class="py-20 bg-studex-gradient from-studex-50 via-white to-studex-100 relative overflow-hidden">
-    <div class="studex-container relative z-10 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-4xl mx-auto text-center">
+  <section class="h-[calc(100vh-5rem)] bg-studex-100 relative overflow-hidden flex flex-col">
+    <!-- Contenido principal del hero: Imagen + Texto (mismo height) -->
+    <div class="studex-container relative z-10 px-4 sm:px-6 lg:px-8 flex-1 flex items-center">
+      <div class="w-full max-w-6xl mx-auto">
         
-        <!-- Hero Principal - Layout Responsivo -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-16">
+        <!-- Hero Principal - Grid con altura igual para imagen y texto -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 w-full items-stretch">
           
-          <!-- Ilustración Principal - IconoInicio (Izquierda en desktop, arriba en móvil) -->
-          <div class="order-1 lg:order-1 lg:col-span-5 flex justify-center lg:justify-end fade-in">
-            <div class="relative flex items-center justify-center p-4">
+          <!-- Ilustración Principal - IconoInicio (Solo visible en desktop) -->
+          <div class="hidden lg:flex order-1 lg:order-1 lg:col-span-5 justify-center lg:justify-end items-center fade-in">
+            <div class="relative flex items-center justify-center h-full w-full">
               
               <!-- IconoInicio.svg - Imagen Externa -->
-              <button class="bg-transparent hover:scale-105 transition-transform duration-500 focus:outline-none">
+              <button class="bg-transparent hover:scale-105 transition-transform duration-500 focus:outline-none flex items-center justify-center h-full">
                 <img 
                   src="IconoInicio.svg" 
                   alt="STUDEX - Logo Principal" 
-                  class="w-[280px] h-auto md:w-[320px] lg:w-[380px] max-w-none object-contain drop-shadow-2xl"
+                  class="w-auto h-full max-h-[350px] sm:max-h-[400px] md:max-h-[450px] lg:max-h-[500px] object-contain drop-shadow-2xl"
                   loading="eager">
               </button>
               
             </div>
           </div>
 
-          <!-- Título Principal (Derecha en desktop, abajo en móvil) -->
-          <div class="order-2 lg:order-2 lg:col-span-7 text-center lg:text-left slide-in-up px-4 lg:px-0" style="animation-delay: 0.2s;">
-            <h1 class="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black text-studex-900 mb-6 leading-tight break-words">
-              ACCEDE A <span class="text-studex-700">MAS DE MIL</span><br>
-              <span class="text-studex-700">PROYECTOS</span> UNIVERSITARIOS<br>
-              <span class="bg-gradient-to-r from-studex-accent to-studex-600 bg-clip-text text-transparent">CON SOLO UN CLIC</span>
-            </h1>
-            <p class="text-base sm:text-lg md:text-xl lg:text-lg xl:text-xl 2xl:text-2xl text-studex-700 mb-8 font-medium lg:max-w-none px-2 lg:px-0">
-              Tu marketplace de proyectos universitarios. Encuentra, compra y vende trabajos académicos de calidad.
-            </p>
+          <!-- Título Principal (Pantalla completa en móvil, 7 columnas en desktop) -->
+          <div class="order-1 lg:order-2 lg:col-span-7 flex flex-col justify-center text-center slide-in-up px-4 lg:px-0" style="animation-delay: 0.2s;">
+            <div class="flex flex-col justify-center">
+              <h1 class="font-heading text-2xl sm:text-3xl md:text-4xl lg:text-4xl xl:text-5xl 2xl:text-6xl font-black text-studex-900 mb-6 leading-tight break-words">
+                ACCEDE A <span class="text-studex-700">MAS DE MIL PROYECTOS</span><br>
+                <span class="text-studex-700">UNIVERSITARIOS</span><br>
+                <span class="bg-gradient-to-r from-studex-accent to-studex-600 bg-clip-text text-transparent">CON SOLO UN CLIC</span>
+              </h1>
+              <p class="text-base sm:text-lg md:text-xl lg:text-lg xl:text-xl 2xl:text-2xl text-studex-700 mb-8 font-medium lg:max-w-none px-2 lg:px-0">
+                Tu marketplace de proyectos universitarios. Encuentra, compra y vende trabajos académicos de calidad.
+              </p>
+
+              <!-- Barra de Búsqueda dentro del Hero -->
+              <div class="max-w-2xl mx-auto w-full">
+                <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-studex-xl border border-studex-200/50 modern-card">
+                  <div class="relative flex items-center">
+                    <!-- Input de búsqueda -->
+                    <input 
+                      type="text" 
+                      [(ngModel)]="searchQuery"
+                      (keyup.enter)="onSearch()"
+                      placeholder="Busca proyectos, tesis, trabajos..."
+                      class="w-full pl-14 pr-16 py-4 bg-white border-2 border-studex-300 rounded-2xl text-studex-900 placeholder-studex-500 focus:outline-none focus:ring-4 focus:ring-studex-500/30 focus:border-studex-600 shadow-lg text-base font-medium transition-all duration-300">
+                    
+                    <!-- Icono de búsqueda izquierdo -->
+                    <div class="absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                      <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                    </div>
+                    
+                    <!-- Botón de búsqueda -->
+                    <button 
+                      (click)="onSearch()"
+                      class="absolute right-2 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-gradient-to-r from-studex-700 to-studex-800 text-white rounded-xl hover:from-studex-800 hover:to-studex-900 transition-all duration-300 shadow-xl hover:scale-105 flex items-center justify-center">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  
+                  <!-- Sugerencias de búsqueda -->
+                  <div class="mt-4 text-center">
+                    <!-- Búsquedas Recientes (Solo usuarios autenticados) -->
+                    <div *ngIf="currentUser && recentSearches.length > 0">
+                      <p class="text-studex-600 font-medium text-sm mb-2">Búsquedas recientes:</p>
+                      <div class="flex flex-wrap justify-center gap-2">
+                        <div *ngFor="let search of recentSearches" 
+                             class="group relative inline-flex items-center justify-between px-3 py-1.5 bg-studex-100 text-studex-700 rounded-full text-xs font-medium hover:bg-studex-200 transition-colors min-w-[100px]">
+                          <span (click)="onPopularSearch(search.termino)" 
+                                class="cursor-pointer flex-1 text-center">{{ search.termino }}</span>
+                          <button (click)="removeRecentSearch(search.id)"
+                                  class="ml-2 w-3.5 h-3.5 flex items-center justify-center hover:bg-studex-300 rounded-full flex-shrink-0">
+                            <svg class="w-2.5 h-2.5 text-studex-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Búsquedas Populares (Solo usuarios NO autenticados) -->
+                    <div *ngIf="!currentUser">
+                      <p class="text-studex-600 font-medium text-sm mb-2">Búsquedas populares:</p>
+                      <div class="flex flex-wrap justify-center gap-2">
+                        <span *ngFor="let search of popularSearches" 
+                              (click)="onPopularSearch(search.termino)" 
+                              class="px-3 py-1.5 bg-studex-100 text-studex-700 rounded-full text-xs font-medium hover:bg-studex-200 cursor-pointer transition-colors">
+                          {{ search.termino }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
+      </div>
+    </div>
 
-        <!-- Barra de Búsqueda Principal Corregida -->
-        <div class="max-w-3xl mx-auto mb-16 slide-in-up" style="animation-delay: 0.4s;">
-          <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-studex-xl border border-studex-200/50 modern-card">
-            <div class="relative flex items-center">
-              <!-- Input de búsqueda con padding ajustado para botón de icono -->
-              <input 
-                type="text" 
-                [(ngModel)]="searchQuery"
-                (keyup.enter)="onSearch()"
-                placeholder="Busca proyectos, tesis, trabajos..."
-                class="w-full pl-16 pr-20 py-5 bg-white border-2 border-studex-300 rounded-2xl text-studex-900 placeholder-studex-500 focus:outline-none focus:ring-4 focus:ring-studex-500/30 focus:border-studex-600 shadow-lg text-lg font-medium transition-all duration-300">
-              
-              <!-- Icono de búsqueda izquierdo alineado -->
-              <div class="absolute left-5 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg class="w-6 h-6 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-              </div>
-              
-              <!-- Botón de búsqueda solo con icono, perfectamente centrado -->
-              <button 
-                (click)="onSearch()"
-                class="absolute right-2 top-1/2 transform -translate-y-1/2 w-12 h-12 bg-gradient-to-r from-studex-700 to-studex-800 text-white rounded-xl hover:from-studex-800 hover:to-studex-900 transition-all duration-300 shadow-xl hover:scale-105 flex items-center justify-center">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-              </button>
-            </div>
-            
-            <!-- Sugerencias de búsqueda -->
-            <div class="mt-6 text-center">
-              <p class="text-studex-600 font-medium mb-3">Búsquedas populares:</p>
-              <div class="flex flex-wrap justify-center gap-2">
-                <span (click)="onPopularSearch('Tesis de sistemas')" 
-                      class="px-4 py-2 bg-studex-100 text-studex-700 rounded-full text-sm font-medium hover:bg-studex-200 cursor-pointer transition-colors">Tesis de sistemas</span>
-                <span (click)="onPopularSearch('Proyectos de ingeniería')" 
-                      class="px-4 py-2 bg-studex-100 text-studex-700 rounded-full text-sm font-medium hover:bg-studex-200 cursor-pointer transition-colors">Proyectos de ingeniería</span>
-                <span (click)="onPopularSearch('Investigación de mercado')" 
-                      class="px-4 py-2 bg-studex-100 text-studex-700 rounded-full text-sm font-medium hover:bg-studex-200 cursor-pointer transition-colors">Investigación de mercado</span>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- Botón flotante para scroll hacia abajo - FUERA del contenedor -->
+    <div class="relative z-20 pb-12 flex justify-center">
+      <button 
+        (click)="scrollToCategories()"
+        class="hover:scale-110 transition-all duration-300 focus:outline-none animate-slow-bounce">
+        <svg class="w-10 h-10 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+    </div>
+  </section>
+
+  <!-- Sección de Categorías -->
+  <section id="categories-section" class="py-20 bg-gradient-to-br from-studex-50 to-studex-100">
+    <div class="studex-container px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto text-center">
 
         <!-- Categorías Populares desde BD -->
         <div class="max-w-5xl mx-auto mb-20 slide-in-up" style="animation-delay: 0.6s;">
@@ -100,20 +142,20 @@
           </div>
           
           <!-- Categorías cargadas -->
-          <div *ngIf="!loadingCategories" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div *ngIf="!loadingCategories" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
             <button 
               *ngFor="let category of popularCategories"
               (click)="selectPopularCategory(category)"
-              class="group p-6 bg-white hover:bg-studex-50 rounded-3xl border-2 border-studex-200 hover:border-studex-400 transition-all duration-300 shadow-lg hover:shadow-studex-xl transform hover:scale-105 hover:-translate-y-2">
-              <div class="text-center">
-                <div class="mb-3 transform group-hover:scale-110 transition-transform duration-300 flex items-center justify-center"
+              class="group p-4 lg:p-6 bg-white rounded-2xl lg:rounded-3xl transition-all duration-300 shadow-lg hover:shadow-studex-xl transform hover:scale-105 hover:-translate-y-2 flex flex-col items-center justify-center h-full">
+              <div class="text-center w-full flex flex-col items-center justify-center">
+                <div class="mb-2 lg:mb-3 transform group-hover:scale-110 transition-transform duration-300 flex items-center justify-center flex-shrink-0"
                      [style.color]="category.colorHex">
-                  <div class="w-12 h-12" [innerHTML]="getSafeHtml(category.icono)"></div>
+                  <div class="w-10 h-10 lg:w-12 lg:h-12" [innerHTML]="getSafeHtml(category.icono)"></div>
                 </div>
-                <h4 class="font-heading text-sm font-bold text-studex-900 group-hover:text-studex-700 transition-colors duration-300">
+                <h4 class="font-heading text-xs sm:text-sm lg:text-sm font-bold text-studex-900 group-hover:text-studex-700 transition-colors duration-300 leading-tight mb-1">
                   {{ category.nombre }}
                 </h4>
-                <p *ngIf="category.descripcion" class="text-xs text-studex-600 mt-1">
+                <p *ngIf="category.descripcion" class="text-[10px] sm:text-xs text-studex-600 leading-snug">
                   {{ category.descripcion }}
                 </p>
               </div>
@@ -128,8 +170,6 @@
       </div>
     </div>
   </section>
-
-  <!-- Sección de Proyectos Destacados -->
   <section class="py-20 bg-white">
     <div class="studex-container">
       

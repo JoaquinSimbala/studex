@@ -54,7 +54,22 @@ module.exports = {
       },
       spacing: {
         '18': '4.5rem',  // 72px para h-18
-      }
+      },
+      keyframes: {
+        'slow-bounce': {
+          '0%, 100%': {
+            transform: 'translateY(0)',
+            animationTimingFunction: 'ease-in-out',
+          },
+          '50%': {
+            transform: 'translateY(-15px)',
+            animationTimingFunction: 'ease-in-out',
+          },
+        },
+      },
+      animation: {
+        'slow-bounce': 'slow-bounce 2s ease-in-out infinite',
+      },
     },
   },
   plugins: [

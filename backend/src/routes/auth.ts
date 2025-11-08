@@ -835,4 +835,68 @@ router.put('/preferred-categories', authenticateToken, async (req: Request, res:
   }
 });
 
+/**
+ * GET /auth/user/:userId/preferred-categories
+ * Obtiene las categorías preferidas de un usuario
+ */
+router.get('/user/:userId/preferred-categories', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = parseInt(req.params.userId);
+
+    if (isNaN(userId)) {
+      res.status(400).json({
+        success: false,
+        message: 'ID de usuario inválido'
+      });
+      return;
+    }
+
+    const userWithCategories = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        categoriasPreferidas: {
+          include: {
+            categoria: true
+          },
+          orderBy: {
+            fechaAgregado: 'asc'
+          }
+        }
+      }
+    });
+
+    if (!userWithCategories) {
+      res.status(404).json({
+        success: false,
+        message: 'Usuario no encontrado'
+      });
+      return;
+    }
+
+    const preferredCategories = userWithCategories.categoriasPreferidas.map(pc => ({
+      id: pc.id,
+      categoriaId: pc.categoriaId,
+      categoria: {
+        id: pc.categoria.id,
+        nombre: pc.categoria.nombre,
+        descripcion: pc.categoria.descripcion,
+        icono: pc.categoria.icono,
+        colorHex: pc.categoria.colorHex
+      }
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: preferredCategories
+    });
+
+  } catch (error) {
+    console.error('❌ Error obteniendo categorías preferidas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+});
+
 export default router;

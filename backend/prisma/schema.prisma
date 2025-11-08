@@ -46,8 +46,23 @@ model User {
   ventasComoComprador     Sale[]                  @relation("CompradorSales")
   ventasComoVendedor      Sale[]                  @relation("VendedorSales")
   categoriasPreferidas    UserPreferredCategory[]
+  historialBusquedas      SearchHistory[]
 
   @@map("usuarios")
+}
+
+model SearchHistory {
+  id         Int      @id @default(autoincrement())
+  usuarioId  Int      @map("usuario_id")
+  termino    String   @map("termino")
+  timestamp  DateTime @default(now())
+  isActive   Boolean  @default(true) @map("is_active")
+  
+  usuario    User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  @@index([usuarioId, isActive])
+  @@index([timestamp])
+  @@map("historial_busquedas")
 }
 
 model Category {

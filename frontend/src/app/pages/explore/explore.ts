@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService, User } from '../../services/auth.service';
+import { SearchHistoryService } from '../../services/search-history.service';
 import { Navbar } from '../../components/navbar/navbar';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
 
@@ -270,12 +271,14 @@ export class ExploreComponent implements OnInit {
    * @param authService - Servicio de autenticación de usuarios
    * @param router - Router de Angular para navegación
    * @param route - ActivatedRoute para acceder a queryParams
+   * @param searchHistoryService - Servicio para gestionar historial de búsquedas
    */
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private searchHistoryService: SearchHistoryService
   ) {}
 
   /**
@@ -312,6 +315,11 @@ export class ExploreComponent implements OnInit {
       if (params['q']) {
         this.searchQuery = params['q'];
         console.log('🔍 Búsqueda pre-cargada:', params['q']);
+        
+        // Guardar búsqueda en historial si está autenticado
+        if (this.currentUser && params['q'].trim()) {
+          this.searchHistoryService.saveSearch(params['q'].trim()).subscribe();
+        }
       }
       this.loadProjects();
     });
@@ -607,8 +615,15 @@ export class ExploreComponent implements OnInit {
    * 
    * Internamente llama a applyFilters() que reinicia la paginación
    * y recarga los proyectos con el término de búsqueda actual.
+   * 
+   * También guarda la búsqueda en el historial si el usuario está autenticado.
    */
   onSearch(): void {
+    // Guardar en historial si está autenticado y hay texto de búsqueda
+    if (this.currentUser && this.searchQuery && this.searchQuery.trim()) {
+      this.searchHistoryService.saveSearch(this.searchQuery.trim()).subscribe();
+    }
+    
     this.applyFilters();
   }
 

@@ -6,6 +6,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { FavoritesService } from '../../services/favorites.service';
+import { SearchHistoryService, SearchHistoryItem, PopularSearch } from '../../services/search-history.service';
 import { Navbar } from '../../components/navbar/navbar';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
 
@@ -122,11 +123,37 @@ export class Home implements OnInit {
   loadingCategories = false;
 
   /**
+   * Array de búsquedas recientes del usuario autenticado
+   * 
+   * @description
+   * Se carga desde la API y se muestra solo para usuarios logueados.
+   * Limitado a 3-5 búsquedas más recientes.
+   */
+  recentSearches: SearchHistoryItem[] = [];
+
+  /**
+   * Array de búsquedas populares predefinidas (hardcodeadas)
+   * 
+   * @description
+   * Se muestran SOLO para usuarios NO autenticados.
+   * Son términos estáticos definidos en el código, no se cargan de la base de datos.
+   */
+  popularSearches: PopularSearch[] = [
+    { termino: 'Tesis de sistemas', count: 0 },
+    { termino: 'Proyectos de ingeniería', count: 0 },
+    { termino: 'Investigación de mercado', count: 0 }
+  ];
+
+  /**
    * Servicio para gestionar proyectos favoritos del usuario
    * 
    * @description
    * Se inyecta usando inject() para sincronizar estados de favoritos
    * entre ProjectCardComponent y la página home.
+   * 
+   * IMPORTANTE: Este servicio se usa internamente en transformProjectData()
+   * para sincronizar el estado inicial de favoritos al cargar proyectos.
+   * No se usa directamente en el template HTML.
    */
   private favoritesService = inject(FavoritesService);
 
@@ -141,7 +168,8 @@ export class Home implements OnInit {
     private authService: AuthService,
     private apiService: ApiService,
     private router: Router,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private searchHistoryService: SearchHistoryService
   ) {}
 
   /**
@@ -161,7 +189,8 @@ export class Home implements OnInit {
    * Realiza las siguientes operaciones en orden:
    * 1. Suscribe al usuario actual del AuthService
    * 2. Carga favoritos del usuario si está autenticado
-   * 3. Carga categorías populares y proyectos destacados en paralelo
+   * 3. Carga categorías populares PRIMERO (importante para filtrado de proyectos)
+   * 4. Carga proyectos destacados DESPUÉS (usa las categorías para filtrar)
    * 
    * @private
    * @async
@@ -170,6 +199,11 @@ export class Home implements OnInit {
     // Suscribirse al usuario actual
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+      
+      // Cargar búsquedas recientes si está autenticado
+      if (user) {
+        this.loadRecentSearches();
+      }
     });
 
     // Cargar favoritos primero para sincronizar estados
@@ -177,20 +211,23 @@ export class Home implements OnInit {
       await this.favoritesService.loadFavorites().toPromise();
     }
 
-    // Cargar categorías populares y proyectos destacados
-    await Promise.all([
-      this.loadPopularCategories(),
-      this.loadFeaturedProjects()
-    ]);
+    // IMPORTANTE: Cargar categorías PRIMERO (necesarias para filtrar proyectos)
+    await this.loadPopularCategories();
+    
+    // Luego cargar proyectos (ya con las categorías disponibles)
+    await this.loadFeaturedProjects();
   }
 
   /**
-   * Carga las 5 categorías más populares desde la base de datos
+   * Carga las categorías populares para mostrar en el hero section
    * 
    * @description
-   * Las categorías se ordenan por la propiedad ordenDisplay y se limitan a 5.
-   * Si falla la petición a la API, se establece un array vacío.
-   * Controla el estado de carga mediante loadingCategories.
+   * Lógica de carga:
+   * 1. Si el usuario está autenticado:
+   *    - Primero carga sus categorías preferidas
+   *    - Completa con categorías ordenadas por ordenDisplay hasta llegar a 6
+   * 2. Si NO está autenticado:
+   *    - Carga las 6 categorías ordenadas por ordenDisplay
    * 
    * @private
    * @async
@@ -200,21 +237,57 @@ export class Home implements OnInit {
     
     try {
       console.log('🔄 Cargando categorías populares desde API...');
+      
+      // Obtener todas las categorías disponibles
       const response = await this.apiService.get('/projects/categories').toPromise();
 
-      if (response?.success && response.data) {
-        // Ordenar por ordenDisplay y tomar las primeras 5
-        const allCategories = response.data as CategoryDB[];
-        this.popularCategories = allCategories
-          .sort((a, b) => (a.ordenDisplay || 999) - (b.ordenDisplay || 999))
-          .slice(0, 5);
-        
-        console.log('✅ Categorías populares cargadas:', this.popularCategories.length);
-        console.log('📂 Categorías:', this.popularCategories);
-      } else {
+      if (!response?.success || !response.data) {
         console.warn('⚠️ No se pudieron cargar categorías desde la API');
         this.popularCategories = [];
+        return;
       }
+
+      const allCategories = response.data as CategoryDB[];
+      let selectedCategories: CategoryDB[] = [];
+
+      // Si el usuario está autenticado, cargar sus categorías preferidas
+      if (this.currentUser) {
+        try {
+          const preferredResponse = await this.apiService.get(`/auth/user/${this.currentUser.id}/preferred-categories`).toPromise();
+          
+          if (preferredResponse?.success && Array.isArray(preferredResponse.data) && preferredResponse.data.length > 0) {
+            console.log('✅ Categorías preferidas del usuario:', preferredResponse.data);
+            
+            // Agregar las categorías preferidas primero
+            const preferredCategoryIds = preferredResponse.data.map((pc: any) => pc.categoriaId);
+            const preferredCategories = allCategories.filter(cat => preferredCategoryIds.includes(cat.id));
+            selectedCategories.push(...preferredCategories);
+            
+            console.log(`📌 ${preferredCategories.length} categorías preferidas agregadas`);
+          }
+        } catch (error) {
+          console.warn('⚠️ No se pudieron cargar categorías preferidas:', error);
+          // Continuar sin categorías preferidas
+        }
+      }
+
+      // Completar con categorías por orden_display hasta llegar a 6
+      const remainingSlots = 6 - selectedCategories.length;
+      if (remainingSlots > 0) {
+        const selectedIds = new Set(selectedCategories.map(cat => cat.id));
+        const remainingCategories = allCategories
+          .filter(cat => !selectedIds.has(cat.id))
+          .sort((a, b) => (a.ordenDisplay || 999) - (b.ordenDisplay || 999))
+          .slice(0, remainingSlots);
+        
+        selectedCategories.push(...remainingCategories);
+        console.log(`➕ ${remainingCategories.length} categorías adicionales por orden_display`);
+      }
+
+      this.popularCategories = selectedCategories.slice(0, 6);
+      console.log('✅ Total de categorías cargadas:', this.popularCategories.length);
+      console.log('📂 Categorías finales:', this.popularCategories.map(c => c.nombre));
+      
     } catch (error) {
       console.error('❌ Error cargando categorías populares:', error);
       this.popularCategories = [];
@@ -224,12 +297,17 @@ export class Home implements OnInit {
   }
 
   /**
-   * Carga hasta 6 proyectos destacados desde la API
+   * Carga proyectos destacados desde la API con lógica de priorización
    * 
    * @description
-   * Los proyectos se transforman usando transformProjectData() para adaptarlos
-   * a la interfaz ProjectCard. Si falla la petición, se muestra un array vacío.
-   * No se utilizan datos mock, se prefiere mostrar estado vacío.
+   * Lógica de ordenamiento:
+   * 1. Si el usuario está autenticado:
+   *    - Primero: Proyectos de categorías preferidas (más recientes a más antiguos)
+   *    - Segundo: Resto de proyectos destacados (más recientes a más antiguos)
+   * 2. Si NO está autenticado:
+   *    - Proyectos destacados ordenados por fecha (más recientes primero)
+   * 
+   * Siempre se muestran hasta 6 proyectos en total.
    * 
    * @private
    * @async
@@ -239,21 +317,56 @@ export class Home implements OnInit {
     
     try {
       console.log('🔄 Cargando proyectos destacados desde API...');
-      const response = await this.apiService.getFeaturedProjects(6).toPromise();
+      const response = await this.apiService.getFeaturedProjects(20).toPromise(); // Cargar más para tener opciones
 
       console.log('📡 Respuesta de API:', response);
 
       if (response?.success && response.data) {
-        this.featuredProjects = response.data.map((projectData: any) => this.transformProjectData(projectData));
+        let allProjects = response.data;
+        
+        // Ordenar todos los proyectos por fecha de creación (más recientes primero)
+        allProjects.sort((a: any, b: any) => {
+          const dateA = new Date(a.fechaCreacion || a.fechaActualizacion || 0).getTime();
+          const dateB = new Date(b.fechaCreacion || b.fechaActualizacion || 0).getTime();
+          return dateB - dateA; // Descendente (más reciente primero)
+        });
+
+        // Si el usuario está autenticado, priorizar por categorías preferidas
+        if (this.currentUser && this.popularCategories.length > 0) {
+          const preferredCategoryNames = this.popularCategories
+            .slice(0, 3) // Solo las primeras 3 que son las preferidas del usuario
+            .map(cat => cat.nombre.toLowerCase());
+
+          console.log('📌 Categorías preferidas para filtrar:', preferredCategoryNames);
+
+          // Separar proyectos en dos grupos
+          const preferredProjects = allProjects.filter((project: any) => 
+            preferredCategoryNames.includes(project.category?.nombre?.toLowerCase() || '')
+          );
+
+          const otherProjects = allProjects.filter((project: any) => 
+            !preferredCategoryNames.includes(project.category?.nombre?.toLowerCase() || '')
+          );
+
+          console.log(`✅ Proyectos de categorías preferidas: ${preferredProjects.length}`);
+          console.log(`📦 Otros proyectos destacados: ${otherProjects.length}`);
+
+          // Combinar: primero preferidos, luego el resto, y transformar
+          const combinedProjects = [...preferredProjects, ...otherProjects].slice(0, 6);
+          this.featuredProjects = combinedProjects.map((projectData: any) => this.transformProjectData(projectData));
+        } else {
+          // Usuario no autenticado: simplemente los 6 más recientes
+          this.featuredProjects = allProjects.slice(0, 6).map((projectData: any) => this.transformProjectData(projectData));
+        }
+
         console.log('✅ Proyectos destacados cargados desde BD:', this.featuredProjects.length);
-        console.log('📚 Proyectos transformados:', this.featuredProjects);
+        console.log('📚 Proyectos finales:', this.featuredProjects.map(p => `${p.title} (${p.category})`));
       } else {
         console.warn('⚠️ No hay proyectos destacados disponibles en la BD');
         this.featuredProjects = [];
       }
     } catch (error) {
       console.error('❌ Error cargando proyectos destacados:', error);
-      // No usar datos mock - dejar vacío si falla la API
       this.featuredProjects = [];
       console.log('⚠️ No se pudieron cargar proyectos destacados de la BD');
     } finally {
@@ -320,9 +433,15 @@ export class Home implements OnInit {
    * @description
    * Se activa al presionar Enter en el input de búsqueda o al hacer clic en el botón.
    * Solo navega si hay texto ingresado (excluyendo espacios vacíos).
+   * También guarda la búsqueda en el historial si el usuario está autenticado.
    */
   onSearch(): void {
     if (this.searchQuery.trim()) {
+      // Guardar en historial si está autenticado
+      if (this.currentUser) {
+        this.searchHistoryService.saveSearch(this.searchQuery.trim()).subscribe();
+      }
+      
       this.router.navigate(['/explorar'], { 
         queryParams: { q: this.searchQuery.trim() }
       });
@@ -333,19 +452,62 @@ export class Home implements OnInit {
    * Navega a /explorar con un término de búsqueda predefinido
    * 
    * @description
-   * Se usa para las búsquedas populares mostradas debajo de la barra principal.
+   * Se usa para las búsquedas populares y recientes mostradas debajo de la barra principal.
+   * También guarda la búsqueda en el historial si el usuario está autenticado.
    * 
    * @param searchTerm - Término de búsqueda predefinido
-   * 
-   * @example
-   * ```typescript
-   * onPopularSearch('Tesis de sistemas')
-   * ```
    */
   onPopularSearch(searchTerm: string): void {
+    // Guardar en historial si está autenticado
+    if (this.currentUser) {
+      this.searchHistoryService.saveSearch(searchTerm).subscribe();
+    }
+    
     this.router.navigate(['/explorar'], { 
       queryParams: { q: searchTerm }
     });
+  }
+
+  /**
+   * Carga las búsquedas recientes del usuario autenticado
+   * 
+   * @description
+   * Obtiene las últimas 3 búsquedas del usuario desde la API.
+   * Solo se ejecuta si hay un usuario autenticado.
+   * 
+   * @private
+   */
+  private loadRecentSearches(): void {
+    this.searchHistoryService.loadRecentSearches(3).subscribe(
+      searches => {
+        this.recentSearches = searches;
+      }
+    );
+  }
+
+
+
+  /**
+   * Elimina una búsqueda específica del historial del usuario
+   * 
+   * @description
+   * Desactiva la búsqueda en la base de datos (soft delete).
+   * Recarga automáticamente las búsquedas recientes para mostrar la siguiente disponible.
+   * Esto mantiene siempre 3 búsquedas visibles (si existen).
+   * 
+   * @param searchId - ID de la búsqueda a eliminar
+   */
+  removeRecentSearch(searchId: number): void {
+    this.searchHistoryService.removeSearch(searchId).subscribe(
+      () => {
+        console.log('✅ Búsqueda eliminada exitosamente');
+        // Recargar las búsquedas recientes para traer la siguiente disponible
+        this.loadRecentSearches();
+      },
+      error => {
+        console.error('❌ Error al eliminar búsqueda:', error);
+      }
+    );
   }
 
   /**
@@ -418,6 +580,27 @@ export class Home implements OnInit {
       return this.sanitizer.bypassSecurityTrustHtml(defaultIcon);
     }
     return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  /**
+   * Hace scroll suave hacia la sección de categorías
+   * 
+   * @description
+   * Se activa al hacer click en el botón flotante de la parte inferior del hero.
+   * Desplaza la vista hasta la sección de categorías, posicionándola debajo del navbar.
+   */
+  scrollToCategories(): void {
+    const categoriesSection = document.getElementById('categories-section');
+    if (categoriesSection) {
+      const navbarHeight = 80; // 5rem = 80px (altura del navbar)
+      const elementPosition = categoriesSection.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - navbarHeight;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
   }
 
 }
