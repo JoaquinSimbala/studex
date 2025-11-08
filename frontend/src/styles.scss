@@ -277,12 +277,7 @@ h3 {
   background: white;
   border-radius: 0.75rem;
   border: 1px solid var(--studex-100);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   transition: all 0.2s;
-}
-
-.studex-card:hover {
-  box-shadow: var(--shadow-studex-md);
 }
 
 .studex-card.elevated {
@@ -291,10 +286,6 @@ h3 {
 
 .studex-card.interactive {
   cursor: pointer;
-}
-
-.studex-card.interactive:hover {
-  transform: scale(1.05) translateY(-0.25rem);
 }
 
 /* Inputs */
@@ -433,10 +424,6 @@ h3 {
   overflow: hidden;
   transition: all 0.3s;
   cursor: pointer;
-}
-
-.studex-project-card:hover {
-  box-shadow: var(--shadow-studex-lg);
 }
 
 .studex-project-image {
