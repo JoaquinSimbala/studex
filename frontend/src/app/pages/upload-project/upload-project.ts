@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService, User } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { BackButtonComponent } from '../../components/back-button/back-button.component';
@@ -152,7 +153,8 @@ export class UploadProjectComponent implements OnInit {
     private http: HttpClient,
     private router: Router,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private sanitizer: DomSanitizer
   ) {
     // Inicialización del formulario con validadores
     this.uploadForm = this.fb.group({
@@ -614,34 +616,22 @@ export class UploadProjectComponent implements OnInit {
   // ========================================
 
   /**
-   * Obtiene el icono emoji de una categoría.
-   * Retorna un icono por defecto si la categoría no tiene icono definido.
+   * Sanitiza el HTML del icono de categoría para renderizar SVG de forma segura.
    * 
-   * @param {Category} categoria - Categoría de la cual obtener el icono
-   * @returns {string} Emoji representativo de la categoría (default: 📁)
+   * @description
+   * Convierte el string SVG en SafeHtml para que Angular lo renderice correctamente.
+   * Si no hay icono, retorna un icono de carpeta por defecto.
+   * 
+   * @param {string | undefined} html - String con el markup SVG del icono
+   * @returns {SafeHtml} HTML sanitizado que Angular puede renderizar
    */
-  getCategoryIcon(categoria: Category): string {
-    return categoria.icono || '📁';
+  getSafeHtml(html: string | undefined): SafeHtml {
+    if (!html) {
+      const defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>';
+      return this.sanitizer.bypassSecurityTrustHtml(defaultIcon);
+    }
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
-
-  /**
-   * ⚠️ MÉTODO NO UTILIZADO - Marcado para revisión
-   * 
-   * Retorna estilos CSS para aplicar a elementos de categoría.
-   * Este método fue creado pero no se está usando en el template HTML.
-   * 
-   * @deprecated No se utiliza actualmente en la UI
-   * @param {Category} categoria - Categoría de la cual obtener estilos
-   * @returns {any} Objeto con propiedades CSS
-   */
-  /* CÓDIGO NO UTILIZADO - COMENTADO PARA REFERENCIA
-  getCategoryStyle(categoria: Category): any {
-    return {
-      'border-color': categoria.colorHex,
-      'color': categoria.colorHex
-    };
-  }
-  */
 
   // ========================================
   // GETTERS PARA VALIDACIÓN EN TEMPLATE

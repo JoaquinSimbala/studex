@@ -106,8 +106,9 @@
               (click)="selectPopularCategory(category)"
               class="group p-6 bg-white hover:bg-studex-50 rounded-3xl border-2 border-studex-200 hover:border-studex-400 transition-all duration-300 shadow-lg hover:shadow-studex-xl transform hover:scale-105 hover:-translate-y-2">
               <div class="text-center">
-                <div class="text-4xl mb-3 transform group-hover:scale-110 transition-transform duration-300">
-                  {{ category.icono || '📂' }}
+                <div class="mb-3 transform group-hover:scale-110 transition-transform duration-300 flex items-center justify-center"
+                     [style.color]="category.colorHex">
+                  <div class="w-12 h-12" [innerHTML]="getSafeHtml(category.icono)"></div>
                 </div>
                 <h4 class="font-heading text-sm font-bold text-studex-900 group-hover:text-studex-700 transition-colors duration-300">
                   {{ category.nombre }}

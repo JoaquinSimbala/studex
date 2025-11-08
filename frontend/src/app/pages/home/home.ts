@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { FavoritesService } from '../../services/favorites.service';
@@ -139,7 +140,8 @@ export class Home implements OnInit {
   constructor(
     private authService: AuthService,
     private apiService: ApiService,
-    private router: Router
+    private router: Router,
+    private sanitizer: DomSanitizer
   ) {}
 
   /**
@@ -405,6 +407,17 @@ export class Home implements OnInit {
    */
   loadMoreProjects(): void {
     this.router.navigate(['/explorar']);
+  }
+
+  /**
+   * Sanitiza el HTML del icono de categoría para renderizar SVG de forma segura
+   */
+  getSafeHtml(html: string | undefined): SafeHtml {
+    if (!html) {
+      const defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>';
+      return this.sanitizer.bypassSecurityTrustHtml(defaultIcon);
+    }
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
 }

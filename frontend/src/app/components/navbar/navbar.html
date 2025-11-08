@@ -322,7 +322,9 @@
           <div class="w-14 h-14 rounded-xl flex items-center justify-center mr-4 transition-all group-hover:scale-110 shadow-sm"
                [style.background-color]="category.colorHex + '20'"
                [style.border]="'2px solid ' + category.colorHex + '40'">
-            <span class="text-2xl">{{ category.icono || '📂' }}</span>
+            <div class="w-8 h-8" 
+                 [style.color]="category.colorHex"
+                 [innerHTML]="getSafeHtml(category.icono)"></div>
           </div>
           
           <!-- Info de categoría -->

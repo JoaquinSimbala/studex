@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
 import { Subject, Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
@@ -89,7 +90,8 @@ export class Navbar implements OnInit, OnDestroy {
     private router: Router,
     private notificationService: NotificationService,
     private cartService: CartService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) {}
 
   ngOnInit(): void {
@@ -392,6 +394,17 @@ export class Navbar implements OnInit, OnDestroy {
       return `https://ui-avatars.com/api/?name=${this.currentUser.firstName}+${this.currentUser.lastName}&background=10B981&color=fff&size=128`;
     }
     return 'https://ui-avatars.com/api/?name=Usuario&background=10B981&color=fff&size=128';
+  }
+
+  /**
+   * Sanitiza el HTML del icono de categoría para renderizar SVG de forma segura
+   */
+  getSafeHtml(html: string | undefined): SafeHtml {
+    if (!html) {
+      const defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>';
+      return this.sanitizer.bypassSecurityTrustHtml(defaultIcon);
+    }
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
   /**

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 // import { Router } from '@angular/router'; // ❌ COMENTADO: No se usa Router en este componente
 import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
@@ -121,7 +122,8 @@ export class ProfileComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private apiService: ApiService
+    private apiService: ApiService,
+    private sanitizer: DomSanitizer
   ) {
     // Formulario de perfil
     this.profileForm = this.fb.group({
@@ -676,6 +678,17 @@ export class ProfileComponent implements OnInit {
       if (field.errors['passwordMismatch']) return `Las contraseñas no coinciden`;
     }
     return '';
+  }
+
+  /**
+   * Sanitiza el HTML del icono de categoría para renderizar SVG de forma segura
+   */
+  getSafeHtml(html: string | undefined): SafeHtml {
+    if (!html) {
+      const defaultIcon = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>';
+      return this.sanitizer.bypassSecurityTrustHtml(defaultIcon);
+    }
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
 }
