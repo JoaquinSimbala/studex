@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { LoggerService } from './logger.service';
 
 export interface User {
   id: string;
@@ -52,31 +53,33 @@ export class AuthService {
   private readonly USER_KEY = 'studex_user';
   private readonly baseUrl = environment.apiUrl || 'http://localhost:3000/api';
 
+  private logger = inject(LoggerService);
+
   constructor(
     private http: HttpClient,
     private router: Router
   ) {
-    console.log('🔧 Inicializando AuthService...');
+    this.logger.log('Inicializando AuthService');
     this.loadUserFromStorage();
     
     // Verificar autenticación con el backend si hay token
     setTimeout(() => {
       if (this.getToken()) {
-        console.log('🔍 Verificando token con el backend...');
+        this.logger.log('Verificando token con el backend');
         this.checkAuthStatus().finally(() => {
           this.isInitializedSubject.next(true);
-          console.log('✅ AuthService inicializado completamente');
+          this.logger.success('AuthService inicializado completamente');
         });
       } else {
         this.isInitializedSubject.next(true);
-        console.log('✅ AuthService inicializado (sin token)');
+        this.logger.log('AuthService inicializado sin token');
       }
     }, 100); // Reducir el timeout
     
     // Agregar listener para detectar cambios en storage
     window.addEventListener('storage', (event) => {
       if (event.key === this.TOKEN_KEY || event.key === this.USER_KEY) {
-        console.log('🔄 Cambio detectado en storage, recargando usuario...');
+        this.logger.debug('Cambio detectado en storage, recargando usuario');
         this.loadUserFromStorage();
       }
     });
@@ -108,30 +111,30 @@ export class AuthService {
           const now = Math.floor(Date.now() / 1000);
           
           if (payload.exp && payload.exp < now) {
-            console.log('⏰ Token expirado al cargar, limpiando sesión');
+            this.logger.warn('Token expirado al cargar, limpiando sesión');
             this.clearStorage();
             return;
           }
         } catch (error) {
-          console.error('❌ Error verificando token al cargar:', error);
+          this.logger.error('Error verificando token al cargar', error);
           this.clearStorage();
           return;
         }
         
         this.currentUserSubject.next(user);
         this.isAuthenticatedSubject.next(true);
-        console.log(`✅ Usuario cargado desde ${storageType}:`, user.email);
+        this.logger.debug('Usuario cargado desde storage', storageType);
         
         // Marcar como inicializado si no hay verificación pendiente
         if (!this.getToken()) {
           this.isInitializedSubject.next(true);
         }
       } else {
-        console.log('ℹ️ No hay sesión guardada');
+        this.logger.log('No hay sesión guardada');
         this.isInitializedSubject.next(true);
       }
     } catch (error) {
-      console.error('❌ Error cargando usuario desde storage:', error);
+      this.logger.error('Error cargando usuario desde storage', error);
       this.clearStorage();
     }
   }
@@ -171,7 +174,7 @@ export class AuthService {
       
       return false;
     } catch (error) {
-      console.error('Error en login:', error);
+      this.logger.error('Error en login', error);
       return false;
     }
   }
@@ -181,30 +184,20 @@ export class AuthService {
    */
   async register(userData: RegisterData): Promise<boolean> {
     try {
-      console.log('📝 Enviando datos de registro:', { ...userData, password: '[HIDDEN]' });
+      this.logger.log('Enviando datos de registro');
       
       const response = await this.http.post<AuthResponse>(`${this.baseUrl}/auth/register`, userData, { 
         headers: this.getHeaders() 
       }).toPromise();
 
-      console.log('✅ Respuesta del servidor:', response);
-
       if (response?.success) {
-        // Si el registro es exitoso, podríamos hacer login automático
-        // o simplemente retornar true para que el usuario haga login manual
+        this.logger.success('Registro exitoso');
         return true;
       }
       
       return false;
     } catch (error: any) {
-      console.error('❌ Error en registro:', error);
-      
-      // Log adicional para debugging
-      if (error.status) {
-        console.error('Status HTTP:', error.status);
-        console.error('Error del servidor:', error.error);
-      }
-      
+      this.logger.error('Error en registro', error);
       return false;
     }
   }
@@ -214,7 +207,7 @@ export class AuthService {
    */
   async registerWithImage(formData: FormData): Promise<boolean> {
     try {
-      console.log('📝 Enviando datos de registro con imagen');
+      this.logger.log('Enviando datos de registro con imagen');
       
       // Para FormData no necesitamos Content-Type, el navegador lo establece automáticamente
       const token = localStorage.getItem(this.TOKEN_KEY);
@@ -230,21 +223,14 @@ export class AuthService {
         headers 
       }).toPromise();
 
-      console.log('✅ Respuesta del servidor:', response);
-
       if (response?.success) {
+        this.logger.success('Registro con imagen exitoso');
         return true;
       }
       
       return false;
     } catch (error: any) {
-      console.error('❌ Error en registro con imagen:', error);
-      
-      if (error.status) {
-        console.error('Status HTTP:', error.status);
-        console.error('Error del servidor:', error.error);
-      }
-      
+      this.logger.error('Error en registro con imagen', error);
       return false;
     }
   }
@@ -253,7 +239,7 @@ export class AuthService {
    * Cierra la sesión del usuario
    */
   logout(): void {
-    console.log('🚪 Cerrando sesión...');
+    this.logger.log('Cerrando sesión');
     this.clearStorage();
     
     // Resetear estado
@@ -279,7 +265,7 @@ export class AuthService {
    * Establece los datos de autenticación en el estado y storage
    */
   private setAuthData(user: User, token: string, persistent: boolean = false): void {
-    console.log(`💾 Guardando sesión (persistente: ${persistent ? 'Sí' : 'No'})`);
+    this.logger.debug('Guardando sesión', { persistent });
     
     // Actualizar estado
     this.currentUserSubject.next(user);
@@ -293,7 +279,7 @@ export class AuthService {
     storage.setItem(this.TOKEN_KEY, token);
     storage.setItem(this.USER_KEY, JSON.stringify(user));
     
-    console.log(`✅ Sesión guardada en ${persistent ? 'localStorage' : 'sessionStorage'}`);
+    this.logger.debug('Sesión guardada', { storageType: persistent ? 'localStorage' : 'sessionStorage' });
   }
 
   /**
@@ -332,7 +318,6 @@ export class AuthService {
     const user = this.getCurrentUser();
     
     if (!token || !user) {
-      console.log('❌ No hay token o usuario');
       return false;
     }
     
@@ -342,15 +327,14 @@ export class AuthService {
       const now = Math.floor(Date.now() / 1000);
       
       if (payload.exp && payload.exp < now) {
-        console.log('⏰ Token expirado');
+        this.logger.warn('Token expirado');
         this.logout();
         return false;
       }
       
-      console.log('✅ Token válido');
       return true;
     } catch (error) {
-      console.error('❌ Error verificando token:', error);
+      this.logger.error('Error verificando token', error);
       return false;
     }
   }
@@ -371,7 +355,7 @@ export class AuthService {
       }).toPromise();
 
       if (response?.success && response.user) {
-        console.log('✅ Token verificado con el backend');
+        this.logger.success('Token verificado con el backend');
         
         // Actualizar el usuario en el subject Y en el storage
         this.currentUserSubject.next(response.user);
@@ -380,16 +364,16 @@ export class AuthService {
         // Actualizar en el storage correspondiente
         const storageType = localStorage.getItem(this.TOKEN_KEY) ? localStorage : sessionStorage;
         storageType.setItem(this.USER_KEY, JSON.stringify(response.user));
-        console.log('💾 Usuario actualizado en storage desde verificación');
+        this.logger.debug('Usuario actualizado en storage desde verificación');
         
         return true;
       } else {
-        console.log('❌ Token inválido según el backend');
+        this.logger.warn('Token inválido según el backend');
         this.logout();
         return false;
       }
     } catch (error) {
-      console.error('❌ Error verificando token con backend:', error);
+      this.logger.error('Error verificando token con backend', error);
       this.logout();
       return false;
     }
@@ -421,7 +405,7 @@ export class AuthService {
 
       return response?.success || false;
     } catch (error) {
-      console.error('Error en forgot password:', error);
+      this.logger.error('Error en forgot password', error);
       return false;
     }
   }
@@ -438,7 +422,7 @@ export class AuthService {
 
       return response?.success || false;
     } catch (error) {
-      console.error('Error en reset password:', error);
+      this.logger.error('Error en reset password', error);
       return false;
     }
   }
@@ -459,7 +443,7 @@ export class AuthService {
       
       return false;
     } catch (error) {
-      console.error('Error en verificación de email:', error);
+      this.logger.error('Error en verificación de email', error);
       return false;
     }
   }
@@ -472,7 +456,7 @@ export class AuthService {
       const response = await this.http.post<{success: boolean}>('/api/auth/resend-verification', {}).toPromise();
       return response?.success || false;
     } catch (error) {
-      console.error('Error reenviando email de verificación:', error);
+      this.logger.error('Error reenviando email de verificación', error);
       return false;
     }
   }
@@ -489,7 +473,7 @@ export class AuthService {
 
       return response?.success || false;
     } catch (error) {
-      console.error('Error cambiando contraseña:', error);
+      this.logger.error('Error cambiando contraseña', error);
       return false;
     }
   }
@@ -510,7 +494,7 @@ export class AuthService {
       
       return false;
     } catch (error) {
-      console.error('Error refrescando token:', error);
+      this.logger.error('Error refrescando token', error);
       this.logout();
       return false;
     }

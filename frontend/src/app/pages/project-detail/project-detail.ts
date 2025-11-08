@@ -8,6 +8,7 @@ import { NotificationService } from '../../services/notification.service';
 import { PurchaseService, PurchaseRequest } from '../../services/purchase.service';
 import { CartService } from '../../services/cart.service';
 import { PurchaseModalComponent, ProjectSummary } from '../../components/purchase-modal/purchase-modal.component';
+import { LoggerService } from '../../services/logger.service';
 
 interface ProjectDetail {
   id: number;
@@ -500,7 +501,8 @@ export class ProjectDetailComponent implements OnInit {
     private purchaseService: PurchaseService,
     private cartService: CartService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -525,7 +527,7 @@ export class ProjectDetailComponent implements OnInit {
         // Si ya está marcado como "recién desbloqueado", no sobrescribir el estado
         // hasta que pase el período de gracia
         if (this.justUnlocked && this.hasAccess) {
-          console.log('🔒 Manteniendo estado optimista - no sobrescribir durante justUnlocked');
+          this.logger.debug('Manteniendo estado optimista durante período de gracia');
           return;
         }
         
@@ -571,12 +573,12 @@ export class ProjectDetailComponent implements OnInit {
         // Verificar si está en el carrito
         this.isInCart = this.cartService.isInCart(this.project.id);
         
-        console.log('📄 Proyecto cargado:', this.project?.title);
+        this.logger.debug('Proyecto cargado');
       } else {
         throw new Error(response?.message || 'Error cargando proyecto');
       }
     } catch (error: any) {
-      console.error('❌ Error cargando proyecto:', error);
+      this.logger.error('Error cargando proyecto', error);
       this.error = error?.error?.message || error?.message || 'Error cargando el proyecto';
     } finally {
       this.isLoading = false;
@@ -584,16 +586,9 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   checkAccess(): void {
-    console.log('🔍 Verificando acceso...', {
-      project: this.project?.id,
-      currentUser: this.currentUser?.id,
-      isOwnerView: this.isOwnerView,
-      isPublicView: this.isPublicView,
-      justUnlocked: this.justUnlocked
-    });
+    this.logger.debug('Verificando acceso al proyecto');
 
     if (!this.project || !this.currentUser) {
-      console.log('❌ Sin proyecto o usuario');
       this.hasAccess = false;
       this.cdr.detectChanges();
       return;
@@ -601,7 +596,6 @@ export class ProjectDetailComponent implements OnInit {
 
     // Si es el propietario del proyecto
     if (this.isOwnerView && this.project.seller.id === parseInt(this.currentUser.id)) {
-      console.log('✅ Es propietario');
       this.hasAccess = true;
       this.cdr.detectChanges();
       return;
@@ -613,7 +607,7 @@ export class ProjectDetailComponent implements OnInit {
       
       // Si está en período de gracia (justUnlocked), mantener el estado optimista
       if (this.justUnlocked && this.hasAccess) {
-        console.log('🛡️ Período de gracia activo - manteniendo acceso desbloqueado');
+        this.logger.debug('Período de gracia activo - manteniendo acceso');
         this.cdr.detectChanges();
         return;
       }
@@ -622,17 +616,11 @@ export class ProjectDetailComponent implements OnInit {
       this.userHasPurchased = backendSaysHasPurchased;
       this.hasAccess = this.userHasPurchased;
       
-      console.log('📊 Vista pública - Verificación compra:', {
-        projectId: this.project.id,
-        userHasPurchased: this.userHasPurchased,
-        hasAccess: this.hasAccess,
-        backendSaysHasPurchased
-      });
+      this.logger.debug('Verificación de compra completada', { hasAccess: this.hasAccess });
       this.cdr.detectChanges();
       return;
     }
 
-    console.log('❌ Sin acceso por defecto');
     this.hasAccess = false;
     this.cdr.detectChanges();
   }
@@ -772,10 +760,10 @@ export class ProjectDetailComponent implements OnInit {
         try {
           const response = await this.apiService.downloadProjectFile(this.projectId, fileId).toPromise();
           if (response?.success) {
-            console.log('📊 Descarga registrada en estadísticas');
+            this.logger.debug('Descarga registrada en estadísticas');
           }
         } catch (error) {
-          console.warn('⚠️ Error registrando descarga en estadísticas:', error);
+          this.logger.warn('Error registrando descarga en estadísticas');
           // Continuar con la descarga aunque falle el registro
         }
       }
@@ -795,7 +783,7 @@ export class ProjectDetailComponent implements OnInit {
 
       // Obtener información del content-type del response
       const contentType = response.headers.get('content-type') || '';
-      console.log('📄 Tipo de contenido:', contentType, 'para archivo:', fileName);
+      this.logger.debug('Descargando archivo', { fileName, contentType });
 
       // Obtener el blob del archivo
       const blob = await response.blob();
@@ -825,7 +813,7 @@ export class ProjectDetailComponent implements OnInit {
       this.notificationService.showSuccess(`✅ ${fileName} descargado correctamente`, 'Descarga completada');
       
     } catch (error: any) {
-      console.error('❌ Error descargando archivo:', error);
+      this.logger.error('Error descargando archivo', error);
       const errorMsg = error?.message || 'Error desconocido al descargar el archivo';
       this.notificationService.showError(`Error: ${errorMsg}`, 'Error en descarga');
     } finally {
@@ -960,7 +948,7 @@ export class ProjectDetailComponent implements OnInit {
   }
 
   onPurchaseCompleted(): void {
-    console.log('🎉 Compra completada, actualizando estado...');
+    this.logger.log('Compra completada, actualizando estado');
     
     // Ejecutar dentro de NgZone para asegurar detección de cambios
     this.ngZone.run(() => {
@@ -976,7 +964,7 @@ export class ProjectDetailComponent implements OnInit {
       // Forzar detección de cambios para que la UI se actualice inmediatamente
       this.cdr.detectChanges();
       
-      console.log('✅ Estado actualizado:', { hasAccess: this.hasAccess, justUnlocked: this.justUnlocked });
+      this.logger.debug('Estado actualizado después de compra');
     });
     
     // Mostrar feedback visual inmediato
@@ -993,7 +981,7 @@ export class ProjectDetailComponent implements OnInit {
         this.cdr.detectChanges();
         
         // Ahora sí, sincronizar con el estado real del backend
-        console.log('🔄 Período de gracia terminado, sincronizando con backend...');
+        this.logger.debug('Período de gracia terminado, sincronizando con backend');
         this.purchaseService.refreshUserPurchases().then(() => {
           // Re-verificar acceso basado en datos reales del backend
           this.checkAccess();
@@ -1005,12 +993,12 @@ export class ProjectDetailComponent implements OnInit {
     // Forzar actualización del PurchaseService en el background
     // pero SIN afectar el estado local durante el período de gracia
     setTimeout(async () => {
-      console.log('🔄 Sincronizando con backend (background)...');
+      this.logger.debug('Sincronizando con backend en background');
       try {
         // Forzar recarga de compras desde el backend (pero no afecta UI por el filtro en la suscripción)
         await this.purchaseService.refreshUserPurchases();
       } catch (error) {
-        console.error('Error sincronizando con backend:', error);
+        this.logger.error('Error sincronizando con backend', error);
       }
     }, 1000);
   }
@@ -1064,7 +1052,7 @@ export class ProjectDetailComponent implements OnInit {
         this.notificationService.showSuccess('Agregado al carrito', 'Éxito');
       }
     } catch (error: any) {
-      console.error('Error con el carrito:', error);
+      this.logger.error('Error con el carrito', error);
       const errorMsg = error?.error?.message || error?.message || 'Error al actualizar el carrito';
       this.notificationService.showError(errorMsg, 'Error');
     } finally {

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
+import { LoggerService } from '../../services/logger.service';
 
 @Component({
   selector: 'app-auth-callback',
@@ -37,7 +38,8 @@ export class AuthCallbackComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private authService: AuthService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private logger: LoggerService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -54,7 +56,7 @@ export class AuthCallbackComponent implements OnInit {
 
       if (token) {
         try {
-          console.log('🔐 Token recibido de Google OAuth:', token.substring(0, 20) + '...');
+          this.logger.log('Token OAuth recibido');
           
           // Guardar el token y obtener datos del usuario
           // IMPORTANTE: Usar el mismo nombre que el AuthService ('studex_token')
@@ -65,7 +67,7 @@ export class AuthCallbackComponent implements OnInit {
           
           if (isValid) {
             const user = this.authService.getCurrentUser();
-            console.log('✅ Usuario autenticado:', user);
+            this.logger.success('Usuario autenticado con Google OAuth');
             
             this.notificationService.showSuccess(
               '¡Bienvenido!',
@@ -75,11 +77,11 @@ export class AuthCallbackComponent implements OnInit {
             // Redirigir al home
             this.router.navigate(['/']);
           } else {
-            console.error('❌ Token inválido según el backend');
+            this.logger.error('Token OAuth inválido según el backend');
             throw new Error('Token inválido');
           }
         } catch (error) {
-          console.error('❌ Error procesando token:', error);
+          this.logger.error('Error procesando token OAuth', error);
           
           // Limpiar token inválido
           localStorage.removeItem('studex_token');

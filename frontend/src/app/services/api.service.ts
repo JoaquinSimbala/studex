@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { LoggerService } from './logger.service';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -34,7 +35,10 @@ export class ApiService {
   private readonly baseUrl = environment.apiUrl || 'http://localhost:3000/api';
   private authToken: string | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private logger: LoggerService
+  ) {}
 
   /**
    * Configura el token de autorización para las peticiones
@@ -125,7 +129,7 @@ export class ApiService {
       }
     }
 
-    console.error('Error en API:', error);
+    this.logger.error('Error en API', error);
     return throwError(() => new Error(errorMessage));
   }
 

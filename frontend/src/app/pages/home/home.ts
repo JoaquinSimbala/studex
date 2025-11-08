@@ -561,7 +561,7 @@ export class Home implements OnInit {
     if (this.navbar) {
       this.navbar.openCategoriesModal();
     } else {
-      console.warn('⚠️ Navbar no está disponible, navegando a /explorar como fallback');
+      this.logger.warn('Navbar no está disponible, navegando a /explorar como fallback');
       this.router.navigate(['/explorar']);
     }
   }

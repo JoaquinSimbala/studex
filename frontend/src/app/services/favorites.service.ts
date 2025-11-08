@@ -78,7 +78,7 @@ export class FavoritesService {
         }
       }),
       catchError(error => {
-        console.error('Error cargando favoritos:', error);
+        this.logger.error('Error cargando favoritos', error);
         throw error;
       })
     );

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { Overlay, OverlayRef, OverlayModule } from '@angular/cdk/overlay';
 import { ComponentPortal, TemplatePortal } from '@angular/cdk/portal';
 import { NotificationService, DbNotification } from '../../services/notification.service';
+import { LoggerService } from '../../services/logger.service';
 import { NotificationModalComponent } from '../notification-modal/notification-modal.component';
 import { Subscription } from 'rxjs';
 
@@ -41,6 +42,9 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
   
   /** Servicio de notificaciones inyectado */
   private notificationService = inject(NotificationService);
+  
+  /** Servicio de logging inyectado */
+  private logger = inject(LoggerService);
   
   /** Router de Angular para navegación */
   private router = inject(Router);
@@ -390,7 +394,7 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
     ]).then(() => {
       this.isLoading = false;
     }).catch((error) => {
-      console.error('Error cargando notificaciones:', error);
+      this.logger.error('Error cargando notificaciones', error);
       this.isLoading = false;
     });
   }
@@ -420,7 +424,7 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
           this.notificationService.loadUnreadCount().subscribe();
         },
         error: (error) => {
-          console.error('Error marcando como leída:', error);
+          this.logger.error('Error marcando como leída', error);
         }
       });
     }
@@ -457,7 +461,7 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
         this.notificationService.loadUnreadCount().subscribe();
       },
       error: (error) => {
-        console.error('Error marcando todas como leídas:', error);
+        this.logger.error('Error marcando todas como leídas', error);
         this.isMarkingAllRead = false;
       }
     });

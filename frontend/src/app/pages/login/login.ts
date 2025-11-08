@@ -5,6 +5,7 @@ import { RouterModule, Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { ApiService } from '../../services/api.service';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Interfaz que define la estructura de una categoría
@@ -146,6 +147,7 @@ export class Login implements OnInit {
    * @param {Router} router - Router de Angular para navegación
    * @param {ActivatedRoute} route - Ruta activa para leer parámetros de URL
    * @param {NotificationService} notificationService - Servicio para mostrar notificaciones
+   * @param {LoggerService} logger - Servicio de logging
    */
   constructor(
     private fb: FormBuilder,
@@ -153,7 +155,8 @@ export class Login implements OnInit {
     private apiService: ApiService,
     private router: Router,
     private route: ActivatedRoute,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private logger: LoggerService
   ) {}
 
   // ==================== LIFECYCLE HOOKS ====================
@@ -193,9 +196,9 @@ export class Login implements OnInit {
     try {
       const response = await this.apiService.getCategories().toPromise();
       this.categories = response?.data || [];
-      console.log('✅ Categorías cargadas:', this.categories);
+      this.logger.debug('Categorías cargadas', this.categories.length);
     } catch (error) {
-      console.error('❌ Error cargando categorías:', error);
+      this.logger.error('Error cargando categorías', error);
       this.notificationService.showError('Error', 'No se pudieron cargar las categorías');
     }
   }
@@ -475,7 +478,7 @@ export class Login implements OnInit {
         await this.handleRegister();
       }
     } catch (error) {
-      console.error('Error en autenticación:', error);
+      this.logger.error('Error en autenticación', error);
       this.notificationService.showError(
         'Error inesperado', 
         'Ocurrió un problema durante la autenticación. Por favor, intenta nuevamente.'
@@ -519,7 +522,7 @@ export class Login implements OnInit {
         this.loginForm.get('password')?.setErrors({ invalidCredentials: true });
       }
     } catch (error: any) {
-      console.error('Error en login:', error);
+      this.logger.error('Error en login', error);
       this.notificationService.showError(
         'Error de conexión', 
         'No se pudo conectar con el servidor. Por favor, intenta más tarde.'
@@ -575,7 +578,7 @@ export class Login implements OnInit {
         this.handleRegistrationError();
       }
     } catch (error: any) {
-      console.error('Error en registro:', error);
+      this.logger.error('Error en registro', error);
       
       // Manejar errores específicos
       if (error?.status === 409) {

@@ -115,7 +115,7 @@ export class CartService {
             observer.complete();
           },
           error: (error) => {
-            console.error('❌ Error cargando carrito:', error);
+            this.logger.error('Error cargando carrito', error);
             this.clearLocalCart();
             observer.error(error);
           }
@@ -127,7 +127,7 @@ export class CartService {
    * Agregar proyecto al carrito
    */
   addToCart(projectId: number): Observable<any> {
-    console.log('➕ Agregando al carrito proyecto:', projectId);
+    this.logger.log('Agregando al carrito');
     
     const headers: any = {};
     const token = this.authService.getToken();
@@ -142,7 +142,7 @@ export class CartService {
         { headers }
       ).subscribe({
         next: (response) => {
-          console.log('✅ Agregado al carrito:', response);
+          this.logger.success('Agregado al carrito');
           // Recargar carrito después de agregar
           this.loadCart().subscribe(() => {
             observer.next(response);
@@ -150,7 +150,7 @@ export class CartService {
           });
         },
         error: (error) => {
-          console.error('❌ Error agregando al carrito:', error);
+          this.logger.error('Error agregando al carrito', error);
           observer.error(error);
         }
       });
@@ -161,7 +161,7 @@ export class CartService {
    * Remover proyecto del carrito
    */
   removeFromCart(projectId: number): Observable<any> {
-    console.log('➖ Removiendo del carrito proyecto:', projectId);
+    this.logger.log('Removiendo del carrito');
     
     const headers: any = {};
     const token = this.authService.getToken();
@@ -174,7 +174,7 @@ export class CartService {
       this.http.delete<any>(`${environment.apiUrl}/cart/${projectId}`, { headers })
         .subscribe({
           next: (response) => {
-            console.log('✅ Removido del carrito:', response);
+            this.logger.success('Removido del carrito');
             // Recargar carrito después de remover
             this.loadCart().subscribe(() => {
               observer.next(response);
@@ -182,7 +182,7 @@ export class CartService {
             });
           },
           error: (error) => {
-            console.error('❌ Error removiendo del carrito:', error);
+            this.logger.error('Error removiendo del carrito', error);
             observer.error(error);
           }
         });
@@ -193,7 +193,7 @@ export class CartService {
    * Limpiar todo el carrito
    */
   clearCart(): Observable<any> {
-    console.log('🗑️ Limpiando carrito...');
+    this.logger.log('Limpiando carrito');
     
     const headers: any = {};
     const token = this.authService.getToken();
@@ -206,13 +206,13 @@ export class CartService {
       this.http.delete<any>(`${environment.apiUrl}/cart`, { headers })
         .subscribe({
           next: (response) => {
-            console.log('✅ Carrito limpiado:', response);
+            this.logger.success('Carrito limpiado');
             this.clearLocalCart();
             observer.next(response);
             observer.complete();
           },
           error: (error) => {
-            console.error('❌ Error limpiando carrito:', error);
+            this.logger.error('Error limpiando carrito', error);
             observer.error(error);
           }
         });
@@ -280,7 +280,7 @@ export class CartService {
             observer.complete();
           },
           error: (error) => {
-            console.error('Error cargando conteo del carrito:', error);
+            this.logger.error('Error cargando conteo del carrito', error);
             observer.error(error);
           }
         });

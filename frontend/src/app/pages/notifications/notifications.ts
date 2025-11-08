@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Overlay, OverlayRef, OverlayModule } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { NotificationService, DbNotification } from '../../services/notification.service';
+import { LoggerService } from '../../services/logger.service';
 import { NotificationModalComponent } from '../../components/notification-modal/notification-modal.component';
 import { BackButtonComponent } from '../../components/back-button/back-button.component';
 import { Subscription } from 'rxjs';
@@ -48,6 +49,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
    * @type {NotificationService}
    */
   private notificationService = inject(NotificationService);
+  
+  /**
+   * Servicio de logging.
+   * @private
+   * @type {LoggerService}
+   */
+  private logger = inject(LoggerService);
   
   /**
    * Servicio de Angular CDK Overlay para renderizar el modal.
@@ -234,7 +242,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         this.canLoadMore = this.notifications.length >= this.pageSize;
       },
       error: (error) => {
-        console.error('Error cargando notificaciones:', error);
+        this.logger.error('Error cargando notificaciones', error);
         this.isLoading = false;
       }
     });
@@ -273,7 +281,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         this.canLoadMore = false;
       },
       error: (error) => {
-        console.error('Error cargando más notificaciones:', error);
+        this.logger.error('Error cargando más notificaciones', error);
         this.isLoadingMore = false;
         this.currentPage--; // Revertir el incremento
       }
@@ -468,7 +476,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
           this.applyFilter();
         },
         error: (error) => {
-          console.error('Error marcando como leída:', error);
+          this.logger.error('Error marcando como leída', error);
         }
       });
     }
@@ -539,7 +547,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         this.applyFilter();
       },
       error: (error) => {
-        console.error('Error marcando todas como leídas:', error);
+        this.logger.error('Error marcando todas como leídas', error);
         this.isMarkingAllRead = false;
       }
     });

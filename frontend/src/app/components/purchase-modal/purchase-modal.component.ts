@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PurchaseService, PurchaseRequest } from '../../services/purchase.service';
 import { NotificationService } from '../../services/notification.service';
+import { LoggerService } from '../../services/logger.service';
 
 export interface ProjectSummary {
   id: number;
@@ -202,7 +203,8 @@ export class PurchaseModalComponent implements OnInit {
 
   constructor(
     private purchaseService: PurchaseService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -262,7 +264,7 @@ export class PurchaseModalComponent implements OnInit {
         );
       }
     } catch (error: any) {
-      console.error('❌ Error en compra:', error);
+      this.logger.error('Error en compra', error);
       this.notificationService.showError(
         'Error procesando la compra. Inténtalo de nuevo.',
         'Error'

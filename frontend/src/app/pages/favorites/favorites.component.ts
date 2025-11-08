@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FavoritesService, FavoriteProject } from '../../services/favorites.service';
+import { LoggerService } from '../../services/logger.service';
 import { ProjectCardComponent } from '../../components/project-card/project-card';
 import { BackButtonComponent } from '../../components/back-button/back-button.component';
 import { Observable } from 'rxjs';
@@ -46,6 +47,9 @@ export class FavoritesComponent implements OnInit {
   
   /** Servicio de gestión de favoritos inyectado */
   private favoritesService = inject(FavoritesService);
+  
+  /** Servicio de logging inyectado */
+  private logger = inject(LoggerService);
   
   // ==================== PROPIEDADES PÚBLICAS ====================
   
@@ -100,7 +104,7 @@ export class FavoritesComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error cargando favoritos:', error);
+        this.logger.error('Error cargando favoritos', error);
         this.isLoading = false;
       }
     });

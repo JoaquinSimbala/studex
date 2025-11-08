@@ -53,7 +53,7 @@ export class LoggerService {
    */
   debug(message: string, data?: any): void {
     if (!environment.production) {
-      console.log(`🔍 DEBUG: ${message}`, data);
+      console.log(`DEBUG: ${message}`, data);
     }
   }
 
@@ -62,7 +62,7 @@ export class LoggerService {
    */
   success(message: string, ...optionalParams: any[]): void {
     if (!environment.production) {
-      console.log(`✅ ${message}`, ...optionalParams);
+      console.log(`${message}`, ...optionalParams);
     }
   }
 

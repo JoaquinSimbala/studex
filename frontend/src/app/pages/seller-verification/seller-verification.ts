@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
+import { LoggerService } from '../../services/logger.service';
 import { BackButtonComponent } from '../../components/back-button/back-button.component';
 
 /**
@@ -118,12 +119,14 @@ export class SellerVerificationComponent implements OnInit {
    * @param {ApiService} apiService - Servicio HTTP para comunicación con el backend
    * @param {NotificationService} notificationService - Servicio para mostrar notificaciones al usuario
    * @param {Router} router - Servicio de navegación de Angular
+   * @param {LoggerService} logger - Servicio de logging
    */
   constructor(
     private authService: AuthService,
     private apiService: ApiService,
     private notificationService: NotificationService,
-    private router: Router
+    private router: Router,
+    private logger: LoggerService
   ) {}
 
   /**
@@ -172,7 +175,7 @@ export class SellerVerificationComponent implements OnInit {
         }
       });
     } catch (error) {
-      console.error('Error cargando datos del usuario:', error);
+      this.logger.error('Error cargando datos del usuario', error);
       this.notificationService.showError('Error cargando información del usuario', 'Error');
     } finally {
       this.isLoading = false;
@@ -195,10 +198,10 @@ export class SellerVerificationComponent implements OnInit {
       
       if (response?.success) {
         this.sellerStatus = response.data as SellerStatus;
-        console.log('Estado de vendedor:', this.sellerStatus);
+        this.logger.debug('Estado de vendedor verificado');
       }
     } catch (error) {
-      console.error('Error verificando estado de vendedor:', error);
+      this.logger.error('Error verificando estado de vendedor', error);
     }
   }
 
@@ -239,7 +242,7 @@ export class SellerVerificationComponent implements OnInit {
         await this.checkSellerStatus(parseInt(this.currentUser.id));
       }
     } catch (error: any) {
-      console.error('Error convirtiendo a vendedor:', error);
+      this.logger.error('Error convirtiendo a vendedor', error);
       this.notificationService.showError(
         error?.error?.message || 'Error al convertir a vendedor. Inténtalo de nuevo.',
         'Error'

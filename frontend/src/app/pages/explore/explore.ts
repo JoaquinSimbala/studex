@@ -5,6 +5,7 @@ import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService, User } from '../../services/auth.service';
 import { SearchHistoryService } from '../../services/search-history.service';
+import { LoggerService } from '../../services/logger.service';
 import { Navbar } from '../../components/navbar/navbar';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
 import { CustomSelectComponent } from '../../components/custom-select/custom-select.component';
@@ -281,12 +282,14 @@ export class ExploreComponent implements OnInit {
    * @param authService - Servicio de autenticación de usuarios
    * @param route - ActivatedRoute para acceder a queryParams
    * @param searchHistoryService - Servicio para gestionar historial de búsquedas
+   * @param logger - Servicio de logging
    */
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
     private route: ActivatedRoute,
-    private searchHistoryService: SearchHistoryService
+    private searchHistoryService: SearchHistoryService,
+    private logger: LoggerService
   ) {}
 
   /**
@@ -318,11 +321,11 @@ export class ExploreComponent implements OnInit {
       
       if (params['category']) {
         this.filters.category = params['category'];
-        console.log('📂 Categoría pre-seleccionada:', params['category']);
+        this.logger.debug('Categoría pre-seleccionada desde URL');
       }
       if (params['q']) {
         this.searchQuery = params['q'];
-        console.log('🔍 Búsqueda pre-cargada:', params['q']);
+        this.logger.debug('Búsqueda pre-cargada desde URL');
         
         // Guardar búsqueda en historial si está autenticado
         if (this.currentUser && params['q'].trim()) {
@@ -352,7 +355,7 @@ export class ExploreComponent implements OnInit {
    */
   async loadProjectTypes(): Promise<void> {
     try {
-      console.log('📋 Cargando tipos de proyecto desde API...');
+      this.logger.debug('Cargando tipos de proyecto desde API');
       const response = await this.apiService.get('/projects/types').toPromise();
       
       if (response?.success && response.data && Array.isArray(response.data)) {
@@ -367,10 +370,10 @@ export class ExploreComponent implements OnInit {
           ...types
         ];
         
-        console.log('✅ Tipos de proyecto cargados:', this.projectTypes.length - 1); // -1 para no contar "Todos"
+        this.logger.debug('Tipos de proyecto cargados', this.projectTypes.length - 1);
       }
     } catch (error) {
-      console.error('❌ Error cargando tipos de proyecto:', error);
+      this.logger.error('Error cargando tipos de proyecto', error);
       // Mantener solo "Todos" si falla la carga
       this.projectTypes = [{ value: '', label: 'Todos' }];
     }
@@ -403,10 +406,10 @@ export class ExploreComponent implements OnInit {
           { value: '', label: 'Todas las categorías' },
           ...this.categories.map(cat => ({ value: cat.nombre, label: cat.nombre }))
         ];
-        console.log('✅ Categorías cargadas:', this.categories.length);
+        this.logger.debug('Categorías cargadas', this.categories.length);
       }
     } catch (error) {
-      console.error('Error cargando categorías:', error);
+      this.logger.error('Error cargando categorías', error);
       // Fallback a categorías básicas
       this.categoriesOptions = [
         { value: '', label: 'Todas las categorías' },
@@ -482,13 +485,13 @@ export class ExploreComponent implements OnInit {
         if ((response as any).stats) {
           this.stats = (response as any).stats;
         }
-        console.log('✅ Proyectos cargados:', newProjects.length, 'Total:', this.projects.length);
+        this.logger.debug('Proyectos cargados', { nuevos: newProjects.length, total: this.projects.length });
       } else {
         throw new Error(response?.message || 'Error al cargar proyectos');
       }
 
     } catch (error) {
-      console.error('Error cargando proyectos:', error);
+      this.logger.error('Error cargando proyectos', error);
       this.error = 'Error al cargar los proyectos. Inténtalo de nuevo.';
     } finally {
       if (this.currentPage === 1) {
@@ -543,7 +546,7 @@ export class ExploreComponent implements OnInit {
       this.currentPage++;
       await this.loadProjects();
     } catch (error) {
-      console.error('Error cargando más proyectos:', error);
+      this.logger.error('Error cargando más proyectos', error);
       // Revertir la página si hay error
       this.currentPage--;
     } finally {

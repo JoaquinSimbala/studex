@@ -5,6 +5,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 // import { Router } from '@angular/router'; // ❌ COMENTADO: No se usa Router en este componente
 import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
+import { LoggerService } from '../../services/logger.service';
 import { BackButtonComponent } from '../../components/back-button/back-button.component';
 
 /**
@@ -118,12 +119,15 @@ export class ProfileComponent implements OnInit {
    * @param fb - FormBuilder para crear formularios reactivos
    * @param authService - Servicio de autenticación para gestionar el usuario actual
    * @param apiService - Servicio API para comunicación con el backend
+   * @param sanitizer - DomSanitizer para sanitizar HTML
+   * @param logger - Servicio de logging
    */
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
     private apiService: ApiService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private logger: LoggerService
   ) {
     // Formulario de perfil
     this.profileForm = this.fb.group({
@@ -190,15 +194,15 @@ export class ProfileComponent implements OnInit {
             areaEstudio: user.areaEstudio || '',
             descripcion: user.descripcion || ''
           });
-          console.log('✅ Perfil de usuario cargado:', user.email);
+          this.logger.debug('Perfil de usuario cargado');
           this.isLoadingUser = false;
         } else {
-          console.log('⚠️ No hay usuario autenticado');
+          this.logger.warn('No hay usuario autenticado');
           this.isLoadingUser = false;
         }
       });
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      this.logger.error('Error loading user profile', error);
       this.isLoadingUser = false;
     }
   }
@@ -397,7 +401,7 @@ export class ProfileComponent implements OnInit {
             // Actualizar en el AuthService
             this.authService.updateUser(updatedUser);
             
-            console.log('✅ Usuario actualizado:', updatedUser);
+            this.logger.success('Usuario actualizado con nueva imagen');
           }
           
           // Limpiar mensaje después de 3 segundos
@@ -477,7 +481,7 @@ export class ProfileComponent implements OnInit {
       `${this.currentUser?.firstName || ''} ${this.currentUser?.lastName || ''}`.trim() || 'Usuario'
     );
     imgElement.src = `https://ui-avatars.com/api/?name=${name}&size=200&background=4F46E5&color=fff&bold=true`;
-    console.error('Error al cargar imagen de perfil, usando fallback');
+    this.logger.error('Error al cargar imagen de perfil, usando fallback');
   }
 
   // ==================== GESTIÓN DE CATEGORÍAS ====================
@@ -496,7 +500,7 @@ export class ProfileComponent implements OnInit {
         this.categories = response.data;
       }
     } catch (error) {
-      console.error('Error cargando categorías:', error);
+      this.logger.error('Error cargando categorías', error);
     }
   }
 
@@ -515,7 +519,7 @@ export class ProfileComponent implements OnInit {
         this.selectedCategoryIds = this.userCategories.map(cat => cat.id);
       }
     } catch (error) {
-      console.error('Error cargando categorías del usuario:', error);
+      this.logger.error('Error cargando categorías del usuario', error);
     }
   }
 

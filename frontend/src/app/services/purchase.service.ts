@@ -109,7 +109,7 @@ export class PurchaseService {
       // Remover todos los proyectos de compras en progreso en caso de error
       projects.forEach(project => this.removePendingPurchase(project.projectId));
       
-      console.error('❌ Error procesando compra de carrito:', error);
+      this.logger.error('Error procesando compra de carrito', error);
       return {
         success: false,
         error: error?.message || 'Error procesando la compra del carrito'
@@ -149,7 +149,7 @@ export class PurchaseService {
       }
     } catch (error: any) {
       this.removePendingPurchase(request.projectId);
-      console.error('❌ Error procesando compra:', error);
+      this.logger.error('Error procesando compra', error);
       return {
         success: false,
         error: error?.message || 'Error procesando la compra'

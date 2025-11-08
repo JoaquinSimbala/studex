@@ -9,6 +9,7 @@ import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
 import { CartService } from '../../services/cart.service';
+import { LoggerService } from '../../services/logger.service';
 import { NotificationsDropdownComponent } from '../notifications-dropdown/notifications-dropdown.component';
 
 interface SearchResult {
@@ -91,7 +92,8 @@ export class Navbar implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private cartService: CartService,
     private cdr: ChangeDetectorRef,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -152,9 +154,9 @@ export class Navbar implements OnInit, OnDestroy {
 
     try {
       // El contador del carrito se maneja automáticamente via CartService subscription
-      console.log('👤 Datos de usuario cargados');
+      this.logger.debug('Datos de usuario cargados');
     } catch (error) {
-      console.error('Error cargando datos del usuario:', error);
+      this.logger.error('Error cargando datos del usuario', error);
     }
   }
 
@@ -178,7 +180,7 @@ export class Navbar implements OnInit, OnDestroy {
         this.showSearchResults = true;
       }
     } catch (error) {
-      console.error('Error en búsqueda:', error);
+      this.logger.error('Error en búsqueda', error);
       // Mock data para desarrollo
       this.searchResults = [
         {
@@ -362,7 +364,7 @@ export class Navbar implements OnInit, OnDestroy {
         this.modalCategories = [];
       }
     } catch (error) {
-      console.error('Error cargando categorías:', error);
+      this.logger.error('Error cargando categorías', error);
       // En caso de error, dejar el array vacío para mostrar el estado vacío
       this.modalCategories = [];
     } finally {

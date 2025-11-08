@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { CartService, CartItem } from '../../services/cart.service';
 import { PurchaseService } from '../../services/purchase.service';
 import { NotificationService } from '../../services/notification.service';
+import { LoggerService } from '../../services/logger.service';
 import { environment } from '../../../environments/environment';
 
 @Component({
@@ -19,6 +20,7 @@ export class CartComponent implements OnInit {
   private purchaseService = inject(PurchaseService);
   private notificationService = inject(NotificationService);
   private router = inject(Router);
+  private logger = inject(LoggerService);
 
   cartItems: CartItem[] = [];
   totalPrice: number = 0;
@@ -38,7 +40,7 @@ export class CartComponent implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error cargando carrito:', error);
+        this.logger.error('Error cargando carrito', error);
         this.notificationService.showError('Error', 'Error al cargar el carrito');
         this.isLoading = false;
       }
@@ -51,7 +53,7 @@ export class CartComponent implements OnInit {
         this.notificationService.showSuccess('Éxito', 'Proyecto removido del carrito');
       },
       error: (error) => {
-        console.error('Error removiendo del carrito:', error);
+        this.logger.error('Error removiendo del carrito', error);
         this.notificationService.showError('Error', 'Error al remover del carrito');
       }
     });
@@ -64,7 +66,7 @@ export class CartComponent implements OnInit {
           this.notificationService.showSuccess('Éxito', 'Carrito vaciado');
         },
         error: (error) => {
-          console.error('Error vaciando carrito:', error);
+          this.logger.error('Error vaciando carrito', error);
           this.notificationService.showError('Error', 'Error al vaciar el carrito');
         }
       });
@@ -105,7 +107,7 @@ export class CartComponent implements OnInit {
       }
       
     } catch (error: any) {
-      console.error('Error en compra de carrito:', error);
+      this.logger.error('Error en compra de carrito', error);
       this.notificationService.showError('Error', error.message || 'Error al procesar la compra del carrito');
     } finally {
       this.isProcessingPurchase = false;

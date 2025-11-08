@@ -16,6 +16,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { AuthService, User } from '../../services/auth.service';
 import { NotificationService } from '../../services/notification.service';
 import { BackButtonComponent } from '../../components/back-button/back-button.component';
+import { LoggerService } from '../../services/logger.service';
 
 /**
  * Interfaz que define la estructura de una categoría de proyecto.
@@ -154,7 +155,8 @@ export class UploadProjectComponent implements OnInit {
     private router: Router,
     private authService: AuthService,
     private notificationService: NotificationService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private logger: LoggerService
   ) {
     // Inicialización del formulario con validadores
     this.uploadForm = this.fb.group({
@@ -189,7 +191,7 @@ export class UploadProjectComponent implements OnInit {
         this.authService.currentUser$.subscribe(user => {
           this.currentUser = user;
           if (!user) {
-            console.log('Usuario no autenticado, redirigiendo a login');
+            this.logger.warn('Usuario no autenticado, redirigiendo a login');
             this.router.navigate(['/login']);
             return;
           }
@@ -219,12 +221,12 @@ export class UploadProjectComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           this.categories = response.data;
-          console.log('Categorías cargadas:', this.categories.length);
+          this.logger.debug('Categorías cargadas', this.categories.length);
         }
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error cargando categorías:', error);
+        this.logger.error('Error cargando categorías', error);
         this.isLoading = false;
       }
     });
@@ -242,7 +244,7 @@ export class UploadProjectComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           this.projectTypes = response.data;
-          console.log('Tipos de proyecto cargados:', this.projectTypes.length);
+          this.logger.debug('Tipos de proyecto cargados', this.projectTypes.length);
           
           // Si ya hay un tipo seleccionado en el formulario, encontrarlo
           const currentTipo = this.uploadForm.get('tipo')?.value;
@@ -252,7 +254,7 @@ export class UploadProjectComponent implements OnInit {
         }
       },
       error: (error) => {
-        console.error('Error cargando tipos de proyecto:', error);
+        this.logger.error('Error cargando tipos de proyecto', error);
         // En caso de error, usar tipos por defecto
         this.projectTypes = [
           { value: 'OTRO', label: 'Otro', category: 'Otros formatos' }
@@ -314,8 +316,7 @@ export class UploadProjectComponent implements OnInit {
       
       // Procesar tags desde el formulario (separados por comas)
       const tagsInput = this.uploadForm.get('tags')?.value || '';
-      console.log('Valor directo del campo tags:', tagsInput);
-      console.log('Tipo del valor tags:', typeof tagsInput);
+      this.logger.debug('Valor del campo tags', { tipo: typeof tagsInput });
       
       const tagsArray = tagsInput
         .split(',')
@@ -323,7 +324,7 @@ export class UploadProjectComponent implements OnInit {
         .filter((tag: string) => tag.length > 0);
       
       formData.append('tags', JSON.stringify(tagsArray));
-      console.log('Tags procesados final:', tagsArray);
+      this.logger.debug('Tags procesados', tagsArray.length);
       
       // Agregar archivos del proyecto
       this.selectedFiles.forEach((file) => {
@@ -335,12 +336,12 @@ export class UploadProjectComponent implements OnInit {
         formData.append('images', image);
       });
 
-      console.log('Enviando proyecto con archivos...');
+      this.logger.debug('Enviando proyecto con archivos');
 
       this.http.post<any>('http://localhost:3000/api/projects/upload-with-files', formData).subscribe({
         next: (response) => {
           if (response.success) {
-            console.log('Proyecto creado:', response.data);
+            this.logger.success('Proyecto creado exitosamente');
             
             // Notificación elegante de éxito
             this.notificationService.showSuccess(
@@ -354,7 +355,7 @@ export class UploadProjectComponent implements OnInit {
           this.isSubmitting = false;
         },
         error: (error) => {
-          console.error('Error subiendo proyecto:', error);
+          this.logger.error('Error subiendo proyecto', error);
           
           // Notificación elegante de error
           this.notificationService.showError(
@@ -366,7 +367,7 @@ export class UploadProjectComponent implements OnInit {
         }
       });
     } else {
-      console.log('Formulario inválido o faltan archivos');
+      this.logger.warn('Formulario inválido o faltan archivos');
       this.markFormGroupTouched(this.uploadForm);
       this.filesRequired = this.selectedFiles.length === 0 && this.selectedImages.length === 0;
     }

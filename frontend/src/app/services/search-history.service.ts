@@ -18,6 +18,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { LoggerService } from './logger.service';
 
 /**
  * Interfaz para una búsqueda en el historial
@@ -50,7 +51,10 @@ export class SearchHistoryService {
   private searchHistorySubject = new BehaviorSubject<SearchHistoryItem[]>([]);
   public searchHistory$ = this.searchHistorySubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private logger: LoggerService
+  ) {}
 
   /**
    * Obtiene los headers HTTP con el token de autorización
@@ -86,7 +90,7 @@ export class SearchHistoryService {
         this.loadRecentSearches().subscribe();
       }),
       catchError(error => {
-        console.error('Error al guardar búsqueda:', error);
+        this.logger.error('Error al guardar búsqueda', error);
         return of(null);
       })
     );
@@ -104,7 +108,7 @@ export class SearchHistoryService {
         this.searchHistorySubject.next(searches);
       }),
       catchError(error => {
-        console.error('Error al cargar búsquedas recientes:', error);
+        this.logger.error('Error al cargar búsquedas recientes', error);
         return of([]);
       })
     );
@@ -119,7 +123,7 @@ export class SearchHistoryService {
   getPopularSearches(limit: number = 5): Observable<PopularSearch[]> {
     return this.http.get<PopularSearch[]>(`${this.apiUrl}/popular?limit=${limit}`).pipe(
       catchError(error => {
-        console.error('Error al cargar búsquedas populares:', error);
+        this.logger.error('Error al cargar búsquedas populares', error);
         // Retornar búsquedas por defecto en caso de error
         return of([
           { termino: 'Tesis de sistemas', count: 0 },
@@ -145,7 +149,7 @@ export class SearchHistoryService {
         this.searchHistorySubject.next(updatedSearches);
       }),
       catchError(error => {
-        console.error('Error al eliminar búsqueda:', error);
+        this.logger.error('Error al eliminar búsqueda', error);
         return of(null);
       })
     );
@@ -163,7 +167,7 @@ export class SearchHistoryService {
         this.searchHistorySubject.next([]);
       }),
       catchError(error => {
-        console.error('Error al limpiar historial:', error);
+        this.logger.error('Error al limpiar historial', error);
         return of(null);
       })
     );

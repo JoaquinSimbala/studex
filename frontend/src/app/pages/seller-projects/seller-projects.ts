@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService, User } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { NotificationService } from '../../services/notification.service';
+import { LoggerService } from '../../services/logger.service';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
 import { BackButtonComponent } from '../../components/back-button/back-button.component';
 
@@ -175,7 +176,8 @@ export class SellerProjectsComponent implements OnInit {
     private route: ActivatedRoute,
     private authService: AuthService,
     private apiService: ApiService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private logger: LoggerService
   ) {}
 
   ngOnInit(): void {
@@ -209,12 +211,12 @@ export class SellerProjectsComponent implements OnInit {
       if (response?.success && response.data) {
         this.projects = (response.data as any).projects || [];
         this.stats = (response.data as any).stats || this.calculateStats();
-        console.log('📚 Proyectos del vendedor cargados:', this.projects.length);
+        this.logger.debug('Proyectos del vendedor cargados', this.projects.length);
       } else {
         throw new Error(response?.message || 'Error cargando proyectos');
       }
     } catch (error: any) {
-      console.error('❌ Error cargando proyectos:', error);
+      this.logger.error('Error cargando proyectos', error);
       this.error = error?.error?.message || error?.message || 'Error cargando los proyectos';
     } finally {
       this.isLoading = false;
