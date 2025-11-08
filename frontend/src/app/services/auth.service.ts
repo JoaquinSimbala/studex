@@ -10,7 +10,7 @@ export interface User {
   firstName: string;
   lastName: string;
   university: string;
-  userType: 'STUDENT' | 'SELLER' | 'ADMIN';
+  userType: 'USER' | 'VENDEDOR' | 'ADMINISTRADOR';
   profileImage?: string;
   verified: boolean;
   createdAt: Date;
@@ -405,7 +405,7 @@ export class AuthService {
   /**
    * Verifica si el usuario tiene un rol específico
    */
-  hasRole(role: 'STUDENT' | 'SELLER' | 'ADMIN'): boolean {
+  hasRole(role: 'USER' | 'VENDEDOR' | 'ADMINISTRADOR'): boolean {
     const user = this.getCurrentUser();
     return user?.userType === role || false;
   }
