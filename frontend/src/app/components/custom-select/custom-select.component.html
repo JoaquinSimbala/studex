@@ -1,0 +1,38 @@
+<div class="custom-select-wrapper" [class.disabled]="disabled">
+  <!-- Campo de selección -->
+  <div 
+    class="custom-select-field"
+    (click)="toggleDropdown()"
+    [class.open]="isOpen">
+    <span class="selected-value">{{ getSelectedLabel() }}</span>
+    <svg 
+      class="dropdown-arrow"
+      [class.rotate]="isOpen"
+      fill="none" 
+      stroke="currentColor" 
+      viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+    </svg>
+  </div>
+
+  <!-- Dropdown de opciones -->
+  <div class="custom-select-dropdown" *ngIf="isOpen">
+    <div class="options-container">
+      <div 
+        *ngFor="let option of options"
+        class="option-item"
+        [class.selected]="option.value === value"
+        (click)="selectOption(option)">
+        <span class="option-icon" *ngIf="option.icon">{{ option.icon }}</span>
+        <span class="option-label">{{ option.label }}</span>
+        <svg 
+          *ngIf="option.value === value"
+          class="check-icon"
+          fill="currentColor" 
+          viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>

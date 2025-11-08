@@ -8,8 +8,8 @@
   <div class="bg-gradient-to-r from-studex-600 to-studex-700 text-white py-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center">
-        <h1 class="text-4xl font-bold mb-4">Explorar Proyectos</h1>
-        <p class="text-xl text-studex-100 mb-8">Encuentra el proyecto perfecto para tu carrera universitaria</p>
+        <h1 class="text-4xl font-bold mb-4 white-solid-text">Explorar Proyectos</h1>
+        <p class="text-xl text-studex-100 mb-8">Encuentra el proyecto perfecto para ti</p>
         
         <!-- Search Bar -->
         <div class="max-w-2xl mx-auto relative">
@@ -56,36 +56,57 @@
 
   <!-- Filters Section -->
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
-      <div class="flex items-center gap-3 mb-6">
-        <svg class="w-6 h-6 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
-        </svg>
-        <h2 class="text-xl font-semibold text-gray-900">Filtros de Búsqueda</h2>
+    <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 filters-container">
+      <!-- Header con botón de toggle para móvil -->
+      <div class="flex items-center justify-between md:mb-6">
+        <div class="flex items-center gap-3">
+          <svg class="w-6 h-6 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.707A1 1 0 013 7V4z"></path>
+          </svg>
+          <h2 class="text-xl font-semibold text-gray-900">Filtros de Búsqueda</h2>
+        </div>
+        
+        <!-- Botón toggle solo visible en móvil -->
+        <button 
+          (click)="toggleFilters()"
+          class="md:hidden p-2 text-studex-600 hover:bg-studex-50 rounded-lg transition-colors">
+          <svg 
+            class="w-6 h-6 transition-transform duration-300"
+            [class.rotate-180]="filtersExpanded"
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+      <!-- Contenido de filtros - colapsable en móvil -->
+      <div 
+        class="filters-content"
+        [class.expanded]="filtersExpanded">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
         <!-- Tipo -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-          <select 
-            [(ngModel)]="filters.type" 
-            (change)="applyFilters()"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
-            <option *ngFor="let type of projectTypes" [value]="type.value">{{type.label}}</option>
-          </select>
+          <app-custom-select
+            [options]="projectTypes"
+            [(value)]="filters.type"
+            (valueChange)="applyFilters()"
+            placeholder="Todos los tipos">
+          </app-custom-select>
         </div>
 
         <!-- Categoría -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
-          <select 
-            [(ngModel)]="filters.category" 
-            (change)="applyFilters()"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
-            <option *ngFor="let category of categoriesOptions" [value]="category.value">{{category.label}}</option>
-          </select>
+          <app-custom-select
+            [options]="categoriesOptions"
+            [(value)]="filters.category"
+            (valueChange)="applyFilters()"
+            placeholder="Todas las categorías">
+          </app-custom-select>
         </div>
 
         <!-- Universidad -->
@@ -136,12 +157,12 @@
         <!-- Ordenar por -->
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Ordenar por</label>
-          <select 
-            [(ngModel)]="filters.orderBy" 
-            (change)="applyFilters()"
-            class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-studex-500 focus:border-studex-500">
-            <option *ngFor="let order of orderOptions" [value]="order.value">{{order.label}}</option>
-          </select>
+          <app-custom-select
+            [options]="orderOptions"
+            [(value)]="filters.orderBy"
+            (valueChange)="applyFilters()"
+            placeholder="Seleccionar orden">
+          </app-custom-select>
         </div>
 
         <!-- Botones -->
@@ -152,6 +173,7 @@
             Limpiar Filtros
           </button>
         </div>
+      </div>
       </div>
     </div>
 

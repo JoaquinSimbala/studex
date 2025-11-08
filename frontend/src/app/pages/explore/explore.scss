@@ -1,36 +1,66 @@
-// Animaciones para la página de explorar
-.slide-in-up {
-  opacity: 0;
-  transform: translateY(30px);
-  animation: slideInUp 0.6s ease-out forwards;
+// Clase para anular el gradiente del h1 y usar color sólido blanco
+// Uso: explore.html - línea 11 (h1 "Explorar Proyectos")
+.white-solid-text {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  -webkit-text-fill-color: white !important;
+  background-clip: unset !important;
+  color: white !important;
+}
+
+// Contenedor de filtros - permitir que los dropdowns se salgan
+// Uso: explore.html - línea 59 (div con filtros)
+.filters-container {
+  overflow: visible !important;
+  
+  @media (max-width: 768px) {
+    // En móvil, asegurar que el dropdown pueda salirse del contenedor
+    overflow: visible !important;
+    position: relative;
+    z-index: 10;
+  }
+}
+
+// Estilos para el desplegable de filtros en móvil
+// Uso: explore.html - línea 87 (div con contenido de filtros)
+.filters-content {
+  // En móvil: oculto por defecto
+  @media (max-width: 768px) {
+    max-height: 0;
+    overflow: visible; // Cambiar de hidden a visible para permitir que el dropdown se salga
+    transition: max-height 0.3s ease-out;
+    margin-top: 0;
+    
+    &.expanded {
+      max-height: 2000px; // Valor suficientemente grande para mostrar todo el contenido
+      transition: max-height 0.5s ease-in;
+      margin-top: 1.5rem; // 24px - equivalente a mt-6
+    }
+    
+    // Ocultar el contenido pero permitir que los dropdowns se muestren
+    & > div {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    
+    &.expanded > div {
+      opacity: 1;
+      pointer-events: auto;
+      transition: opacity 0.3s ease 0.1s;
+    }
+  }
+  
+  // En desktop: siempre visible
+  @media (min-width: 769px) {
+    max-height: none !important;
+    overflow: visible !important;
+  }
 }
 
 @keyframes slideInUp {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-// Optimizaciones de rendimiento heredadas
-.animate-spin {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-// Hover effects para filtros
-select:hover, input:hover {
-  border-color: #059669;
-  transition: border-color 0.2s ease;
-}
-
-// Responsive improvements
-@media (max-width: 768px) {
-  .slide-in-up {
-    animation-delay: 0s !important;
   }
 }

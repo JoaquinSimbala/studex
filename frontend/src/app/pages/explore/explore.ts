@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule, Router, ActivatedRoute } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService, User } from '../../services/auth.service';
 import { SearchHistoryService } from '../../services/search-history.service';
 import { Navbar } from '../../components/navbar/navbar';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
+import { CustomSelectComponent } from '../../components/custom-select/custom-select.component';
 
 /**
  * Interfaz para opciones de filtrado de proyectos
@@ -97,7 +98,7 @@ interface Category {
 @Component({
   selector: 'app-explore',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, Navbar, ProjectCardComponent],
+  imports: [CommonModule, FormsModule, Navbar, ProjectCardComponent, CustomSelectComponent],
   templateUrl: './explore.html',
   styleUrl: './explore.scss'
 })
@@ -199,6 +200,15 @@ export class ExploreComponent implements OnInit {
    * Controla el spinner en el botón de paginación.
    */
   isLoadingMore = false;
+
+  /**
+   * Indica si los filtros están expandidos en móvil
+   * 
+   * @description
+   * Controla el estado del desplegable de filtros en dispositivos móviles.
+   * True = filtros visibles, False = filtros ocultos.
+   */
+  filtersExpanded = false;
   
   /**
    * Objeto con todos los filtros aplicados actualmente
@@ -269,14 +279,12 @@ export class ExploreComponent implements OnInit {
    * 
    * @param apiService - Servicio para realizar peticiones HTTP a la API
    * @param authService - Servicio de autenticación de usuarios
-   * @param router - Router de Angular para navegación
    * @param route - ActivatedRoute para acceder a queryParams
    * @param searchHistoryService - Servicio para gestionar historial de búsquedas
    */
   constructor(
     private apiService: ApiService,
     private authService: AuthService,
-    private router: Router,
     private route: ActivatedRoute,
     private searchHistoryService: SearchHistoryService
   ) {}
@@ -482,10 +490,6 @@ export class ExploreComponent implements OnInit {
     } catch (error) {
       console.error('Error cargando proyectos:', error);
       this.error = 'Error al cargar los proyectos. Inténtalo de nuevo.';
-      // Fallback a datos mock en caso de error solo si es la primera página
-      if (this.currentPage === 1) {
-        this.loadMockData();
-      }
     } finally {
       if (this.currentPage === 1) {
         this.isLoading = false;
@@ -547,64 +551,6 @@ export class ExploreComponent implements OnInit {
     }
   }
 
-  // ========================================
-  // ⚠️ MÉTODO DE FALLBACK - Solo para desarrollo
-  // ========================================
-  // Este método proporciona datos mock cuando falla la API.
-  // No debería usarse en producción. Se mantiene solo como
-  // medida de seguridad durante el desarrollo.
-  //
-  /**
-   * Carga datos mock como fallback cuando falla la API
-   * 
-   * @description
-   * ⚠️ SOLO PARA DESARROLLO - No usar en producción
-   * 
-   * Proporciona un proyecto de ejemplo cuando la petición a la API falla.
-   * Esto evita que la página quede completamente vacía durante el desarrollo
-   * si el backend no está disponible.
-   * 
-   * En producción, debería mostrarse el estado de error sin datos mock.
-   * 
-   * @private
-   * @deprecated Solo para desarrollo
-   */
-  private loadMockData(): void {
-    this.projects = [
-      {
-        id: 1,
-        title: 'Sistema de Gestión de Biblioteca Universitaria',
-        description: 'Sistema completo de gestión de biblioteca universitaria desarrollado en Python con Django.',
-        price: 120,
-        type: 'SOFTWARE',
-        university: 'Universidad Nacional de Ingeniería (UNI)',
-        category: 'Software',
-        year: 2024,
-        rating: 4.8,
-        views: 256,
-        mainImage: {
-          fileUrl: 'https://via.placeholder.com/400x300/10B981/ffffff?text=Sistema+Biblioteca',
-          fileName: 'sistema-biblioteca.jpg'
-        },
-        isFavorite: false,
-        seller: {
-          id: 1,
-          name: 'Carlos Mendoza Silva',
-          avatar: 'https://ui-avatars.com/api/?name=Carlos+Mendoza&background=10B981&color=ffffff&size=40',
-          rating: 4.9,
-          salesCount: 23
-        },
-        featured: true
-      }
-    ];
-    
-    this.stats = {
-      total: this.projects.length,
-      universities: 1,
-      categories: 1
-    };
-  }
-
   /**
    * Ejecuta la búsqueda aplicando los filtros actuales
    * 
@@ -628,18 +574,19 @@ export class ExploreComponent implements OnInit {
   }
 
   /**
-   * Limpia todos los filtros y búsqueda, reseteando a estado inicial
+   * Limpia todos los filtros, reseteando a estado inicial
    * 
    * @description
    * Se activa al hacer clic en el botón "Limpiar Filtros".
    * 
    * Resetea:
    * - Todos los campos de filters a valores por defecto
-   * - searchQuery a string vacío
    * - orderBy a 'newest' (más recientes)
    * 
-   * Luego recarga los proyectos sin filtros aplicados,
-   * mostrando todos los proyectos disponibles ordenados por fecha.
+   * IMPORTANTE: NO limpia searchQuery para mantener la búsqueda por texto.
+   * 
+   * Luego recarga los proyectos con la búsqueda actual pero sin filtros,
+   * mostrando todos los proyectos que coincidan con el texto de búsqueda.
    */
   clearFilters(): void {
     this.filters = {
@@ -651,33 +598,9 @@ export class ExploreComponent implements OnInit {
       maxPrice: null,
       orderBy: 'newest'
     };
-    this.searchQuery = '';
+    // NO limpiar searchQuery - mantener el texto de búsqueda
     this.loadProjects();
   }
-
-  // ========================================
-  // ❌ MÉTODOS NO UTILIZADOS - Comentados
-  // ========================================
-  // ProjectCardComponent ahora maneja toda la navegación y favoritos internamente.
-  // Estos métodos eran duplicados e innecesarios, ya que el componente hijo
-  // gestiona estos eventos de forma independiente.
-  //
-  // viewProject(project: ProjectCard): void {
-  //   if (this.currentUser && project.seller.id === parseInt(this.currentUser.id)) {
-  //     this.router.navigate(['/vendedor/proyecto', project.id]);
-  //   } else {
-  //     this.router.navigate(['/proyecto', project.id]);
-  //   }
-  // }
-  //
-  // handleFavoriteClick(project: ProjectCard): void {
-  //   if (!this.currentUser) {
-  //     this.router.navigate(['/login']);
-  //     return;
-  //   }
-  //   project.isFavorite = !project.isFavorite;
-  //   console.log('Toggle favorite:', project.id, project.isFavorite);
-  // }
 
   /**
    * Función trackBy para optimizar el renderizado de la lista de proyectos
@@ -697,14 +620,14 @@ export class ExploreComponent implements OnInit {
     return project.id;
   }
 
-  // ========================================
-  // ❌ MÉTODO NO UTILIZADO EN EL TEMPLATE
-  // ========================================
-  // Este método no se usa en explore.html ni en ningún componente hijo.
-  // El tipo de proyecto se muestra directamente o se formatea en ProjectCardComponent.
-  //
-  // getProjectTypeLabel(type: string): string {
-  //   const typeObj = this.projectTypes.find(t => t.value === type);
-  //   return typeObj ? typeObj.label : type;
-  // }
+  /**
+   * Alterna el estado de los filtros en móvil
+   * 
+   * @description
+   * Expande o contrae la sección de filtros en dispositivos móviles.
+   * Se usa con un botón en el template para mejorar la UX en pantallas pequeñas.
+   */
+  toggleFilters(): void {
+    this.filtersExpanded = !this.filtersExpanded;
+  }
 }
