@@ -47,6 +47,7 @@ model User {
   ventasComoVendedor      Sale[]                  @relation("VendedorSales")
   categoriasPreferidas    UserPreferredCategory[]
   historialBusquedas      SearchHistory[]
+  comentarios             ProjectComment[]
 
   @@map("usuarios")
 }
@@ -81,7 +82,7 @@ model Category {
 }
 
 model Project {
-  id                 Int            @id(map: "projects_pkey") @default(autoincrement())
+  id                 Int              @id(map: "projects_pkey") @default(autoincrement())
   titulo             String
   descripcion        String
   precio             Decimal
@@ -89,23 +90,24 @@ model Project {
   universidad        String
   materia            String
   año               Int
-  vendedorId         Int            @map("vendedor_id")
-  categoriaId        Int            @map("categoria_id")
-  estado             ProjectStatus  @default(PUBLICADO)
-  vistas             Int            @default(0)
-  descargas          Int            @default(0)
-  destacado          Boolean        @default(false)
+  vendedorId         Int              @map("vendedor_id")
+  categoriaId        Int              @map("categoria_id")
+  estado             ProjectStatus    @default(PUBLICADO)
+  vistas             Int              @default(0)
+  descargas          Int              @default(0)
+  destacado          Boolean          @default(false)
   etiquetas          String[]
-  fechaCreacion      DateTime       @default(now()) @map("fecha_creacion")
-  fechaActualizacion DateTime       @updatedAt @map("fecha_actualizacion")
+  fechaCreacion      DateTime         @default(now()) @map("fecha_creacion")
+  fechaActualizacion DateTime         @updatedAt @map("fecha_actualizacion")
   archivos           ProjectFile[]
   calificaciones     Rating[]
   favoritos          Favorite[]
   carrito            Cart[]
   imagenes           ProjectImage[]
   mensajes           Message[]
-  categoria          Category       @relation(fields: [categoriaId], references: [id])
-  vendedor           User           @relation(fields: [vendedorId], references: [id], onDelete: Cascade)
+  comentarios        ProjectComment[]
+  categoria          Category         @relation(fields: [categoriaId], references: [id])
+  vendedor           User             @relation(fields: [vendedorId], references: [id], onDelete: Cascade)
   ventas             Sale[]
 
   @@map("proyectos")
@@ -410,4 +412,21 @@ model UserPreferredCategory {
 enum AuthProvider {
   LOCAL  @map("local")
   GOOGLE @map("google")
+}
+
+model ProjectComment {
+  id             Int      @id @default(autoincrement())
+  contenido      String
+  proyectoId     Int      @map("proyecto_id")
+  usuarioId      Int      @map("usuario_id")
+  fechaCreacion  DateTime @default(now()) @map("fecha_creacion")
+  fechaActualizacion DateTime @updatedAt @map("fecha_actualizacion")
+  
+  proyecto       Project  @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  usuario        User     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  
+  @@index([proyectoId])
+  @@index([usuarioId])
+  @@index([fechaCreacion])
+  @@map("comentarios_proyecto")
 }

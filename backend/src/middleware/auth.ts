@@ -30,10 +30,15 @@ export const authMiddleware = async (req: Request, res: Response, next: NextFunc
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'studex-secret-key') as any;
     
+    // DEBUG: Ver qué contiene el token decodificado
+    console.log('🔍 Token decodificado:', decoded);
+    
     // Buscar usuario en la base de datos
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId }
     });
+
+    console.log('👤 Usuario encontrado:', user ? `ID: ${user.id}, Email: ${user.email}` : 'NULL');
 
     if (!user) {
       res.status(401).json({

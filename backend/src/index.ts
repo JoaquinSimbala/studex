@@ -17,6 +17,7 @@ import purchaseRoutes from './routes/purchases';
 import favoritesRoutes from './routes/favorites';
 import cartRoutes from './routes/cart';
 import searchHistoryRoutes from './routes/search-history';
+import commentsRoutes from './routes/comments';
 
 // Importar servicios
 import { scheduleFeaturedUpdates } from './services/featuredUpdater';
@@ -92,6 +93,7 @@ app.use('/api/purchases', purchaseRoutes);
 app.use('/api/favorites', favoritesRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/search-history', searchHistoryRoutes);
+app.use('/api/comments', commentsRoutes);
 
 // Middleware de manejo de errores
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

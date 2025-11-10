@@ -1,0 +1,579 @@
+<div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">
+  <div class="max-w-6xl mx-auto px-4">
+    
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="text-center py-12">
+      <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-studex-600"></div>
+      <p class="mt-4 text-studex-600">Cargando proyecto...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error" class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+      <h3 class="text-red-800 font-semibold mb-2">Error cargando proyecto</h3>
+      <p class="text-red-600">{{ error }}</p>
+      <button (click)="goBack()" 
+              class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+        Volver
+      </button>
+    </div>
+
+    <!-- Project Detail -->
+    <div *ngIf="!isLoading && !error && project">
+      
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+        <button (click)="goBack()" 
+                class="flex items-center justify-center w-10 h-10 text-studex-600 hover:bg-studex-100 rounded-lg transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </button>
+        
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Botón de agregar/remover del carrito -->
+          <button *ngIf="shouldShowCartButton()" 
+                  (click)="addToCart()"
+                  [disabled]="isAddingToCart"
+                  [class]="isInCart ? 
+                    'px-4 md:px-6 py-2 md:py-3 bg-white border-2 border-red-500 text-red-600 rounded-lg font-semibold hover:bg-red-50 transition-all text-sm md:text-base' :
+                    'px-4 md:px-6 py-2 md:py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base'">
+            <span *ngIf="isAddingToCart">Procesando...</span>
+            <span *ngIf="!isAddingToCart">{{ isInCart ? 'Remover del carrito' : 'Agregar al carrito' }}</span>
+          </button>
+
+          <!-- Botón de compra (solo vista pública) -->
+          <button *ngIf="showPurchasePrompt()" 
+                  (click)="purchaseProject()"
+                  class="px-4 md:px-6 py-2 md:py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base">
+            Comprar por S/ {{ project.price }}
+          </button>
+          
+          <!-- Mensaje de login requerido -->
+          <button *ngIf="showLoginPrompt()" 
+                  (click)="router.navigate(['/login'])"
+                  class="px-4 md:px-6 py-2 md:py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base">
+            Iniciar Sesión para Comprar
+          </button>
+          
+          <!-- Estado de acceso concedido -->
+          <div *ngIf="hasAccess && isPublicView" 
+               class="px-4 py-2 bg-green-100 text-green-800 rounded-xl font-semibold text-xs md:text-sm border border-green-300 flex items-center gap-2">
+            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Tienes acceso a este proyecto
+          </div>
+          
+          <!-- Badge de estado (solo para propietarios) -->
+          <span *ngIf="isOwnerView"
+                [class]="getStatusBadgeClass(project.status)"
+                class="px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-2"
+                [innerHTML]="getStatusIcon(project.status)">
+          </span>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+        
+        <!-- Left Column - Images -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Main Image -->
+          <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div class="relative h-64 md:h-80 bg-studex-100">
+              <!-- Image Container with Zoom and Pan -->
+              <div *ngIf="selectedImage" 
+                   class="w-full h-full overflow-hidden relative"
+                   [class.cursor-move]="imageZoom > 1"
+                   [class.cursor-zoom-in]="imageZoom === 1"
+                   (mousedown)="onImageMouseDown($event)"
+                   (mousemove)="onImageMouseMove($event)"
+                   (mouseup)="onImageMouseUp()"
+                   (mouseleave)="onImageMouseUp()"
+                   (wheel)="onImageWheel($event)">
+                <img [src]="selectedImage.fileUrl" 
+                     [alt]="selectedImage.fileName"
+                     [style.transform]="'scale(' + imageZoom + ') translate(' + (imagePosition.x / imageZoom) + 'px, ' + (imagePosition.y / imageZoom) + 'px)'"
+                     class="w-full h-full object-contain select-none"
+                     [class.transition-transform]="!isDragging"
+                     [class.duration-200]="!isDragging"
+                     draggable="false">
+              </div>
+              
+              <!-- Placeholder cuando no hay imagen -->
+              <div *ngIf="!selectedImage && project.images.length === 0" 
+                   class="w-full h-full flex items-center justify-center">
+                <svg class="w-20 h-20 md:w-24 md:h-24 text-studex-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              
+              <!-- Zoom Controls -->
+              <div *ngIf="selectedImage" class="absolute top-4 right-4 flex flex-col gap-2 bg-white bg-opacity-90 rounded-lg p-2 shadow-lg">
+                <button (click)="zoomIn()"
+                        [disabled]="imageZoom >= maxZoom"
+                        class="w-8 h-8 flex items-center justify-center rounded hover:bg-studex-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Acercar">
+                  <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path>
+                  </svg>
+                </button>
+                
+                <button (click)="resetZoom()"
+                        [disabled]="imageZoom === 1"
+                        class="w-8 h-8 flex items-center justify-center rounded hover:bg-studex-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs font-semibold text-studex-600"
+                        title="Restablecer">
+                  {{ (imageZoom * 100).toFixed(0) }}%
+                </button>
+                
+                <button (click)="zoomOut()"
+                        [disabled]="imageZoom <= minZoom"
+                        class="w-8 h-8 flex items-center justify-center rounded hover:bg-studex-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Alejar">
+                  <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Image Gallery -->
+          <div *ngIf="project.images.length > 0" class="bg-white rounded-xl shadow-lg p-4 md:p-6">
+            <h3 class="text-base md:text-lg font-semibold text-studex-900 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              Imágenes ({{ project.images.length }})
+            </h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              <div *ngFor="let image of project.images" 
+                   class="relative group cursor-pointer"
+                   (click)="selectImage(image)">
+                <img [src]="image.fileUrl" 
+                     [alt]="image.fileName"
+                     class="w-full h-20 md:h-24 object-cover rounded-lg border-2 border-transparent hover:border-studex-500 transition-colors"
+                     [class.border-studex-500]="selectedImage?.id === image.id">
+                
+                <!-- Download Button -->
+                <button (click)="downloadFile(image.fileUrl, image.fileName, $event, image.id)"
+                        class="absolute top-1 right-1 w-6 h-6 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        [class]="canDownloadFile() ? 'bg-black bg-opacity-50 text-white hover:bg-opacity-75' : 'bg-red-500 text-white cursor-not-allowed'"
+                        [disabled]="!canDownloadFile()">
+                  <svg *ngIf="canDownloadFile()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                  <svg *ngIf="!canDownloadFile()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                </button>
+                
+                <!-- File Info -->
+                <div class="mt-1 text-xs text-studex-500 text-center truncate">
+                  {{ image.fileName }}
+                </div>
+                <div class="text-xs text-studex-400 text-center">
+                  {{ formatFileSize(image.fileSize) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Files Section -->
+          <div *ngIf="project.files.length > 0" class="bg-white rounded-xl shadow-lg p-4 md:p-6">
+            <h3 class="text-base md:text-lg font-semibold text-studex-900 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+              </svg>
+              Archivos ({{ project.files.length }})
+            </h3>
+            <div class="space-y-3">
+              <div *ngFor="let file of project.files" 
+                   class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-3 md:p-4 border border-studex-200 rounded-lg hover:bg-studex-50 transition-colors">
+                <div class="flex items-center space-x-3 flex-1 min-w-0">
+                  <div class="w-10 h-10 bg-studex-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <span [innerHTML]="getFileIcon(file.mimeType)"></span>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="font-medium text-studex-800 truncate">{{ file.fileName }}</p>
+                    <p class="text-xs md:text-sm text-studex-500">{{ formatFileSize(file.fileSize) }} • {{ getFileTypeText(file.mimeType) }}</p>
+                    <p *ngIf="file.description" class="text-xs text-studex-400 truncate">{{ file.description }}</p>
+                  </div>
+                </div>
+                <button (click)="downloadFile(file.fileUrl, file.fileName, undefined, file.id)"
+                        [disabled]="downloadingFiles.has(file.id) || !canDownloadFile()"
+                        class="px-4 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 whitespace-nowrap"
+                        [class]="
+                          downloadingFiles.has(file.id) ? 
+                            'bg-gray-400 text-white cursor-not-allowed' :
+                          !canDownloadFile() ?
+                            'bg-red-500 text-white cursor-not-allowed' :
+                            'bg-studex-600 text-white hover:bg-studex-700'">
+                  <svg *ngIf="!downloadingFiles.has(file.id) && canDownloadFile()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                  <svg *ngIf="!downloadingFiles.has(file.id) && !canDownloadFile()" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                  </svg>
+                  <svg *ngIf="downloadingFiles.has(file.id)" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  <span>{{ 
+                    downloadingFiles.has(file.id) ? 'Descargando...' : 
+                    !canDownloadFile() ? 'Bloqueado' : 
+                    'Descargar' 
+                  }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Project Info -->
+        <div class="lg:col-span-1 space-y-6">
+          <!-- Project Info -->
+          <div class="bg-white rounded-xl shadow-lg p-4 md:p-6">
+            <h1 class="text-xl md:text-2xl font-bold text-studex-900 mb-4">{{ project.title }}</h1>
+            
+            <div class="space-y-3 md:space-y-4 text-sm md:text-base">
+              <!-- Price -->
+              <div class="flex items-center justify-between">
+                <span class="text-studex-600">Precio:</span>
+                <span class="text-xl md:text-2xl font-bold text-studex-900">S/ {{ project.price }}</span>
+              </div>
+
+              <!-- Category -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-studex-600">Categoría:</span>
+                <span class="font-medium text-right">{{ project.category.nombre }}</span>
+              </div>
+
+              <!-- Type -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-studex-600">Tipo:</span>
+                <span class="font-medium text-right">{{ getProjectTypeText(project.type) }}</span>
+              </div>
+
+              <!-- University -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-studex-600">Universidad:</span>
+                <span class="font-medium text-right">{{ project.university }}</span>
+              </div>
+
+              <!-- Subject -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-studex-600">Materia:</span>
+                <span class="font-medium text-right">{{ project.subject }}</span>
+              </div>
+
+              <!-- Year -->
+              <div class="flex items-center justify-between">
+                <span class="text-studex-600">Año:</span>
+                <span class="font-medium">{{ project.year }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div class="bg-white rounded-xl shadow-lg p-4 md:p-6">
+            <h3 class="text-base md:text-lg font-semibold text-studex-900 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              Estadísticas
+            </h3>
+            <div class="space-y-3 text-sm md:text-base">
+              <div class="flex items-center justify-between">
+                <span class="text-studex-600 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-studex-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                  </svg>
+                  Vistas:
+                </span>
+                <span class="font-bold">{{ project.views }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-studex-600 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-studex-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                  </svg>
+                  Descargas:
+                </span>
+                <span class="font-bold">{{ project.downloads }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-studex-600 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-studex-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  Publicado:
+                </span>
+                <span class="font-medium">{{ formatDate(project.createdAt) }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-studex-600 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-studex-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  Actualizado:
+                </span>
+                <span class="font-medium">{{ formatDate(project.updatedAt) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div *ngIf="project.tags.length > 0" class="bg-white rounded-xl shadow-lg p-4 md:p-6">
+            <h3 class="text-base md:text-lg font-semibold text-studex-900 mb-4 flex items-center gap-2">
+              <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14"/>
+              </svg>
+              Tags
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              <span *ngFor="let tag of project.tags" 
+                    class="px-3 py-1 bg-studex-100 text-studex-700 text-xs md:text-sm rounded-full">
+                {{ tag }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mt-6">
+        <h3 class="text-base md:text-lg font-semibold text-studex-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          Descripción
+        </h3>
+        <p class="text-sm md:text-base text-studex-700 leading-relaxed whitespace-pre-wrap">{{ project.description }}</p>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="bg-white rounded-xl shadow-lg p-4 md:p-6 mt-6">
+        <h3 class="text-base md:text-lg font-semibold text-studex-900 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          Consultas y Comentarios
+          <span class="ml-auto text-sm font-normal text-studex-500">({{ comments.length }})</span>
+        </h3>
+
+        <!-- New Comment Form -->
+        <div class="mb-6">
+          <div *ngIf="currentUser" class="space-y-3">
+            <textarea 
+              [(ngModel)]="newCommentContent"
+              placeholder="Escribe tu consulta o comentario..."
+              rows="3"
+              maxlength="1000"
+              class="w-full px-4 py-3 border border-studex-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-studex-500 focus:border-transparent resize-none text-sm md:text-base"
+              [disabled]="isSubmittingComment"></textarea>
+            
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-studex-500">
+                {{ newCommentContent.length }}/1000 caracteres
+              </span>
+              <button 
+                (click)="submitComment()"
+                [disabled]="isSubmittingComment || newCommentContent.trim().length < 3"
+                class="px-4 py-2 bg-studex-600 text-white rounded-lg font-medium hover:bg-studex-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base">
+                <span *ngIf="!isSubmittingComment">Publicar</span>
+                <span *ngIf="isSubmittingComment" class="flex items-center gap-2">
+                  <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  Publicando...
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="!currentUser" class="text-center py-6 bg-studex-50 rounded-lg border border-studex-200">
+            <p class="text-studex-600 mb-3">Inicia sesión para dejar un comentario</p>
+            <button 
+              (click)="router.navigate(['/login'])"
+              class="px-4 py-2 bg-studex-600 text-white rounded-lg font-medium hover:bg-studex-700 transition-colors text-sm md:text-base">
+              Iniciar Sesión
+            </button>
+          </div>
+        </div>
+
+        <!-- Comments List -->
+        <div *ngIf="isLoadingComments" class="text-center py-8">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-studex-600"></div>
+          <p class="mt-2 text-studex-600 text-sm">Cargando comentarios...</p>
+        </div>
+
+        <div *ngIf="!isLoadingComments && comments.length === 0" class="text-center py-8">
+          <svg class="w-16 h-16 mx-auto text-studex-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+          <p class="text-studex-500">Aún no hay comentarios</p>
+          <p class="text-sm text-studex-400 mt-1">Sé el primero en comentar</p>
+        </div>
+
+        <div *ngIf="!isLoadingComments && comments.length > 0" class="space-y-4">
+          <div *ngFor="let comment of comments" 
+               class="border border-studex-200 rounded-lg p-4 hover:bg-studex-50 transition-colors">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex items-start gap-3 flex-1 min-w-0">
+                <!-- Avatar -->
+                <div class="w-10 h-10 rounded-full bg-studex-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  <img *ngIf="comment.usuario.profileImage" 
+                       [src]="comment.usuario.profileImage" 
+                       [alt]="comment.usuario.nombre"
+                       class="w-full h-full object-cover">
+                  <svg *ngIf="!comment.usuario.profileImage" class="w-6 h-6 text-studex-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                  </svg>
+                </div>
+
+                <!-- Comment Content -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-semibold text-studex-900">
+                      {{ comment.usuario.nombre }} {{ comment.usuario.apellidos }}
+                    </span>
+                    <svg *ngIf="comment.usuario.vendedorVerificado" 
+                         class="w-4 h-4 text-blue-500" 
+                         fill="currentColor" 
+                         viewBox="0 0 20 20"
+                         title="Vendedor verificado">
+                      <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span class="text-xs text-studex-500">{{ getRelativeTime(comment.fechaCreacion) }}</span>
+                  </div>
+                  
+                  <p *ngIf="comment.usuario.institucion" class="text-xs text-studex-500 mt-0.5">
+                    {{ comment.usuario.institucion }}
+                  </p>
+                  
+                  <p class="text-sm md:text-base text-studex-700 mt-2 whitespace-pre-wrap break-words">
+                    {{ comment.contenido }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- Delete Button -->
+              <button *ngIf="canDeleteComment(comment)"
+                      (click)="deleteComment(comment.id)"
+                      class="flex-shrink-0 text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 transition-colors"
+                      title="Eliminar comentario">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Access Information Panel (solo vista pública) -->
+      <div *ngIf="isPublicView" class="mt-6 rounded-xl shadow-lg p-4 md:p-6"
+           [class]="hasAccess ? 'bg-green-50 border border-green-200' : 'bg-orange-50 border border-orange-200'">
+        
+        <!-- Usuario con acceso -->
+        <div *ngIf="hasAccess" class="text-center">
+          <div class="text-4xl mb-3" [class]="justUnlocked ? 'animate-bounce' : ''">
+            <svg *ngIf="!justUnlocked" class="w-16 h-16 mx-auto text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <svg *ngIf="justUnlocked" class="w-16 h-16 mx-auto text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold mb-2" 
+              [class]="justUnlocked ? 'text-blue-800 animate-pulse' : 'text-green-800'">
+            {{ justUnlocked ? '¡Contenido Desbloqueado!' : '¡Tienes acceso completo!' }}
+          </h3>
+          <p class="text-sm md:text-base" [class]="justUnlocked ? 'text-blue-700 font-medium' : 'text-green-700'">
+            {{ justUnlocked ? '¡Compra realizada con éxito! Ya puedes descargar todos los archivos.' : 'Puedes descargar todos los archivos de este proyecto.' }}
+          </p>
+          <div *ngIf="justUnlocked" class="mt-3 px-4 py-2 bg-blue-100 border border-blue-300 rounded-lg">
+            <p class="text-xs md:text-sm text-blue-800 flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+              </svg>
+              El acceso a los archivos se ha activado inmediatamente
+            </p>
+          </div>
+        </div>
+
+        <!-- Usuario sin acceso - Necesita comprar -->
+        <div *ngIf="!hasAccess && currentUser" class="text-center">
+          <div class="mb-3">
+            <svg class="w-16 h-16 mx-auto text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-orange-800 mb-2">Proyecto Protegido</h3>
+          <p class="text-sm md:text-base text-orange-700 mb-4">Para acceder a los archivos de este proyecto, necesitas comprarlo.</p>
+          <div class="bg-white rounded-lg p-4 mb-4 border border-orange-300">
+            <div class="flex items-center justify-between">
+              <span class="text-lg font-semibold text-studex-900">Precio:</span>
+              <span class="text-2xl font-bold text-studex-600">S/ {{ project.price }}</span>
+            </div>
+          </div>
+          
+          <!-- Botones de acción -->
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <!-- Botón de carrito -->
+            <button *ngIf="shouldShowCartButton()" 
+                    (click)="addToCart()"
+                    [disabled]="isAddingToCart"
+                    [class]="isInCart ? 
+                      'px-6 py-3 bg-white border-2 border-red-500 text-red-600 rounded-lg font-semibold hover:bg-red-50 transition-all text-sm md:text-base' :
+                      'px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base'">
+              <span *ngIf="isAddingToCart">Procesando...</span>
+              <span *ngIf="!isAddingToCart">{{ isInCart ? 'Remover del carrito' : 'Agregar al carrito' }}</span>
+            </button>
+            
+            <!-- Botón de compra directa -->
+            <button (click)="purchaseProject()"
+                    class="px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base">
+              Comprar Ahora
+            </button>
+          </div>
+          
+          <!-- Información del carrito -->
+          <div *ngIf="isInCart" class="mt-3 px-4 py-2 bg-blue-100 border border-blue-300 rounded-lg">
+            <p class="text-xs md:text-sm text-blue-800">
+              <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Este proyecto está en tu carrito. 
+              <a routerLink="/carrito" class="underline font-medium hover:text-blue-900">Ver carrito</a>
+            </p>
+          </div>
+        </div>
+
+        <!-- Usuario no autenticado -->
+        <div *ngIf="!currentUser" class="text-center">
+          <div class="mb-3">
+            <svg class="w-16 h-16 mx-auto text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-orange-800 mb-2">Inicia Sesión</h3>
+          <p class="text-sm md:text-base text-orange-700 mb-4">Debes iniciar sesión para comprar y acceder a este proyecto.</p>
+          <button (click)="router.navigate(['/login'])"
+                  class="px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base">
+            Iniciar Sesión
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Purchase Modal -->
+<app-purchase-modal
+  [isOpen]="showPurchaseModal"
+  [project]="projectSummary"
+  (closed)="onPurchaseModalClosed()"
+  (purchaseCompleted)="onPurchaseCompleted()">
+</app-purchase-modal>
