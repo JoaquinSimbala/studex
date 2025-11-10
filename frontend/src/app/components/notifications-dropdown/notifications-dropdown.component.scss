@@ -8,26 +8,56 @@ $animation-duration: 0.3s;
 $border-radius: 12px;
 
 /* Animaciones */
-@keyframes dropdownSlide {
+
+// Animación para dropdown desktop (translateY -10px → 0)
+@keyframes dropdownAppear {
   from {
     opacity: 0;
-    transform: translateY(-10px) scale(0.95);
+    transform: translateY(-10px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-@keyframes fadeIn {
+.animate-dropdown-appear {
+  animation: dropdownAppear 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Animación para móvil overlay (translateY -20px → 0)
+@keyframes slideDown {
   from {
     opacity: 0;
+    transform: translateY(-20px);
   }
   to {
     opacity: 1;
+    transform: translateY(0);
   }
 }
 
+.animate-slide-down {
+  animation: slideDown $animation-duration cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Animación para cerrar (opcional)
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp $animation-duration cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Animación para modal
 @keyframes modalSlide {
   from {
     opacity: 0;
@@ -39,12 +69,13 @@ $border-radius: 12px;
   }
 }
 
+// Animación pulse para indicador no leído (gris)
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.6;
   }
 }
 
@@ -58,19 +89,11 @@ $border-radius: 12px;
 }
 
 /* Custom notification colors */
-.bg-studex-25 {
-  background-color: rgba(120, 129, 96, 0.05);
-}
-
-.bg-blue-25 {
-  background-color: rgba(59, 130, 246, 0.05);
+.bg-gray-50 {
+  background-color: rgba(249, 250, 251, 1);
 }
 
 /* Animaciones de componentes */
-.dropdown-animation {
-  animation: dropdownSlide $animation-duration ease-out;
-}
-
 .pulse-animation {
   animation: pulse 2s infinite;
 }
@@ -101,12 +124,8 @@ $border-radius: 12px;
   position: relative;
   
   &.notification-unread {
-    background: linear-gradient(to right, rgba(59, 130, 246, 0.08), transparent);
-    border-left: 4px solid #3b82f6;
-  }
-  
-  .notification-icon {
-    transition: all 0.3s ease;
+    background: linear-gradient(to right, rgba(156, 163, 175, 0.1), transparent);
+    border-left: 3px solid #9ca3af;
   }
   
   .notification-title {
@@ -121,18 +140,10 @@ $border-radius: 12px;
     font-weight: 500;
   }
   
-  &:hover {
-    .notification-icon {
-      transform: scale(1.1) rotate(5deg);
-    }
-  }
-  
   &:last-child {
     border-bottom: none;
   }
 }
-
-/* Modal styles removed - now handled by notification-modal.component.scss */
 
 /* Responsive adjustments */
 @media (max-width: 640px) {
@@ -158,43 +169,13 @@ $border-radius: 12px;
       margin-top: 6px;
     }
   }
-  
-  .modal-container {
-    margin: 16px;
-    max-height: 85vh;
-  }
-  
-  .modal-header {
-    padding: 20px;
-    
-    h3 {
-      font-size: 1.125rem;
-    }
-  }
-  
-  .modal-body {
-    padding: 20px;
-  }
-  
-  .modal-footer {
-    padding: 16px 20px;
-    flex-direction: column;
-    
-    button {
-      width: 100%;
-      margin-bottom: 8px;
-      
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
 }
 
 /* Accessibility improvements */
 @media (prefers-reduced-motion: reduce) {
-  .dropdown-animation,
-  .notification-modal .modal-container,
+  .animate-dropdown-appear,
+  .animate-slide-down,
+  .animate-slide-up,
   .pulse-animation {
     animation: none;
   }
@@ -218,5 +199,3 @@ button:focus-visible {
   outline: 2px solid $studex-600;
   outline-offset: -2px;
 }
-
-/* Dark mode support REMOVED - Always show light theme */

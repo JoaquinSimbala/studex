@@ -1,8 +1,8 @@
-import { Component, OnInit, OnDestroy, inject, ViewContainerRef, ElementRef, ViewChild, TemplateRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ElementRef, ViewChild, HostListener, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { Overlay, OverlayRef, OverlayModule } from '@angular/cdk/overlay';
-import { ComponentPortal, TemplatePortal } from '@angular/cdk/portal';
+import { ComponentPortal } from '@angular/cdk/portal';
 import { NotificationService, DbNotification } from '../../services/notification.service';
 import { LoggerService } from '../../services/logger.service';
 import { NotificationModalComponent } from '../notification-modal/notification-modal.component';
@@ -15,7 +15,8 @@ import { Subscription } from 'rxjs';
  * Al hacer clic, despliega un panel flotante con la lista de notificaciones recientes.
  * 
  * @description
- * - Usa Angular CDK Overlay para renderizar dropdown y modal fuera del contexto del navbar
+ * - Desktop (≥640px): Dropdown absolute con hover management
+ * - Móvil (<640px): Fixed overlay desde top: 80px
  * - Muestra las últimas notificaciones de la base de datos
  * - Contador de notificaciones no leídas en badge rojo
  * - Permite marcar notificaciones individuales como leídas
@@ -29,7 +30,7 @@ import { Subscription } from 'rxjs';
  * ```
  * 
  * @author Studex Platform
- * @version 2.0.0
+ * @version 3.0.0
  */
 @Component({
   selector: 'app-notifications-dropdown',
@@ -40,6 +41,9 @@ import { Subscription } from 'rxjs';
 })
 export class NotificationsDropdownComponent implements OnInit, OnDestroy {
   
+  /** Evento para notificar al navbar que cierre otros menús en móvil */
+  @Output() closeOtherMenus = new EventEmitter<void>();
+  
   /** Servicio de notificaciones inyectado */
   private notificationService = inject(NotificationService);
   
@@ -49,23 +53,14 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
   /** Router de Angular para navegación */
   private router = inject(Router);
   
-  /** Overlay service de Angular CDK */
+  /** Overlay service de Angular CDK (solo para modal) */
   private overlay = inject(Overlay);
-  
-  /** ViewContainerRef para crear portals */
-  private viewContainerRef = inject(ViewContainerRef);
   
   /** Referencia al overlay del modal */
   private modalOverlayRef: OverlayRef | null = null;
   
-  /** Referencia al overlay del dropdown */
-  private dropdownOverlayRef: OverlayRef | null = null;
-  
-  /** Referencia al botón de notificaciones (para posicionar dropdown) */
+  /** Referencia al botón de notificaciones */
   @ViewChild('notificationButton', { read: ElementRef }) notificationButton!: ElementRef;
-  
-  /** Referencia al template del dropdown (para crear portal) */
-  @ViewChild('dropdownTemplate', { read: TemplateRef }) dropdownTemplate!: TemplateRef<any>;
   
   /**
    * Lista de notificaciones de la base de datos.
@@ -117,6 +112,13 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
 
   /**
+   * Timeout para manejo del hover en desktop.
+   * @type {any}
+   * @private
+   */
+  private dropdownTimeout: any = null;
+
+  /**
    * Inicializa el componente y establece suscripciones.
    * 
    * @description
@@ -164,11 +166,36 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
       this.modalOverlayRef.dispose();
       this.modalOverlayRef = null;
     }
-    
-    // Limpiar dropdown overlay si existe
-    if (this.dropdownOverlayRef) {
-      this.dropdownOverlayRef.dispose();
-      this.dropdownOverlayRef = null;
+
+    // Limpiar timeout si existe
+    if (this.dropdownTimeout) {
+      clearTimeout(this.dropdownTimeout);
+      this.dropdownTimeout = null;
+    }
+  }
+
+  /**
+   * Cierra el dropdown al hacer clic fuera (solo para móvil).
+   * 
+   * @param {MouseEvent} event - Evento de click
+   * @returns {void}
+   */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    // Solo para móvil (<640px)
+    if (window.innerWidth < 640 && this.isOpen) {
+      const target = event.target as HTMLElement;
+      
+      // Verificar si el click fue en el botón de notificaciones
+      const clickedButton = this.notificationButton?.nativeElement.contains(target);
+      
+      // Verificar si el click fue dentro del dropdown móvil
+      const clickedDropdown = target.closest('.notifications-dropdown-mobile') !== null;
+      
+      // Si no se hizo click ni en el botón ni en el dropdown, cerrar
+      if (!clickedButton && !clickedDropdown) {
+        this.closeDropdown();
+      }
     }
   }
 
@@ -176,28 +203,28 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
    * Alterna la visibilidad del dropdown.
    * 
    * @description
-   * - Si se abre: crea overlay con CDK y recarga las notificaciones del servidor
-   * - Si se cierra: cierra el overlay
+   * - Desktop (≥640px): Toggle simple
+   * - Móvil (<640px): Toggle y recarga notificaciones
    * 
    * @returns {void}
    * @public
    */
   toggleDropdown(): void {
-    if (this.dropdownOverlayRef) {
-      // Si ya está abierto, cerrarlo
+    if (this.isOpen) {
       this.closeDropdown();
     } else {
-      // Si está cerrado, abrirlo
       this.openDropdown();
     }
   }
 
   /**
-   * Abre el dropdown usando CDK Overlay.
+   * Abre el dropdown.
    * 
    * @description
-   * Crea un overlay posicionado relativo al botón de notificaciones
-   * y renderiza el contenido del dropdown fuera del contexto del navbar.
+   * - Cierra el modal si está abierto
+   * - En móvil (<640px): Emite evento para cerrar otros menús
+   * - Marca como abierto
+   * - Recarga notificaciones
    * 
    * @returns {void}
    * @private
@@ -206,61 +233,16 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
     // Cerrar modal si está abierto
     this.closeNotificationModal();
     
-    // Crear estrategia de posicionamiento conectada al botón
-    const positionStrategy = this.overlay
-      .position()
-      .flexibleConnectedTo(this.notificationButton)
-      .withPositions([
-        {
-          originX: 'end',
-          originY: 'bottom',
-          overlayX: 'end',
-          overlayY: 'top',
-          offsetY: 8
-        },
-        {
-          originX: 'end',
-          originY: 'top',
-          overlayX: 'end',
-          overlayY: 'bottom',
-          offsetY: -8
-        }
-      ])
-      .withPush(true);
-
-    // Crear configuración del overlay
-    const overlayConfig = {
-      hasBackdrop: true,
-      backdropClass: 'cdk-overlay-transparent-backdrop',
-      positionStrategy,
-      scrollStrategy: this.overlay.scrollStrategies.reposition(),
-      panelClass: 'dropdown-overlay'
-    };
-
-    // Crear el overlay
-    this.dropdownOverlayRef = this.overlay.create(overlayConfig);
-
-    // Crear el portal con el template del dropdown
-    const dropdownPortal = new TemplatePortal(
-      this.dropdownTemplate,
-      this.viewContainerRef
-    );
-
-    // Adjuntar el portal al overlay
-    this.dropdownOverlayRef.attach(dropdownPortal);
-
-    // Marcar como abierto para el template
+    // En móvil, emitir evento para cerrar otros menús
+    if (window.innerWidth < 640) {
+      this.closeOtherMenus.emit();
+    }
+    
+    // Marcar como abierto
     this.isOpen = true;
 
     // Cargar notificaciones
     this.loadNotifications();
-
-    // Suscribirse a clicks en el backdrop para cerrar
-    const backdropSub = this.dropdownOverlayRef.backdropClick().subscribe(() => {
-      this.closeDropdown();
-    });
-
-    this.subscriptions.push(backdropSub);
   }
 
   /**
@@ -270,10 +252,82 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
    * @public
    */
   closeDropdown(): void {
-    if (this.dropdownOverlayRef) {
-      this.dropdownOverlayRef.dispose();
-      this.dropdownOverlayRef = null;
-      this.isOpen = false;
+    this.isOpen = false;
+    
+    // Limpiar timeout si existe
+    if (this.dropdownTimeout) {
+      clearTimeout(this.dropdownTimeout);
+      this.dropdownTimeout = null;
+    }
+  }
+
+  /**
+   * Cierra el dropdown desde el exterior (llamado por el navbar).
+   * Método público para que el navbar pueda cerrar las notificaciones.
+   * 
+   * @returns {void}
+   * @public
+   */
+  close(): void {
+    this.closeDropdown();
+  }
+
+  /**
+   * Muestra el dropdown al hacer hover (solo desktop ≥640px).
+   * 
+   * @description
+   * Cancela cualquier timeout pendiente de cierre y muestra el dropdown.
+   * Solo funciona en desktop (≥640px).
+   * 
+   * @returns {void}
+   * @public
+   */
+  showDropdownOnHover(): void {
+    // Solo para desktop (≥640px)
+    if (window.innerWidth >= 640) {
+      // Cancelar timeout de cierre si existe
+      if (this.dropdownTimeout) {
+        clearTimeout(this.dropdownTimeout);
+        this.dropdownTimeout = null;
+      }
+      
+      // Mostrar dropdown
+      this.isOpen = true;
+      
+      // Cargar notificaciones si no están cargadas
+      if (this.notifications.length === 0 && !this.isLoading) {
+        this.loadNotifications();
+      }
+    }
+  }
+
+  /**
+   * Oculta el dropdown al salir del hover (solo desktop ≥640px).
+   * 
+   * @description
+   * Crea un timeout de 200ms antes de cerrar para permitir que el usuario
+   * mueva el mouse desde el botón al dropdown sin que se cierre.
+   * Solo funciona en desktop (≥640px).
+   * 
+   * @returns {void}
+   * @public
+   */
+  hideDropdownOnLeave(): void {
+    // Solo para desktop (≥640px)
+    if (window.innerWidth >= 640) {
+      // Limpiar timeout anterior si existe
+      if (this.dropdownTimeout) {
+        clearTimeout(this.dropdownTimeout);
+      }
+      
+      // Crear nuevo timeout de 200ms
+      this.dropdownTimeout = setTimeout(() => {
+        // Verificar nuevamente el ancho de pantalla antes de cerrar
+        if (window.innerWidth >= 640) {
+          this.isOpen = false;
+        }
+        this.dropdownTimeout = null;
+      }, 200);
     }
   }
 
@@ -292,8 +346,8 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
    * @public
    */
   openNotificationModal(notification: DbNotification): void {
-    // Cerrar dropdown para que su backdrop desaparezca
-    this.isOpen = false;
+    // Cerrar dropdown para que desaparezca
+    this.closeDropdown();
     
     // Si ya hay un modal abierto, cerrarlo primero
     if (this.modalOverlayRef) {
@@ -315,7 +369,7 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
     });
     
     // Crear portal del componente modal
-    const modalPortal = new ComponentPortal(NotificationModalComponent, this.viewContainerRef);
+    const modalPortal = new ComponentPortal(NotificationModalComponent);
     const modalRef = this.modalOverlayRef.attach(modalPortal);
     
     // Pasar datos al componente modal
@@ -370,7 +424,7 @@ export class NotificationsDropdownComponent implements OnInit, OnDestroy {
    * @public
    */
   viewAllNotifications(): void {
-    this.isOpen = false;
+    this.closeDropdown();
     this.router.navigate(['/notifications']);
   }
 

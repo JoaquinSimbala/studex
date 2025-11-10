@@ -97,6 +97,16 @@
   }
 }
 
+// Sidebar de categorías
+#categories-sidebar {
+  // Asegurar que el sidebar capture los clics
+  pointer-events: auto;
+  touch-action: auto;
+  
+  // Prevenir scroll del body
+  overscroll-behavior: contain;
+}
+
 // Animación de deslizamiento desde la derecha para el sidebar
 @keyframes slideInRight {
   from {
@@ -153,6 +163,90 @@
 
 .animate-fade-out {
   animation: fadeOut 0.3s ease-in forwards;
+}
+
+// Animación de slide up para bottom sheet (móvil) - Fijo en la parte inferior
+@keyframes slideUpBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-up-bottom {
+  animation: slideUpBottom 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+// Animación de aparición para dropdown (desktop) - Desde ARRIBA hacia ABAJO
+@keyframes dropdownAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-10px); // Empieza más ARRIBA
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0); // Baja a su posición normal
+  }
+}
+
+.animate-dropdown-appear {
+  animation: dropdownAppear 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+// Animación de desaparición para dropdown - Hacia ARRIBA
+@keyframes dropdownDisappear {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px); // Se va hacia ARRIBA
+  }
+}
+
+.animate-dropdown-disappear {
+  animation: dropdownDisappear 0.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+// Animación de slide down para menú móvil - Aparece desde arriba con fade
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+// Animación de slide up para cuando se cierra
+@keyframes slideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+// Safe area para dispositivos con notch
+.h-safe-area-inset-bottom {
+  height: env(safe-area-inset-bottom, 0px);
+  min-height: 8px; // Mínimo 8px de padding
 }
 
 // Animación de entrada para las categorías

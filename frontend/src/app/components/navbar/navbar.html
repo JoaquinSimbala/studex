@@ -16,7 +16,7 @@
       </div>
 
       <!-- Barra de Búsqueda Central (Desktop) -->
-      <div class="hidden md:flex flex-1 max-w-2xl mx-8">
+      <div class="hidden lg:flex flex-1 max-w-2xl mx-8">
         <div class="relative w-full search-container">
           <input 
             type="text" 
@@ -36,7 +36,7 @@
           <!-- Botón de búsqueda -->
           <button 
             (click)="onSearch()"
-            class="absolute right-2 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-studex-600 text-white rounded-lg hover:bg-studex-700 focus:outline-none focus:ring-2 focus:ring-studex-400 transition-all duration-300 flex items-center justify-center shadow-md">
+            class="absolute right-2 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-studex-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-studex-400 flex items-center justify-center shadow-md">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
             </svg>
@@ -48,7 +48,7 @@
             <div class="p-2">
               <div *ngFor="let result of searchResults" 
                    (click)="selectSearchResult(result)"
-                   class="flex items-center space-x-3 p-3 hover:bg-studex-100 rounded-lg cursor-pointer transition-all duration-200 modern-card">
+                   class="flex items-center space-x-3 p-3 rounded-lg cursor-pointer modern-card">
                 <img [src]="result.image || '/assets/images/project-placeholder.png'" 
                      [alt]="result.title"
                      class="w-12 h-12 object-cover rounded-lg shadow-sm">
@@ -69,35 +69,35 @@
         <!-- Enlaces de navegación (Desktop) -->
         <div class="hidden lg:flex items-center space-x-6">
           <a routerLink="/explorar" routerLinkActive="text-studex-200" 
-             class="text-white/90 hover:text-white font-medium transition-all duration-300 modern-button px-3 py-2 rounded-lg">
+             class="text-white/90 font-medium px-3 py-2 rounded-lg">
             Explorar
           </a>
-          <button (click)="openCategoriesModal()"
-             class="text-white/90 hover:text-white font-medium transition-all duration-300 modern-button px-3 py-2 rounded-lg">
+          <button (click)="openCategoriesModal($event)"
+             class="text-white/90 font-medium px-3 py-2 rounded-lg">
             Categorías
           </button>
           <a routerLink="/vender" routerLinkActive="text-studex-200"
-             class="text-white/90 hover:text-white font-medium transition-all duration-300 modern-button px-3 py-2 rounded-lg">
+             class="text-white/90 font-medium px-3 py-2 rounded-lg">
             Vender
           </a>
         </div>
 
         <!-- Notificaciones -->
         <div *ngIf="currentUser">
-          <app-notifications-dropdown></app-notifications-dropdown>
+          <app-notifications-dropdown (closeOtherMenus)="closeOtherMobileMenus()"></app-notifications-dropdown>
         </div>
 
         <!-- Carrito de compras -->
         <div class="relative" *ngIf="currentUser">
           <button 
             (click)="toggleCart()"
-            class="relative p-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 modern-button">
+            class="relative p-2 text-white/90 rounded-lg">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 11-4 0v-6m4 0v6a2 2 0 104 0v-6"></path>
             </svg>
             <!-- Badge del carrito -->
             <span *ngIf="cartItemsCount > 0" 
-                  class="absolute -top-1 -right-1 bg-studex-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center animate-pulse">
+                  class="absolute -top-1 -right-1 bg-studex-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
               {{ cartItemsCount }}
             </span>
           </button>
@@ -105,57 +105,88 @@
 
         <!-- Menú de usuario -->
         <div class="relative" *ngIf="currentUser; else guestMenu">
+          <!-- Botón de usuario con hover para desktop -->
           <button 
-            (click)="toggleUserMenu()"
-            class="flex items-center space-x-2 p-2 hover:bg-white/10 rounded-lg transition-all duration-300 modern-button">
+            (click)="toggleUserMenu($event)"
+            (mouseenter)="showUserMenuOnHover()"
+            (mouseleave)="hideUserMenuOnLeave()"
+            class="flex items-center space-x-2 p-2 rounded-lg">
             <img [src]="getProfileImageUrl()" 
                  [alt]="currentUser.firstName"
                  class="w-8 h-8 rounded-full object-cover border-2 border-white/20 shadow-sm">
             <span class="hidden md:block font-medium text-white">{{ currentUser.firstName }}</span>
-            <svg class="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4 text-white/80 transition-transform duration-300" 
+                 [class.rotate-180]="showUserMenu"
+                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </button>
 
-          <!-- Dropdown del usuario -->
+          <!-- Dropdown del usuario - Desktop y Tablets (≥640px) - ABSOLUTE POSICIONADO -->
           <div *ngIf="showUserMenu" 
-               class="absolute right-0 top-full mt-2 w-56 bg-white border border-studex-200 rounded-xl shadow-studex-lg z-50">
-            <div class="p-4 border-b border-studex-100">
-              <p class="font-medium text-studex-900">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
-              <p class="text-sm text-studex-600">{{ currentUser.email }}</p>
+               (mouseenter)="showUserMenuOnHover()"
+               (mouseleave)="hideUserMenuOnLeave()"
+               class="hidden sm:block absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-2xl z-[60] overflow-hidden animate-dropdown-appear">
+            <!-- Header del dropdown -->
+            <div class="bg-gradient-to-r from-studex-600 to-studex-700 px-5 py-4">
+              <div class="flex items-center space-x-3">
+                <img [src]="getProfileImageUrl()" 
+                     [alt]="currentUser.firstName"
+                     class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md">
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-white truncate">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
+                  <p class="text-xs text-studex-100 truncate">{{ currentUser.email }}</p>
+                </div>
+              </div>
             </div>
+            
+            <!-- Opciones del menú -->
             <div class="py-2">
               <a routerLink="/perfil" 
-                 class="flex items-center space-x-3 px-4 py-2 text-studex-700 hover:bg-studex-50 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                </svg>
-                <span>Mi Perfil</span>
+                 (click)="showUserMenu = false"
+                 class="flex items-center space-x-3 px-4 py-3 text-studex-700">
+                <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-studex-100">
+                  <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                </div>
+                <span class="font-medium">Mi Perfil</span>
               </a>
+              
               <!-- Mis Proyectos: Solo para vendedores y administradores -->
               <a *ngIf="currentUser.userType === 'VENDEDOR' || currentUser.userType === 'ADMINISTRADOR'"
                  routerLink="/vendedor/mis-proyectos" 
-                 class="flex items-center space-x-3 px-4 py-2 text-studex-700 hover:bg-studex-50 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-                <span>Mis Proyectos</span>
+                 (click)="showUserMenu = false"
+                 class="flex items-center space-x-3 px-4 py-3 text-studex-700">
+                <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-studex-100">
+                  <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                  </svg>
+                </div>
+                <span class="font-medium">Mis Proyectos</span>
               </a>
+              
               <a routerLink="/favoritos" 
-                 class="flex items-center space-x-3 px-4 py-2 text-studex-700 hover:bg-studex-50 transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
-                </svg>
-                <span>Favoritos</span>
+                 (click)="showUserMenu = false"
+                 class="flex items-center space-x-3 px-4 py-3 text-studex-700">
+                <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-studex-100">
+                  <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                  </svg>
+                </div>
+                <span class="font-medium">Favoritos</span>
               </a>
+              
               <div class="border-t border-studex-100 mt-2 pt-2">
                 <button 
                   (click)="logout()"
-                  class="flex items-center space-x-3 px-4 py-2 text-red-600 hover:bg-red-50 transition-colors w-full text-left">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                  </svg>
-                  <span>Cerrar Sesión</span>
+                  class="flex items-center space-x-3 px-4 py-3 text-red-600 w-full text-left">
+                  <div class="w-10 h-10 flex items-center justify-center rounded-lg bg-red-100">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                  </div>
+                  <span class="font-medium">Cerrar Sesión</span>
                 </button>
               </div>
             </div>
@@ -167,12 +198,12 @@
           <div class="flex items-center space-x-3">
             <a routerLink="/login" 
                [queryParams]="{mode: 'login'}"
-               class="text-white/90 hover:text-white font-medium transition-all duration-300 modern-button px-4 py-2 rounded-lg">
+               class="text-white/90 font-medium px-4 py-2 rounded-lg">
               Iniciar Sesión
             </a>
             <a routerLink="/login" 
                [queryParams]="{mode: 'register'}"
-               class="bg-studex-accent hover:bg-studex-accent/90 text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 modern-button shadow-md">
+               class="bg-studex-accent text-white px-4 py-2 rounded-lg font-medium shadow-md">
               Registrarse
             </a>
           </div>
@@ -181,7 +212,7 @@
         <!-- Botón de menú móvil -->
         <button 
           (click)="toggleMobileMenu()"
-          class="md:hidden p-2 text-white/90 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300 modern-button">
+          class="lg:hidden p-2 text-white/90 rounded-lg">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path *ngIf="!showMobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
             <path *ngIf="showMobileMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -191,7 +222,8 @@
     </div>
 
     <!-- Búsqueda móvil -->
-    <div *ngIf="showMobileSearch" class="md:hidden pb-4 border-t border-studex-100 pt-4">
+    <div *ngIf="showMobileSearch" class="lg:hidden fixed left-0 right-0 bg-white border-b border-studex-100 shadow-md z-[60] animate-slide-down px-4 py-4"
+         style="top: 80px;">
       <div class="relative">
         <input 
           type="text" 
@@ -209,28 +241,20 @@
     </div>
 
     <!-- Menú móvil -->
-    <div *ngIf="showMobileMenu" class="md:hidden border-t border-studex-100 py-4">
-      <div class="space-y-1">
-        <!-- Búsqueda móvil toggle -->
-        <button 
-          (click)="toggleMobileSearch()"
-          class="flex items-center space-x-3 w-full px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-          </svg>
-          <span>Buscar</span>
-        </button>
-
+    <div *ngIf="showMobileMenu" class="lg:hidden fixed left-0 right-0 bg-white border-b border-studex-100 shadow-lg z-[60] animate-slide-down"
+         style="top: 80px;">
+      <div class="space-y-1 py-4 px-4">
         <a routerLink="/explorar" 
-           class="flex items-center space-x-3 px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
+           (click)="showMobileMenu = false"
+           class="flex items-center space-x-3 px-4 py-3 text-studex-700 rounded-lg">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
           <span>Explorar</span>
         </a>
         
-        <button (click)="openCategoriesModal()" 
-           class="flex items-center space-x-3 w-full px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors text-left">
+        <button (click)="openCategoriesModal($event)" 
+           class="flex items-center space-x-3 w-full px-4 py-3 text-studex-700 rounded-lg text-left">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
           </svg>
@@ -238,7 +262,7 @@
         </button>
         
         <a routerLink="/vender" 
-           class="flex items-center space-x-3 px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
+           class="flex items-center space-x-3 px-4 py-3 text-studex-700 rounded-lg">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
           </svg>
@@ -248,32 +272,92 @@
         <div *ngIf="!currentUser" class="border-t border-studex-100 pt-4 mt-4">
           <a routerLink="/login" 
              [queryParams]="{mode: 'login'}"
-             class="block px-4 py-3 text-studex-700 hover:bg-studex-50 rounded-lg transition-colors">
+             class="block px-4 py-3 text-studex-700 rounded-lg">
             Iniciar Sesión
           </a>
           <a routerLink="/login" 
              [queryParams]="{mode: 'register'}"
-             class="block px-4 py-3 text-white bg-studex-500 hover:bg-studex-600 rounded-lg transition-colors mt-2">
+             class="block px-4 py-3 text-white bg-studex-500 rounded-lg mt-2">
             Registrarse
           </a>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Menú de usuario móvil - Desplegable desde navbar (< 640px) -->
+  <div *ngIf="showUserMenu && currentUser" class="sm:hidden fixed left-0 right-0 bg-white shadow-lg z-[60] animate-slide-down" 
+       style="top: 80px;">
+    <div class="space-y-1 pb-4">
+      <!-- Header con info del usuario -->
+      <div class="flex items-center space-x-3 px-6 py-4 bg-gradient-to-r from-studex-600 to-studex-700 mb-3">
+        <img [src]="getProfileImageUrl()" 
+             [alt]="currentUser.firstName"
+             class="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md">
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-white truncate text-sm">{{ currentUser.firstName }} {{ currentUser.lastName }}</p>
+          <p class="text-xs text-studex-100 truncate">{{ currentUser.email }}</p>
+        </div>
+      </div>
+
+      <!-- Opciones del menú -->
+      <a routerLink="/perfil" 
+         (click)="showUserMenu = false"
+         class="flex items-center space-x-3 px-6 py-3 text-studex-700">
+        <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+        <span class="font-medium">Mi Perfil</span>
+      </a>
+      
+      <!-- Mis Proyectos: Solo para vendedores y administradores -->
+      <a *ngIf="currentUser.userType === 'VENDEDOR' || currentUser.userType === 'ADMINISTRADOR'"
+         routerLink="/vendedor/mis-proyectos" 
+         (click)="showUserMenu = false"
+         class="flex items-center space-x-3 px-6 py-3 text-studex-700">
+        <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+        </svg>
+        <span class="font-medium">Mis Proyectos</span>
+      </a>
+      
+      <a routerLink="/favoritos" 
+         (click)="showUserMenu = false"
+         class="flex items-center space-x-3 px-6 py-3 text-studex-700">
+        <svg class="w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+        </svg>
+        <span class="font-medium">Favoritos</span>
+      </a>
+      
+      <div class="border-t border-gray-200 mt-2 pt-2 px-2">
+        <button 
+          (click)="logout()"
+          class="flex items-center space-x-3 px-4 py-3 text-red-600 rounded-lg w-full text-left">
+          <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+          </svg>
+          <span class="font-medium">Cerrar Sesión</span>
+        </button>
+      </div>
+    </div>
+  </div>
 </nav>
 
 <!-- Menú Lateral de Categorías -->
-<div [hidden]="!showCategoriesModal && !isClosingCategories" class="fixed inset-0 z-[60]">
+<div *ngIf="showCategoriesModal || isClosingCategories" class="fixed inset-0 z-[60]">
   <!-- Backdrop -->
   <div class="fixed inset-0 bg-black bg-opacity-50"
        [class.animate-fade-in]="showCategoriesModal && !isClosingCategories"
        [class.animate-fade-out]="isClosingCategories"
-       (click)="closeCategoriesModal()"></div>
+       (click)="closeCategoriesModal($event)"></div>
   
   <!-- Sidebar -->
-  <div class="fixed top-0 right-0 h-full w-full sm:w-96 md:w-[28rem] bg-white shadow-2xl flex flex-col"
+  <div id="categories-sidebar"
+       class="fixed top-0 right-0 h-full w-full sm:w-96 md:w-[28rem] bg-white shadow-2xl flex flex-col"
        [class.animate-slide-in-right]="showCategoriesModal && !isClosingCategories"
-       [class.animate-slide-out-right]="isClosingCategories">
+       [class.animate-slide-out-right]="isClosingCategories"
+       (click)="$event.stopPropagation()">
     
     <!-- Header Fijo -->
     <div class="bg-gradient-to-r from-studex-600 to-studex-700 px-6 py-5 shadow-lg">
@@ -282,7 +366,8 @@
           <h3 class="text-xl font-bold text-white">Categorías</h3>
           <p class="text-studex-100 text-sm mt-1">Explora proyectos por categoría</p>
         </div>
-        <button (click)="closeCategoriesModal()" 
+        <button (click)="closeCategoriesModal($event)" 
+                type="button"
                 class="text-white/80 hover:text-white hover:bg-white/10 p-2 rounded-lg transition-all duration-200">
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

@@ -18,14 +18,23 @@
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  padding: 0 1rem !important;
+  
+  @media (max-width: 640px) {
+    padding: 0 0.5rem !important;
+    align-items: flex-start !important;
+    padding-top: 5vh !important;
+  }
 }
 
 // Container del modal - Centrado automáticamente por flexbox del padre
 .modal-container {
   animation: slideIn 0.3s ease-out;
   
-  // Asegurar que esté centrado incluso en navegadores antiguos
-  margin: auto;
+  // Asegurar que esté centrado y contenido
+  margin: 0 auto;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 // Animación de fade in para el backdrop
@@ -65,77 +74,67 @@
   background: #a8a8a8;
 }
 
-// Modal header button styles
-.modal-header button {
-  transition: all 0.2s ease;
-  
-  &:hover {
-    transform: scale(1.1);
-  }
-}
-
-// Modal body detail items
-.modal-body {
-  .detail-item {
-    transition: background-color 0.2s ease;
-    
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.02);
-    }
-  }
-}
-
-// Modal footer buttons
-.modal-footer {
-  button {
-    transition: all 0.2s ease;
-    
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    
-    &:active {
-      transform: translateY(0);
-    }
-  }
-}
-
 // Responsive adjustments
 @media (max-width: 640px) {
-  .notification-modal {
-    padding: 1rem !important;
-  }
-  
   .modal-container {
-    margin: 0 auto;
-    max-height: 85vh;
+    max-height: 85vh !important;
+    border-radius: 0.75rem !important;
+    width: 85% !important;
+    max-width: 85vw !important;
+    margin: 0 auto !important;
   }
   
   .modal-header {
-    padding: 20px;
-    
     h3 {
-      font-size: 1.125rem;
+      font-size: 0.95rem !important;
+      line-height: 1.25 !important;
+      word-wrap: break-word !important;
+      overflow-wrap: break-word !important;
+      hyphens: auto !important;
+    }
+    
+    p {
+      font-size: 0.7rem !important;
     }
   }
   
   .modal-body {
-    padding: 20px;
+    max-height: calc(85vh - 180px) !important;
+    
+    p {
+      font-size: 0.85rem !important;
+      line-height: 1.5 !important;
+    }
+    
+    h4 {
+      font-size: 0.85rem !important;
+    }
+    
+    .detail-item {
+      font-size: 0.75rem !important;
+      
+      span {
+        word-break: break-word;
+        overflow-wrap: break-word;
+      }
+    }
   }
   
   .modal-footer {
-    padding: 16px 20px;
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: stretch;
     
     button {
-      width: 100%;
-      margin-bottom: 8px;
-      
-      &:last-child {
-        margin-bottom: 0;
-      }
+      flex: 1;
+      font-size: 0.875rem !important;
     }
+  }
+}
+
+// Tablet adjustments (641px - 768px)
+@media (min-width: 641px) and (max-width: 768px) {
+  .modal-container {
+    max-width: 90vw;
   }
 }
 
@@ -144,10 +143,5 @@
   .notification-modal,
   .modal-container {
     animation: none !important;
-  }
-  
-  .modal-header button:hover,
-  .modal-footer button:hover {
-    transform: none !important;
   }
 }

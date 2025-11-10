@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, Router } from '@angular/router';
@@ -58,6 +58,9 @@ interface Category {
 })
 export class Navbar implements OnInit, OnDestroy {
 
+  // Referencia al componente de notificaciones
+  @ViewChild(NotificationsDropdownComponent) notificationsDropdown?: NotificationsDropdownComponent;
+
   // Usuario actual
   currentUser: User | null = null;
   
@@ -81,6 +84,9 @@ export class Navbar implements OnInit, OnDestroy {
 
   // Carrito
   cartItemsCount = 0;
+
+  // Timeout para el menú de usuario
+  private userMenuTimeout: any = null;
 
   // Subscripciones
   private subscriptions: Subscription[] = [];
@@ -227,11 +233,65 @@ export class Navbar implements OnInit, OnDestroy {
   }
 
   /**
-   * Toggle del menú de usuario
+   * Toggle del menú de usuario (para móvil)
    */
-  toggleUserMenu(): void {
+  toggleUserMenu(event?: Event): void {
+    // Prevenir propagación
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    // En móvil (< 640px), solo toggle con click
+    if (window.innerWidth < 640) {
+      this.showUserMenu = !this.showUserMenu;
+      this.closeOtherMenus('user');
+      // Cerrar notificaciones en móvil
+      this.closeNotifications();
+      this.logger.debug('Menú de usuario móvil', this.showUserMenu ? 'abierto' : 'cerrado');
+      return;
+    }
+    
+    // En desktop, también toggle con click
     this.showUserMenu = !this.showUserMenu;
     this.closeOtherMenus('user');
+    this.logger.debug('Menú de usuario', this.showUserMenu ? 'abierto' : 'cerrado');
+  }
+
+  /**
+   * Muestra el menú de usuario al pasar el mouse (desktop)
+   */
+  showUserMenuOnHover(): void {
+    // Solo en desktop y tablets (ancho >= 640px)
+    if (window.innerWidth >= 640) {
+      // Cancelar cualquier timeout pendiente
+      if (this.userMenuTimeout) {
+        clearTimeout(this.userMenuTimeout);
+        this.userMenuTimeout = null;
+      }
+      this.showUserMenu = true;
+      this.closeOtherMenus('user');
+    }
+  }
+
+  /**
+   * Oculta el menú de usuario cuando el mouse sale (desktop)
+   */
+  hideUserMenuOnLeave(): void {
+    // Solo en desktop y tablets
+    if (window.innerWidth >= 640) {
+      // Cancelar timeout anterior si existe
+      if (this.userMenuTimeout) {
+        clearTimeout(this.userMenuTimeout);
+      }
+      
+      // Pequeño delay para permitir mover el mouse al dropdown
+      this.userMenuTimeout = setTimeout(() => {
+        if (window.innerWidth >= 640) {
+          this.showUserMenu = false;
+        }
+        this.userMenuTimeout = null;
+      }, 200);
+    }
   }
 
   /**
@@ -248,6 +308,10 @@ export class Navbar implements OnInit, OnDestroy {
   toggleMobileMenu(): void {
     this.showMobileMenu = !this.showMobileMenu;
     this.closeOtherMenus('mobile');
+    // Cerrar notificaciones en móvil
+    if (window.innerWidth < 640) {
+      this.closeNotifications();
+    }
   }
 
   /**
@@ -255,6 +319,10 @@ export class Navbar implements OnInit, OnDestroy {
    */
   toggleMobileSearch(): void {
     this.showMobileSearch = !this.showMobileSearch;
+    // Cerrar notificaciones en móvil
+    if (window.innerWidth < 640) {
+      this.closeNotifications();
+    }
   }
 
   /**
@@ -277,6 +345,24 @@ export class Navbar implements OnInit, OnDestroy {
    */
   private closeAllMenus(): void {
     this.closeOtherMenus();
+  }
+
+  /**
+   * Cierra otros menús móviles (llamado desde el componente de notificaciones)
+   */
+  closeOtherMobileMenus(): void {
+    this.showMobileMenu = false;
+    this.showMobileSearch = false;
+    this.showUserMenu = false;
+  }
+
+  /**
+   * Cierra las notificaciones cuando se abren otros menús
+   */
+  private closeNotifications(): void {
+    if (this.notificationsDropdown) {
+      this.notificationsDropdown.close();
+    }
   }
 
   /**
@@ -307,8 +393,18 @@ export class Navbar implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: any): void {
     const navbar = document.querySelector('nav');
-    if (navbar && !navbar.contains(event.target)) {
-      this.closeAllMenus();
+    const categoriesSidebar = document.getElementById('categories-sidebar');
+    
+    // No cerrar si el clic fue dentro del navbar o del sidebar de categorías
+    if (navbar && !navbar.contains(event.target) && 
+        (!categoriesSidebar || !categoriesSidebar.contains(event.target))) {
+      // No cerrar el sidebar de categorías si está abierto, solo los dropdowns
+      if (this.showCategoriesModal) {
+        this.showUserMenu = false;
+        this.showSearchResults = false;
+      } else {
+        this.closeAllMenus();
+      }
     }
   }
 
@@ -324,18 +420,33 @@ export class Navbar implements OnInit, OnDestroy {
   /**
    * Abre el modal de categorías
    */
-  openCategoriesModal(): void {
+  openCategoriesModal(event?: Event): void {
+    // Prevenir propagación del evento
+    if (event) {
+      event.stopPropagation();
+    }
+    
     this.closeOtherMenus('categories'); // Cerrar otros menús pero no el de categorías
     this.isClosingCategories = false;
     this.showCategoriesModal = true;
+    
+    // Cerrar el menú móvil si está abierto
+    this.showMobileMenu = false;
+    
     this.cdr.detectChanges();
     this.loadCategoriesForModal();
+    this.logger.debug('Modal de categorías abierto');
   }
 
   /**
    * Cierra el modal de categorías
    */
-  closeCategoriesModal(): void {
+  closeCategoriesModal(event?: Event): void {
+    // Prevenir propagación del evento
+    if (event) {
+      event.stopPropagation();
+    }
+    
     this.isClosingCategories = true;
     this.cdr.detectChanges();
     
@@ -344,6 +455,7 @@ export class Navbar implements OnInit, OnDestroy {
       this.showCategoriesModal = false;
       this.isClosingCategories = false;
       this.cdr.detectChanges();
+      this.logger.debug('Modal de categorías cerrado');
     }, 300); // Mismo tiempo que la duración de la animación
   }
 
