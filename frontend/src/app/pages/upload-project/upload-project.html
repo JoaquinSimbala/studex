@@ -4,7 +4,12 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
       <div>
-        <h1 class="text-4xl font-bold text-studex-900 mb-2">📁 Subir Nuevo Proyecto</h1>
+        <h1 class="text-4xl font-bold text-studex-900 mb-2 flex items-center gap-3">
+          <svg class="w-10 h-10 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+          </svg>
+          Subir Nuevo Proyecto
+        </h1>
         <p class="text-studex-600">Comparte tu trabajo y ayuda a otros estudiantes</p>
       </div>
       <app-back-button></app-back-button>
@@ -310,7 +315,11 @@
                     <span class="image-name">{{ image.name }}</span>
                     <span class="image-size">({{ getFileSize(image.size) }})</span>
                   </div>
-                  <button type="button" class="btn-remove-image" (click)="removeImage(i)">✕</button>
+                  <button type="button" class="btn-remove-image" (click)="removeImage(i)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -339,10 +348,16 @@
               </div>
               <div class="file-list">
                 <div *ngFor="let file of selectedFiles; let i = index" class="file-item">
-                  <span class="file-icon">📄</span>
+                  <svg class="file-icon w-5 h-5 text-studex-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                  </svg>
                   <span class="file-name">{{ file.name }}</span>
                   <span class="file-size">({{ getFileSize(file.size) }})</span>
-                  <button type="button" class="btn-remove" (click)="removeFile(i)">✕</button>
+                  <button type="button" class="btn-remove" (click)="removeFile(i)">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                  </button>
                 </div>
               </div>
             </div>
@@ -365,14 +380,28 @@
               <div class="preview-header mb-4">
                 <h4 class="text-xl font-bold text-gray-800 mb-2">{{ uploadForm.get('titulo')?.value || 'Título del proyecto' }}</h4>
                 <div class="flex flex-wrap gap-2 mb-3">
-                  <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full">
-                    💰 S/ {{ uploadForm.get('precio')?.value || '0' }}
+                  <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-orange-600 bg-orange-100 rounded-full gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    S/ {{ uploadForm.get('precio')?.value || '0' }}
                   </span>
-                  <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-purple-600 bg-purple-100 rounded-full">
-                    🏛️ {{ uploadForm.get('university')?.value || 'Universidad' }}
+                  <span class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full gap-1"
+                        [style.color]="selectedCategory?.colorHex || '#9333ea'"
+                        [style.background-color]="selectedCategory ? (selectedCategory.colorHex + '20') : '#f3e8ff'">
+                    <div *ngIf="selectedCategory" class="w-4 h-4" 
+                         [style.color]="selectedCategory.colorHex"
+                         [innerHTML]="getSafeHtml(selectedCategory.icono)"></div>
+                    <svg *ngIf="!selectedCategory" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    {{ selectedCategory?.nombre || 'Categoría' }}
                   </span>
-                  <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full">
-                    📅 {{ uploadForm.get('year')?.value || '2024' }}
+                  <span class="inline-flex items-center px-3 py-1 text-sm font-medium text-blue-600 bg-blue-100 rounded-full gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    {{ uploadForm.get('year')?.value || '2024' }}
                   </span>
                 </div>
               </div>
@@ -391,11 +420,17 @@
                 </div>
                 
                 <div class="flex gap-4 text-sm">
-                  <div *ngIf="selectedImages.length > 0" class="flex items-center text-blue-600">
-                    📷 {{ selectedImages.length }} imagen(es)
+                  <div *ngIf="selectedImages.length > 0" class="flex items-center text-blue-600 gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    {{ selectedImages.length }} imagen(es)
                   </div>
-                  <div *ngIf="selectedFiles.length > 0" class="flex items-center text-green-600">
-                    📄 {{ selectedFiles.length }} archivo(s)
+                  <div *ngIf="selectedFiles.length > 0" class="flex items-center text-green-600 gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+                    </svg>
+                    {{ selectedFiles.length }} archivo(s)
                   </div>
                 </div>
               </div>
@@ -404,9 +439,13 @@
             <!-- Términos con checkbox -->
             <div class="bg-gray-50 rounded-lg p-4 mb-6">
               <label class="flex items-start space-x-3 cursor-pointer">
-                <input type="checkbox" required class="mt-1 h-4 w-4 text-studex-600 border-gray-300 rounded focus:ring-studex-500"> 
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="termsAccepted"
+                  [ngModelOptions]="{standalone: true}"
+                  class="mt-1 h-4 w-4 text-studex-600 border-gray-300 rounded focus:ring-studex-500"> 
                 <div>
-                  <span class="font-medium text-gray-700">Acepto los términos de publicación</span>
+                  <span class="font-medium text-gray-700">Acepto los términos de publicación *</span>
                   <p class="text-sm text-gray-500 mt-1">
                     Confirmo que este contenido es original, no infringe derechos de autor y cumple con las políticas de STUDEX.
                   </p>
@@ -436,13 +475,17 @@
             class="px-6 py-3 bg-studex-600 text-white rounded-lg font-medium hover:bg-studex-700 transition-colors duration-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             [disabled]="(currentStep === 1 && !isStep1Valid()) || 
                        (currentStep === 2 && !isStep2Valid()) || 
+                       (currentStep === 3 && !isStep3Valid()) ||
                        isSubmitting">
             
             <span *ngIf="isSubmitting" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full"></span>
             
             <span *ngIf="currentStep < 3">Siguiente →</span>
-            <span *ngIf="currentStep === 3">
-              {{ isSubmitting ? 'Publicando...' : '🚀 Publicar Proyecto' }}
+            <span *ngIf="currentStep === 3" class="flex items-center gap-2">
+              <svg *ngIf="!isSubmitting" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+              </svg>
+              {{ isSubmitting ? 'Publicando...' : 'Publicar Proyecto' }}
             </span>
           </button>
         </div>
@@ -505,7 +548,9 @@
                 
                 <!-- Icono del tipo -->
                 <div class="w-12 h-12 rounded-lg flex items-center justify-center mr-4 transition-all bg-gray-100 group-hover:bg-studex-100">
-                  <span class="text-xl">{{ getProjectTypeIcon(type) }}</span>
+                  <svg class="w-6 h-6" [ngClass]="getIconColor(type)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getIconSvgPath(getProjectTypeIcon(type))"/>
+                  </svg>
                 </div>
                 
                 <!-- Info del tipo -->
@@ -532,38 +577,17 @@
 
         <!-- Empty State -->
         <div *ngIf="projectTypes.length === 0" class="text-center py-8">
-          <div class="text-4xl mb-4">📄</div>
+          <svg class="w-16 h-16 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+          </svg>
           <h3 class="text-lg font-semibold text-gray-900 mb-2">No hay tipos disponibles</h3>
           <p class="text-gray-600">No se pudieron cargar los tipos de proyecto en este momento.</p>
         </div>
 
       </div>
-      
-      <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-        <div class="flex justify-between items-center">
-          <p class="text-sm text-gray-600">
-            {{ projectTypes.length }} {{ projectTypes.length === 1 ? 'tipo' : 'tipos' }} disponible{{ projectTypes.length === 1 ? '' : 's' }}
-          </p>
-          <div class="flex space-x-3">
-            <button 
-              (click)="closeProjectTypesModal()"
-              class="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
-              Cancelar
-            </button>
-            <button 
-              *ngIf="selectedProjectType"
-              (click)="confirmProjectTypeSelection()"
-              class="px-4 py-2 bg-studex-600 text-white rounded-lg hover:bg-studex-700 transition-colors">
-              Confirmar Selección
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </div>
-<!-- Modal de Categor�as -->
 
 <!-- Modal de Categorías -->
 <div *ngIf="showCategoriesModal" class="fixed inset-0 z-[60] overflow-y-auto">
@@ -642,28 +666,6 @@
           <p class="text-gray-600">No se pudieron cargar las categorías en este momento.</p>
         </div>
 
-      </div>
-      
-      <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
-        <div class="flex justify-between items-center">
-          <p class="text-sm text-gray-600">
-            {{ categories.length }} {{ categories.length === 1 ? 'categoría' : 'categorías' }} disponible{{ categories.length === 1 ? '' : 's' }}
-          </p>
-          <div class="flex space-x-3">
-            <button 
-              (click)="closeCategoriesModal()"
-              class="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition-colors">
-              Cancelar
-            </button>
-            <button 
-              *ngIf="selectedCategory"
-              (click)="confirmCategorySelection()"
-              class="px-4 py-2 bg-studex-600 text-white rounded-lg hover:bg-studex-700 transition-colors">
-              Confirmar Selección
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   </div>

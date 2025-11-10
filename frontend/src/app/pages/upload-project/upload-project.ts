@@ -129,6 +129,9 @@ export class UploadProjectComponent implements OnInit {
   /** Indica si se requiere al menos un archivo (usado en validación) */
   filesRequired = false;
   
+  /** Indica si el usuario ha aceptado los términos de publicación */
+  termsAccepted = false;
+  
   // ========================================
   // PROPIEDADES DEL STEPPER
   // ========================================
@@ -429,6 +432,15 @@ export class UploadProjectComponent implements OnInit {
     return this.selectedFiles.length > 0 || this.selectedImages.length > 0;
   }
 
+  /**
+   * Valida que el usuario haya aceptado los términos de publicación.
+   * 
+   * @returns {boolean} true si los términos han sido aceptados
+   */
+  isStep3Valid(): boolean {
+    return this.termsAccepted;
+  }
+
   // ========================================
   // MÉTODOS DE GESTIÓN DE ARCHIVOS
   // ========================================
@@ -594,6 +606,7 @@ export class UploadProjectComponent implements OnInit {
     this.selectedImages = [];
     this.imagePreviewUrls = [];
     this.filesRequired = false;
+    this.termsAccepted = false;
     this.currentStep = 1;
   }
 
@@ -711,14 +724,17 @@ export class UploadProjectComponent implements OnInit {
   }
 
   /**
-   * Selecciona temporalmente un tipo de proyecto en el modal.
-   * La selección no se aplica al formulario hasta que el usuario confirme.
+   * Selecciona un tipo de proyecto del modal.
+   * Ahora confirma automáticamente la selección y cierra el modal.
    * 
    * @param {ProjectType} type - Tipo de proyecto seleccionado
    * @returns {void}
    */
   selectProjectType(type: ProjectType): void {
     this.selectedProjectType = type;
+    // Confirmación automática
+    this.uploadForm.patchValue({ tipo: type.value });
+    this.closeProjectTypesModal();
   }
 
   /**
@@ -764,35 +780,97 @@ export class UploadProjectComponent implements OnInit {
   }
 
   /**
-   * Obtiene el emoji representativo para un tipo de proyecto específico.
+   * Obtiene el icono SVG representativo para un tipo de proyecto específico.
    * Cada tipo de proyecto tiene un icono único que lo identifica visualmente.
    * 
    * @param {ProjectType} type - Tipo de proyecto
-   * @returns {string} Emoji correspondiente al tipo (default: 📄)
+   * @returns {string} Nombre del icono SVG correspondiente al tipo (default: 'document')
    */
   getProjectTypeIcon(type: ProjectType): string {
     const icons: { [key: string]: string } = {
-      'MANUAL_GUIA': '📖',
-      'TUTORIAL_CURSO': '🎓',
-      'DOCUMENTACION': '📋',
-      'PLANTILLA_TEMPLATE': '📝',
-      'SISTEMA_APLICACION': '💻',
-      'CODIGO_FUENTE': '⚡',
-      'BASE_DATOS': '🗄️',
-      'API_SERVICIO': '🔌',
-      'PLAN_NEGOCIO': '💼',
-      'ANALISIS_CASO': '📊',
-      'INVESTIGACION_ESTUDIO': '🔬',
-      'ANALISIS_MERCADO': '📈',
-      'DISEÑO_GRAFICO': '🎨',
-      'PRESENTACION': '🖼️',
-      'VIDEO_AUDIO': '🎥',
-      'MATERIAL_VISUAL': '📱',
-      'HOJA_CALCULO': '📊',
-      'FORMULARIO_FORMATO': '📄',
-      'OTRO': '❓'
+      'MANUAL_GUIA': 'book-open',
+      'TUTORIAL_CURSO': 'academic-cap',
+      'DOCUMENTACION': 'clipboard-list',
+      'PLANTILLA_TEMPLATE': 'document-text',
+      'SISTEMA_APLICACION': 'desktop-computer',
+      'CODIGO_FUENTE': 'code',
+      'BASE_DATOS': 'database',
+      'API_SERVICIO': 'server',
+      'PLAN_NEGOCIO': 'briefcase',
+      'ANALISIS_CASO': 'chart-bar',
+      'INVESTIGACION_ESTUDIO': 'beaker',
+      'ANALISIS_MERCADO': 'trending-up',
+      'DISEÑO_GRAFICO': 'color-swatch',
+      'PRESENTACION': 'presentation-chart-bar',
+      'VIDEO_AUDIO': 'film',
+      'MATERIAL_VISUAL': 'photograph',
+      'HOJA_CALCULO': 'table',
+      'FORMULARIO_FORMATO': 'document',
+      'OTRO': 'question-mark-circle'
     };
-    return icons[type.value] || '📄';
+    return icons[type.value] || 'document';
+  }
+
+  /**
+   * Obtiene el path SVG para renderizar el icono del tipo de proyecto.
+   * 
+   * @param {string} iconName - Nombre del icono
+   * @returns {string} Path SVG del icono
+   */
+  getIconSvgPath(iconName: string): string {
+    const svgPaths: { [key: string]: string } = {
+      'book-open': 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253',
+      'academic-cap': 'M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222',
+      'clipboard-list': 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01',
+      'document-text': 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+      'desktop-computer': 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+      'code': 'M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4',
+      'database': 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4',
+      'server': 'M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01',
+      'briefcase': 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+      'chart-bar': 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+      'beaker': 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z',
+      'trending-up': 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
+      'color-swatch': 'M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01',
+      'presentation-chart-bar': 'M8 13v-1m4 1v-3m4 3V8M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z',
+      'film': 'M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z',
+      'photograph': 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z',
+      'table': 'M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z',
+      'document': 'M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z',
+      'question-mark-circle': 'M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+    };
+    return svgPaths[iconName] || svgPaths['document'];
+  }
+
+  /**
+   * Obtiene el color del icono según el tipo de proyecto.
+   * 
+   * @param {ProjectType} type - Tipo de proyecto
+   * @returns {string} Clase de color Tailwind para el icono
+   */
+  getIconColor(type: ProjectType): string {
+    const colors: { [key: string]: string } = {
+      'MANUAL_GUIA': 'text-blue-600',
+      'TUTORIAL_CURSO': 'text-purple-600',
+      'DOCUMENTACION': 'text-gray-600',
+      'PLANTILLA_TEMPLATE': 'text-indigo-600',
+      'SISTEMA_APLICACION': 'text-cyan-600',
+      'CODIGO_FUENTE': 'text-yellow-600',
+      'BASE_DATOS': 'text-green-600',
+      'API_SERVICIO': 'text-teal-600',
+      'PLAN_NEGOCIO': 'text-orange-600',
+      'ANALISIS_CASO': 'text-pink-600',
+      'INVESTIGACION_ESTUDIO': 'text-violet-600',
+      'ANALISIS_MERCADO': 'text-emerald-600',
+      'DISEÑO_GRAFICO': 'text-rose-600',
+      'PRESENTACION': 'text-fuchsia-600',
+      'VIDEO_AUDIO': 'text-red-600',
+      'MATERIAL_VISUAL': 'text-lime-600',
+      'HOJA_CALCULO': 'text-sky-600',
+      'FORMULARIO_FORMATO': 'text-slate-600',
+      'OTRO': 'text-amber-600'
+    };
+    return colors[type.value] || 'text-studex-600';
   }
 
   /**
@@ -822,7 +900,7 @@ export class UploadProjectComponent implements OnInit {
       'MATERIAL_VISUAL': 'Infografías, gráficos, ilustraciones o recursos visuales',
       'HOJA_CALCULO': 'Hojas de cálculo, modelos financieros o análisis de datos',
       'FORMULARIO_FORMATO': 'Formularios, formatos oficiales o documentos estructurados',
-      'OTRO': 'Otros tipos de contenido no clasificados en las categorías anteriores'
+      'OTRO': 'Otros tipos de contenido no clasificados en las opciones anteriores'
     };
     return descriptions[type.value] || 'Descripción no disponible';
   }
@@ -852,14 +930,17 @@ export class UploadProjectComponent implements OnInit {
   }
 
   /**
-   * Selecciona temporalmente una categoría en el modal.
-   * La selección no se aplica al formulario hasta que el usuario confirme.
+   * Selecciona una categoría en el modal.
+   * Ahora confirma automáticamente la selección y cierra el modal.
    * 
    * @param {Category} category - Categoría seleccionada
    * @returns {void}
    */
   selectCategory(category: Category): void {
     this.selectedCategory = category;
+    // Confirmación automática
+    this.uploadForm.patchValue({ categoryId: category.id });
+    this.closeCategoriesModal();
   }
 
   /**

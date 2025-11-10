@@ -1,0 +1,85 @@
+// Animaciones
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Animación de entrada para las tarjetas
+.slide-in-up {
+  opacity: 0;
+  animation: slideInUp 0.5s ease-out forwards;
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Estilos para las estadísticas
+.stat-card {
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-4px);
+  }
+}
+
+// Transiciones suaves para hover
+.transition-all {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Responsive
+@media (max-width: 768px) {
+  // Ajustes para tablets
+  .grid {
+    gap: 1rem;
+  }
+  
+  // Reducir padding en móviles
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  // Ajustes para móviles
+  .grid {
+    gap: 0.75rem;
+  }
+  
+  // Texto más pequeño en móviles
+  h1 {
+    font-size: 1.875rem; // 30px
+    line-height: 2.25rem;
+  }
+  
+  h3 {
+    font-size: 1.25rem; // 20px
+    line-height: 1.75rem;
+  }
+  
+  // Iconos más pequeños en móviles
+  svg {
+    &.w-24 {
+      width: 5rem;
+      height: 5rem;
+    }
+  }
+}
+

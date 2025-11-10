@@ -1,3 +1,12 @@
+/**
+ * @fileoverview Componente para la gestión y visualización de proyectos del vendedor.
+ * Permite visualizar estadísticas, gestionar y administrar proyectos publicados.
+ * 
+ * @author STUDEX Team
+ * @version 1.0.1
+ * @since 2025-11-10
+ */
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -9,31 +18,52 @@ import { LoggerService } from '../../services/logger.service';
 import { ProjectCardComponent, ProjectCard } from '../../components/project-card/project-card';
 import { BackButtonComponent } from '../../components/back-button/back-button.component';
 
+/**
+ * Interfaz que define la estructura de un proyecto del vendedor.
+ * @interface SellerProject
+ */
 interface SellerProject {
+  /** ID único del proyecto */
   id: number;
+  /** Título del proyecto */
   title: string;
+  /** Descripción del proyecto */
   description: string;
+  /** Precio del proyecto en soles */
   price: number;
+  /** Tipo de proyecto (tesis, código, informe, etc.) */
   type: string;
+  /** Universidad de origen */
   university: string;
+  /** Materia o curso asociado */
   subject: string;
+  /** Año de realización */
   year: number;
+  /** Estado del proyecto (PUBLICADO, DESTACADO, etc.) */
   status: string;
+  /** Número de vistas del proyecto */
   views: number;
+  /** Número de descargas del proyecto */
   downloads: number;
+  /** Indica si el proyecto está destacado */
   featured: boolean;
+  /** Fecha de creación */
   createdAt: string;
+  /** Fecha de última actualización */
   updatedAt: string;
+  /** Categoría del proyecto */
   category: {
     id: number;
     nombre: string;
     icono: string;
     colorHex: string;
   };
+  /** Imagen principal del proyecto */
   mainImage: {
     fileUrl: string;
     fileName: string;
   } | null;
+  /** Estadísticas del proyecto */
   stats: {
     totalImages: number;
     totalFiles: number;
@@ -41,136 +71,83 @@ interface SellerProject {
   };
 }
 
-interface ProjectImage {
-  id: number;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  isMain: boolean;
-  order: number;
-}
-
-interface ProjectFile {
-  id: number;
-  fileName: string;
-  fileUrl: string;
-  fileSize: number;
-  mimeType: string;
-  description: string;
-  order: number;
-}
-
+/**
+ * Interfaz para las estadísticas globales de proyectos.
+ * @interface ProjectStats
+ */
 interface ProjectStats {
+  /** Total de proyectos */
   total: number;
+  /** Total de proyectos publicados */
   published: number;
+  /** Total de vistas acumuladas */
   totalViews: number;
+  /** Total de descargas acumuladas */
   totalDownloads: number;
 }
+
+/**
+ * Componente principal para la gestión de proyectos del vendedor.
+ * 
+ * Funcionalidades principales:
+ * - Visualización de todos los proyectos del vendedor
+ * - Estadísticas en tiempo real (total, publicados, vistas, descargas)
+ * - Navegación a la página de subida de proyectos
+ * - Gestión de estados de carga y error
+ * - Transformación de datos para compatibilidad con ProjectCardComponent
+ * 
+ * @class SellerProjectsComponent
+ * @implements {OnInit}
+ */
 
 @Component({
   selector: 'app-seller-projects',
   standalone: true,
   imports: [CommonModule, FormsModule, ProjectCardComponent, BackButtonComponent],
-  template: `
-    <div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">
-      <div class="max-w-7xl mx-auto px-4">
-        
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
-          <div>
-            <h1 class="text-4xl font-bold text-studex-900 mb-2">📚 Mis Proyectos</h1>
-            <p class="text-studex-600">Gestiona y visualiza todos tus proyectos publicados</p>
-          </div>
-          <app-back-button></app-back-button>
-        </div>
-
-        <!-- Loading -->
-        <div *ngIf="isLoading" class="text-center py-12">
-          <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-studex-600"></div>
-          <p class="mt-4 text-studex-600">Cargando proyectos...</p>
-        </div>
-
-        <!-- Error -->
-        <div *ngIf="error" class="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
-          <h3 class="text-red-800 font-semibold mb-2">Error cargando proyectos</h3>
-          <p class="text-red-600">{{ error }}</p>
-          <button (click)="loadProjects()" 
-                  class="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
-            Reintentar
-          </button>
-        </div>
-
-        <!-- No projects -->
-        <div *ngIf="!isLoading && !error && projects.length === 0" 
-             class="text-center py-16">
-          <div class="text-6xl mb-4">📝</div>
-          <h3 class="text-2xl font-bold text-studex-900 mb-2">No tienes proyectos aún</h3>
-          <p class="text-studex-600 mb-6">¡Comienza subiendo tu primer proyecto!</p>
-          <button (click)="navigateToUpload()"
-                  class="px-8 py-3 bg-studex-600 text-white font-semibold rounded-lg hover:bg-studex-700 transition-colors">
-            Subir Proyecto
-          </button>
-        </div>
-
-        <!-- Projects Grid -->
-        <div *ngIf="!isLoading && !error && projects.length > 0">
-          <!-- Stats -->
-          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-              <div class="text-3xl font-bold text-studex-600">{{ projects.length }}</div>
-              <div class="text-sm text-studex-500">Total Proyectos</div>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-              <div class="text-3xl font-bold text-studex-accent-400">{{ getPublishedCount() }}</div>
-              <div class="text-sm text-studex-500">Publicados</div>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-              <div class="text-3xl font-bold text-studex-600">{{ getTotalViews() }}</div>
-              <div class="text-sm text-studex-500">Vistas Totales</div>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg p-6 text-center">
-              <div class="text-3xl font-bold text-studex-accent-400">{{ getTotalDownloads() }}</div>
-              <div class="text-sm text-studex-500">Descargas</div>
-            </div>
-          </div>
-
-          <!-- Projects List -->
-          <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            <app-project-card
-              *ngFor="let project of projects; let i = index"
-              [project]="transformToProjectCard(project)"
-              [showOwnerActions]="true"
-              [animationDelay]="i * 0.05"
-              class="slide-in-up"
-              [style.animation-delay]="(i * 0.05) + 's'">
-            </app-project-card>
-          </div>
-        </div>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .animate-spin {
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-  `]
+  templateUrl: './seller-projects.html',
+  styleUrls: ['./seller-projects.scss']
 })
 export class SellerProjectsComponent implements OnInit {
+  
+  // ========================================
+  // PROPIEDADES DEL COMPONENTE
+  // ========================================
+  
+  /** Usuario autenticado actualmente */
   currentUser: User | null = null;
+  
+  /** Lista de proyectos del vendedor */
   projects: SellerProject[] = [];
+  
+  /** Estadísticas globales de los proyectos */
   stats: ProjectStats = {
     total: 0,
     published: 0,
     totalViews: 0,
     totalDownloads: 0
   };
+  
+  /** Indica si se están cargando los datos */
   isLoading = true;
+  
+  /** Mensaje de error si ocurre algún problema */
   error: string | null = null;
 
+  // ========================================
+  // CONSTRUCTOR E INICIALIZACIÓN
+  // ========================================
+
+  /**
+   * Constructor del componente.
+   * Inicializa los servicios necesarios para la gestión de proyectos.
+   * 
+   * @param {Router} router - Servicio de navegación entre rutas
+   * @param {ActivatedRoute} route - Ruta activa actual
+   * @param {AuthService} authService - Servicio de autenticación
+   * @param {ApiService} apiService - Servicio de llamadas a la API
+   * @param {NotificationService} notificationService - Servicio de notificaciones
+   * @param {LoggerService} logger - Servicio de logging
+   */
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -180,10 +157,27 @@ export class SellerProjectsComponent implements OnInit {
     private logger: LoggerService
   ) {}
 
+  /**
+   * Hook de inicialización del componente.
+   * Carga el usuario y sus proyectos al iniciar.
+   * 
+   * @returns {void}
+   */
   ngOnInit(): void {
     this.loadUserAndProjects();
   }
 
+  // ========================================
+  // MÉTODOS DE CARGA DE DATOS
+  // ========================================
+
+  /**
+   * Carga el usuario autenticado y sus proyectos.
+   * Redirige al login si no hay usuario autenticado.
+   * 
+   * @private
+   * @returns {Promise<void>}
+   */
   private async loadUserAndProjects(): Promise<void> {
     this.authService.isInitialized$.subscribe(initialized => {
       if (initialized) {
@@ -199,6 +193,12 @@ export class SellerProjectsComponent implements OnInit {
     });
   }
 
+  /**
+   * Carga todos los proyectos del vendedor desde la API.
+   * Actualiza las estadísticas automáticamente.
+   * 
+   * @returns {Promise<void>}
+   */
   async loadProjects(): Promise<void> {
     if (!this.currentUser) return;
 
@@ -223,18 +223,43 @@ export class SellerProjectsComponent implements OnInit {
     }
   }
 
+  // ========================================
+  // MÉTODOS DE CÁLCULO DE ESTADÍSTICAS
+  // ========================================
+
+  /**
+   * Calcula el número total de proyectos publicados.
+   * 
+   * @returns {number} Cantidad de proyectos con estado PUBLICADO o DESTACADO
+   */
   getPublishedCount(): number {
     return this.projects.filter(p => p.status === 'PUBLICADO' || p.status === 'DESTACADO').length;
   }
 
+  /**
+   * Calcula el total de vistas de todos los proyectos.
+   * 
+   * @returns {number} Suma de vistas de todos los proyectos
+   */
   getTotalViews(): number {
     return this.projects.reduce((total, project) => total + project.views, 0);
   }
 
+  /**
+   * Calcula el total de descargas de todos los proyectos.
+   * 
+   * @returns {number} Suma de descargas de todos los proyectos
+   */
   getTotalDownloads(): number {
     return this.projects.reduce((total, project) => total + project.downloads, 0);
   }
 
+  /**
+   * Calcula las estadísticas completas de los proyectos.
+   * Se usa como fallback si la API no devuelve estadísticas.
+   * 
+   * @returns {ProjectStats} Objeto con todas las estadísticas calculadas
+   */
   calculateStats(): ProjectStats {
     return {
       total: this.projects.length,
@@ -244,8 +269,16 @@ export class SellerProjectsComponent implements OnInit {
     };
   }
 
+  // ========================================
+  // MÉTODOS DE TRANSFORMACIÓN
+  // ========================================
+
   /**
-   * Transforma SellerProject a ProjectCard para usar con ProjectCardComponent
+   * Transforma un SellerProject a ProjectCard para usar con ProjectCardComponent.
+   * Adapta la estructura de datos para compatibilidad con el componente de tarjeta.
+   * 
+   * @param {SellerProject} project - Proyecto del vendedor a transformar
+   * @returns {ProjectCard} Proyecto transformado en formato ProjectCard
    */
   transformToProjectCard(project: SellerProject): ProjectCard {
     return {
@@ -273,6 +306,15 @@ export class SellerProjectsComponent implements OnInit {
     };
   }
 
+  // ========================================
+  // MÉTODOS DE NAVEGACIÓN
+  // ========================================
+
+  /**
+   * Navega a la página de subida de proyectos.
+   * 
+   * @returns {void}
+   */
   navigateToUpload(): void {
     this.router.navigate(['/vendedor/subir-proyecto']);
   }
