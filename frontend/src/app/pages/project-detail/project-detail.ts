@@ -9,6 +9,7 @@ import { NotificationService } from '../../services/notification.service';
 import { PurchaseService, PurchaseRequest } from '../../services/purchase.service';
 import { CartService } from '../../services/cart.service';
 import { CommentService, ProjectComment } from '../../services/comment.service';
+import { FavoritesService } from '../../services/favorites.service';
 import { PurchaseModalComponent, ProjectSummary } from '../../components/purchase-modal/purchase-modal.component';
 import { LoggerService } from '../../services/logger.service';
 
@@ -155,6 +156,13 @@ export class ProjectDetailComponent implements OnInit {
   isLoadingComments = false;
   isSubmittingComment = false;
 
+  // ----------------------------------------
+  // Favorites
+  // ----------------------------------------
+  
+  isFavorite = false;
+  isLoadingFavorite = false;
+
   // ============================================
   // CONSTRUCTOR
   // ============================================
@@ -168,6 +176,7 @@ export class ProjectDetailComponent implements OnInit {
     private purchaseService: PurchaseService,
     private cartService: CartService,
     private commentService: CommentService,
+    private favoritesService: FavoritesService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private logger: LoggerService,
@@ -248,7 +257,10 @@ export class ProjectDetailComponent implements OnInit {
         this.checkAccess();
         this.isInCart = this.cartService.isInCart(this.project.id);
         
-        this.logger.debug('Proyecto cargado');
+        // Verificar si el proyecto está en favoritos
+        this.isFavorite = this.favoritesService.isFavorite(this.project.id);
+        
+        this.logger.debug('Proyecto cargado', { isFavorite: this.isFavorite });
       } else {
         throw new Error(response?.message || 'Error cargando proyecto');
       }
@@ -996,5 +1008,64 @@ export class ProjectDetailComponent implements OnInit {
     if (diffDay < 7) return `Hace ${diffDay} día${diffDay > 1 ? 's' : ''}`;
     
     return this.formatDate(dateString);
+  }
+
+  // ============================================
+  // FAVORITES
+  // ============================================
+
+  /**
+   * Maneja el click en el botón de favoritos.
+   * Agrega o remueve el proyecto de favoritos.
+   */
+  onFavoriteClick(): void {
+    if (this.isLoadingFavorite) return;
+    
+    // Validar autenticación
+    if (!this.currentUser) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    
+    if (!this.project) return;
+    
+    this.isLoadingFavorite = true;
+    
+    // Si no es favorito → agregar, si es favorito → remover
+    if (!this.isFavorite) {
+      // AGREGAR a favoritos
+      this.logger.log('Agregando a favoritos');
+      this.favoritesService.addToFavorites(this.project.id).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.isFavorite = true;
+            this.logger.success('Agregado a favoritos');
+          }
+          this.isLoadingFavorite = false;
+        },
+        error: (error) => {
+          this.logger.error('Error agregando a favoritos', error);
+          this.notificationService.showError('Error al agregar a favoritos', 'Error');
+          this.isLoadingFavorite = false;
+        }
+      });
+    } else {
+      // REMOVER de favoritos  
+      this.logger.log('Removiendo de favoritos');
+      this.favoritesService.removeFromFavorites(this.project.id).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.isFavorite = false;
+            this.logger.success('Removido de favoritos');
+          }
+          this.isLoadingFavorite = false;
+        },
+        error: (error) => {
+          this.logger.error('Error removiendo de favoritos', error);
+          this.notificationService.showError('Error al remover de favoritos', 'Error');
+          this.isLoadingFavorite = false;
+        }
+      });
+    }
   }
 }

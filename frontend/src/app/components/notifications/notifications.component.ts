@@ -121,11 +121,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     
     switch (type) {
       case 'success':
-        return `${baseClasses} border-green-500 bg-green-50`;
+        return `${baseClasses} border-studex-600 bg-studex-50`;
       case 'error':
         return `${baseClasses} border-red-500 bg-red-50`;
       case 'warning':
-        return `${baseClasses} border-yellow-500 bg-yellow-50`;
+        return `${baseClasses} border-orange-500 bg-orange-50`;
       case 'info':
         return `${baseClasses} border-blue-500 bg-blue-50`;
       default:
@@ -139,11 +139,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   getIconClasses(type: Notification['type']): string {
     switch (type) {
       case 'success':
-        return 'text-green-600';
+        return 'text-studex-600';
       case 'error':
         return 'text-red-600';
       case 'warning':
-        return 'text-yellow-600';
+        return 'text-orange-600';
       case 'info':
         return 'text-blue-600';
       default:
@@ -157,11 +157,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   getTitleClasses(type: Notification['type']): string {
     switch (type) {
       case 'success':
-        return 'text-green-800';
+        return 'text-studex-800';
       case 'error':
         return 'text-red-800';
       case 'warning':
-        return 'text-yellow-800';
+        return 'text-orange-800';
       case 'info':
         return 'text-blue-800';
       default:

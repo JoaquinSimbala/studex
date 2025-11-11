@@ -1,47 +1,58 @@
 <div class="min-h-screen bg-gradient-to-br from-studex-50 to-studex-100 py-8">
   <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
     
-    <!-- Back Button -->
-    <div class="mb-4">
-      <app-back-button></app-back-button>
-    </div>
-    
     <!-- Header -->
-    <div class="bg-white/90 backdrop-blur-sm rounded-xl shadow-studex-xl border border-studex-200/50 p-6 mb-6">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div class="mb-4 sm:mb-0">
-          <h1 class="text-2xl font-bold text-gray-900">Notificaciones</h1>
-          <p class="text-gray-600 mt-1">
-            {{ unreadCount > 0 ? unreadCount + ' notificaciones sin leer' : 'Todas las notificaciones están al día' }}
+    <div class="mb-8">
+      <div class="flex items-start justify-between gap-4 mb-6">
+        <div class="flex-1">
+          <h1 class="text-4xl font-bold text-studex-900 mb-2">
+            Mis <span class="text-studex-600">Notificaciones</span>
+          </h1>
+          <p class="text-studex-600">
+            {{ unreadCount > 0 ? 'Tienes ' + unreadCount + ' notificaciones sin leer' : 'Todas tus notificaciones están al día' }}
           </p>
         </div>
-        
-        <!-- Actions -->
-        <div class="flex space-x-3">
-          <button 
-            *ngIf="unreadCount > 0"
-            (click)="markAllAsRead()"
-            [disabled]="isMarkingAllRead"
-            class="px-4 py-2 bg-studex-600 text-white rounded-lg hover:bg-studex-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-studex-sm">
-            <span *ngIf="!isMarkingAllRead">Marcar todas como leídas</span>
-            <span *ngIf="isMarkingAllRead" class="flex items-center space-x-2">
-              <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+        <div class="flex-shrink-0">
+          <app-back-button></app-back-button>
+        </div>
+      </div>
+      
+      <!-- Actions Card -->
+      <div class="bg-white rounded-2xl p-6 shadow-lg border border-studex-100">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+          <div>
+            <h2 class="text-xl font-bold text-studex-900">Panel de Notificaciones</h2>
+            <p class="text-studex-600">
+              {{ todayCount }} {{ todayCount === 1 ? 'notificación recibida hoy' : 'notificaciones recibidas hoy' }}
+            </p>
+          </div>
+          
+          <div class="flex space-x-3">
+            <button 
+              *ngIf="unreadCount > 0"
+              (click)="markAllAsRead()"
+              [disabled]="isMarkingAllRead"
+              class="inline-flex items-center px-4 py-2 bg-studex-600 text-white font-medium rounded-xl hover:bg-studex-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+              <svg *ngIf="!isMarkingAllRead" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <svg *ngIf="isMarkingAllRead" class="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              <span>Marcando...</span>
-            </span>
-          </button>
-          
-          <button 
-            (click)="loadNotifications()"
-            [disabled]="isLoading"
-            class="px-4 py-2 bg-studex-100 text-studex-700 rounded-lg hover:bg-studex-200 transition-colors disabled:opacity-50 shadow-studex-sm">
-            <svg class="w-4 h-4 inline mr-2" [class.animate-spin]="isLoading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-            </svg>
-            Actualizar
-          </button>
+              {{ isMarkingAllRead ? 'Marcando...' : 'Marcar todas leídas' }}
+            </button>
+            
+            <button 
+              (click)="loadNotifications()"
+              [disabled]="isLoading"
+              class="inline-flex items-center px-4 py-2 bg-studex-100 text-studex-700 font-medium rounded-xl hover:bg-studex-200 transition-colors duration-200">
+              <svg class="w-4 h-4 mr-2" [class.animate-spin]="isLoading" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              Actualizar
+            </button>
+          </div>
         </div>
       </div>
     </div>

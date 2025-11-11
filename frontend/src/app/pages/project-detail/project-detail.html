@@ -18,41 +18,50 @@
     </div>
 
     <!-- Project Detail -->
-    <div *ngIf="!isLoading && !error && project">
+    <div *ngIf="!isLoading && !error && project" class="pb-24 lg:pb-0">
       
       <!-- Header -->
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-        <button (click)="goBack()" 
-                class="flex items-center justify-center w-10 h-10 text-studex-600 hover:bg-studex-100 rounded-lg transition-colors">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-          </svg>
-        </button>
+      <div class="flex items-center justify-between gap-4 mb-8">
+        <!-- Precio en el extremo izquierdo -->
+        <div>
+          <div class="text-sm text-studex-600 font-medium">Precio</div>
+          <div class="text-3xl md:text-4xl font-bold text-studex-900">S/ {{ project.price }}</div>
+        </div>
         
-        <div class="flex flex-wrap items-center gap-3">
-          <!-- Botón de agregar/remover del carrito -->
-          <button *ngIf="shouldShowCartButton()" 
-                  (click)="addToCart()"
-                  [disabled]="isAddingToCart"
-                  [class]="isInCart ? 
-                    'px-4 md:px-6 py-2 md:py-3 bg-white border-2 border-red-500 text-red-600 rounded-lg font-semibold hover:bg-red-50 transition-all text-sm md:text-base' :
-                    'px-4 md:px-6 py-2 md:py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base'">
-            <span *ngIf="isAddingToCart">Procesando...</span>
-            <span *ngIf="!isAddingToCart">{{ isInCart ? 'Remover del carrito' : 'Agregar al carrito' }}</span>
-          </button>
-
-          <!-- Botón de compra (solo vista pública) -->
-          <button *ngIf="showPurchasePrompt()" 
-                  (click)="purchaseProject()"
-                  class="px-4 md:px-6 py-2 md:py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base">
-            Comprar por S/ {{ project.price }}
+        <!-- Botones en el extremo derecho -->
+        <div class="flex items-center gap-3">
+          <!-- Botón de favorito (solo vista pública) -->
+          <button *ngIf="isPublicView && currentUser"
+                  (click)="onFavoriteClick()"
+                  [disabled]="isLoadingFavorite"
+                  class="flex items-center justify-center w-11 h-11 md:w-12 md:h-12 rounded-xl transition-all hover:scale-110"
+                  [class.text-red-500]="isFavorite"
+                  [class.text-studex-400]="!isFavorite"
+                  [class.opacity-50]="isLoadingFavorite"
+                  [class.cursor-not-allowed]="isLoadingFavorite"
+                  title="{{ isFavorite ? 'Remover de favoritos' : 'Agregar a favoritos' }}">
+            <svg *ngIf="!isLoadingFavorite" class="w-6 h-6 md:w-7 md:h-7" [class.fill-current]="isFavorite" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+            <svg *ngIf="isLoadingFavorite" class="w-5 h-5 animate-spin text-studex-600" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
           </button>
           
-          <!-- Mensaje de login requerido -->
-          <button *ngIf="showLoginPrompt()" 
-                  (click)="router.navigate(['/login'])"
-                  class="px-4 md:px-6 py-2 md:py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base">
-            Iniciar Sesión para Comprar
+          <!-- Badge de estado (solo para propietarios, antes del back-button) -->
+          <span *ngIf="isOwnerView"
+                [class]="getStatusBadgeClass(project.status)"
+                class="px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-2"
+                [innerHTML]="getStatusIcon(project.status)">
+          </span>
+          
+          <!-- Back Button (siempre al extremo derecho) -->
+          <button (click)="goBack()" 
+                  class="flex items-center justify-center w-11 h-11 md:w-12 md:h-12 text-studex-600 hover:bg-studex-100 rounded-xl transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
           </button>
           
           <!-- Estado de acceso concedido -->
@@ -63,13 +72,6 @@
             </svg>
             Tienes acceso a este proyecto
           </div>
-          
-          <!-- Badge de estado (solo para propietarios) -->
-          <span *ngIf="isOwnerView"
-                [class]="getStatusBadgeClass(project.status)"
-                class="px-4 py-2 rounded-full font-semibold shadow-md flex items-center gap-2"
-                [innerHTML]="getStatusIcon(project.status)">
-          </span>
         </div>
       </div>
 
@@ -231,17 +233,73 @@
 
         <!-- Right Column - Project Info -->
         <div class="lg:col-span-1 space-y-6">
+          
+          <!-- Botones de Acción (solo vista pública - ocultos en móvil y tablets) -->
+          <div *ngIf="isPublicView && !hasAccess" class="hidden lg:block space-y-3">
+            <!-- Botón Comprar Ahora -->
+            <button *ngIf="showPurchasePrompt()" 
+                    (click)="purchaseProject()"
+                    class="w-full group relative px-6 py-4 bg-gradient-to-r from-studex-600 to-studex-700 text-white rounded-xl font-bold text-base hover:from-studex-700 hover:to-studex-800 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 overflow-hidden">
+              <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+              <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span class="relative z-10">Comprar Ahora</span>
+            </button>
+            
+            <!-- Botón Agregar al Carrito -->
+            <button *ngIf="shouldShowCartButton()" 
+                    (click)="addToCart()"
+                    [disabled]="isAddingToCart"
+                    class="w-full group relative px-6 py-4 bg-studex-100/60 backdrop-blur-sm border-2 border-studex-300 text-studex-700 rounded-xl font-bold text-base hover:bg-studex-200/60 hover:border-studex-400 transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 overflow-hidden"
+                    [class.bg-red-100]="isInCart"
+                    [class.border-red-300]="isInCart"
+                    [class.text-red-700]="isInCart"
+                    [class.hover:bg-red-200]="isInCart"
+                    [class.hover:border-red-400]="isInCart">
+              <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
+              <svg *ngIf="!isAddingToCart" class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path *ngIf="!isInCart" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                <path *ngIf="isInCart" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              <svg *ngIf="isAddingToCart" class="w-5 h-5 animate-spin relative z-10" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span class="relative z-10">
+                <span *ngIf="isAddingToCart">Procesando...</span>
+                <span *ngIf="!isAddingToCart">{{ isInCart ? 'Remover del Carrito' : 'Agregar al Carrito' }}</span>
+              </span>
+            </button>
+            
+            <!-- Botón Login -->
+            <button *ngIf="showLoginPrompt()" 
+                    (click)="router.navigate(['/login'])"
+                    class="w-full group relative px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold text-base hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 overflow-hidden">
+              <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+              <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+              </svg>
+              <span class="relative z-10">Iniciar Sesión</span>
+            </button>
+            
+            <!-- Info del carrito -->
+            <div *ngIf="isInCart" class="mt-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <p class="text-xs text-blue-800 flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Ya está en tu carrito. 
+                <a routerLink="/carrito" class="underline font-medium hover:text-blue-900">Ver carrito</a>
+              </p>
+            </div>
+          </div>
+          
           <!-- Project Info -->
           <div class="bg-white rounded-xl shadow-lg p-4 md:p-6">
             <h1 class="text-xl md:text-2xl font-bold text-studex-900 mb-4">{{ project.title }}</h1>
             
             <div class="space-y-3 md:space-y-4 text-sm md:text-base">
-              <!-- Price -->
-              <div class="flex items-center justify-between">
-                <span class="text-studex-600">Precio:</span>
-                <span class="text-xl md:text-2xl font-bold text-studex-900">S/ {{ project.price }}</span>
-              </div>
-
               <!-- Category -->
               <div class="flex items-center justify-between gap-2">
                 <span class="text-studex-600">Categoría:</span>
@@ -519,29 +577,47 @@
             </div>
           </div>
           
-          <!-- Botones de acción -->
-          <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <!-- Botón de carrito -->
+          <!-- Botones de acción (ocultos en móvil y tablets, visibles en desktop) -->
+          <div class="hidden lg:flex flex-col gap-3">
+            <!-- Botón Comprar Ahora -->
+            <button (click)="purchaseProject()"
+                    class="w-full group relative px-6 py-4 bg-gradient-to-r from-studex-600 to-studex-700 text-white rounded-xl font-bold text-base hover:from-studex-700 hover:to-studex-800 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl flex items-center justify-center gap-2.5 overflow-hidden">
+              <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+              <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+              <span class="relative z-10">Comprar Ahora</span>
+            </button>
+            
+            <!-- Botón Agregar al Carrito -->
             <button *ngIf="shouldShowCartButton()" 
                     (click)="addToCart()"
                     [disabled]="isAddingToCart"
-                    [class]="isInCart ? 
-                      'px-6 py-3 bg-white border-2 border-red-500 text-red-600 rounded-lg font-semibold hover:bg-red-50 transition-all text-sm md:text-base' :
-                      'px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base'">
-              <span *ngIf="isAddingToCart">Procesando...</span>
-              <span *ngIf="!isAddingToCart">{{ isInCart ? 'Remover del carrito' : 'Agregar al carrito' }}</span>
-            </button>
-            
-            <!-- Botón de compra directa -->
-            <button (click)="purchaseProject()"
-                    class="px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base">
-              Comprar Ahora
+                    class="w-full group relative px-6 py-4 bg-studex-100/60 backdrop-blur-sm border-2 border-studex-300 text-studex-700 rounded-xl font-bold text-base hover:bg-studex-200/60 hover:border-studex-400 transition-all duration-300 transform hover:scale-[1.02] shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 overflow-hidden"
+                    [class.bg-red-100]="isInCart"
+                    [class.border-red-300]="isInCart"
+                    [class.text-red-700]="isInCart"
+                    [class.hover:bg-red-200]="isInCart"
+                    [class.hover:border-red-400]="isInCart">
+              <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
+              <svg *ngIf="!isAddingToCart" class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path *ngIf="!isInCart" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                <path *ngIf="isInCart" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+              <svg *ngIf="isAddingToCart" class="w-5 h-5 animate-spin relative z-10" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span class="relative z-10">
+                <span *ngIf="isAddingToCart">Procesando...</span>
+                <span *ngIf="!isAddingToCart">{{ isInCart ? 'Remover del Carrito' : 'Agregar al Carrito' }}</span>
+              </span>
             </button>
           </div>
           
-          <!-- Información del carrito -->
-          <div *ngIf="isInCart" class="mt-3 px-4 py-2 bg-blue-100 border border-blue-300 rounded-lg">
-            <p class="text-xs md:text-sm text-blue-800">
+          <!-- Información del carrito (solo desktop) -->
+          <div *ngIf="isInCart" class="hidden lg:block mt-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <p class="text-xs text-blue-800 flex items-center gap-2">
               <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
               </svg>
@@ -561,12 +637,68 @@
           <h3 class="text-lg font-semibold text-orange-800 mb-2">Inicia Sesión</h3>
           <p class="text-sm md:text-base text-orange-700 mb-4">Debes iniciar sesión para comprar y acceder a este proyecto.</p>
           <button (click)="router.navigate(['/login'])"
-                  class="px-6 py-3 bg-white border-2 border-studex-600 text-studex-600 rounded-lg font-semibold hover:bg-studex-50 transition-all text-sm md:text-base">
-            Iniciar Sesión
+                  class="hidden lg:inline-flex group relative px-8 py-3.5 bg-gradient-to-r from-studex-600 to-studex-700 text-white rounded-xl font-bold text-base hover:from-studex-700 hover:to-studex-800 transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl items-center gap-2.5 overflow-hidden">
+            <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+            <svg class="w-5 h-5 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+            </svg>
+            <span class="relative z-10">Iniciar Sesión</span>
           </button>
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- Footer Fijo para Móvil con Botones de Acción -->
+<div *ngIf="isPublicView && !hasAccess" class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-2xl z-50 pb-safe">
+  <div class="px-4 py-3 flex gap-2">
+    <!-- Botón Comprar Ahora -->
+    <button *ngIf="showPurchasePrompt()" 
+            (click)="purchaseProject()"
+            class="flex-1 group relative px-4 py-3.5 bg-gradient-to-r from-studex-600 to-studex-700 text-white rounded-xl font-bold text-sm hover:from-studex-700 hover:to-studex-800 transition-all duration-300 shadow-lg flex items-center justify-center gap-2 overflow-hidden">
+      <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+      <svg class="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+      </svg>
+      <span class="relative z-10">Comprar Ahora</span>
+    </button>
+    
+    <!-- Botón Agregar al Carrito -->
+    <button *ngIf="shouldShowCartButton()" 
+            (click)="addToCart()"
+            [disabled]="isAddingToCart"
+            class="flex-1 group relative px-4 py-3.5 bg-studex-100/60 backdrop-blur-sm border-2 border-studex-300 text-studex-700 rounded-xl font-bold text-sm hover:bg-studex-200/60 hover:border-studex-400 transition-all duration-300 shadow-md flex items-center justify-center gap-2 overflow-hidden"
+            [class.bg-red-100]="isInCart"
+            [class.border-red-300]="isInCart"
+            [class.text-red-700]="isInCart"
+            [class.hover:bg-red-200]="isInCart"
+            [class.hover:border-red-400]="isInCart">
+      <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-30 transition-opacity duration-300"></span>
+      <svg *ngIf="!isAddingToCart" class="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path *ngIf="!isInCart" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        <path *ngIf="isInCart" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+      <svg *ngIf="isAddingToCart" class="w-4 h-4 animate-spin relative z-10" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span class="relative z-10 truncate">
+        <span *ngIf="isAddingToCart">Procesando...</span>
+        <span *ngIf="!isAddingToCart">{{ isInCart ? 'Remover' : 'Agregar' }}</span>
+      </span>
+    </button>
+    
+    <!-- Botón Login (cuando no hay usuario) -->
+    <button *ngIf="showLoginPrompt()" 
+            (click)="router.navigate(['/login'])"
+            class="flex-1 group relative px-4 py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-bold text-sm hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg flex items-center justify-center gap-2 overflow-hidden">
+      <span class="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></span>
+      <svg class="w-4 h-4 relative z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+      </svg>
+      <span class="relative z-10">Iniciar Sesión</span>
+    </button>
   </div>
 </div>
 

@@ -93,6 +93,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   unreadCount = 0;
   
   /**
+   * Contador de notificaciones recibidas hoy.
+   * @type {number}
+   * @public
+   */
+  todayCount = 0;
+  
+  /**
    * Estado de carga inicial de notificaciones.
    * @type {boolean}
    * @public
@@ -322,6 +329,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
    * - Filtra las notificaciones por usuario actual
    * - Aplica el filtro seleccionado (all, unread, o tipo específico)
    * - Actualiza la lista de notificaciones filtradas
+   * - Calcula el contador de notificaciones de hoy
    * 
    * @returns {void}
    * @public
@@ -342,6 +350,30 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     } else {
       this.filteredNotifications = filtered.filter(n => n.tipo === this.currentFilter.toUpperCase());
     }
+    
+    // Calcular notificaciones de hoy
+    this.calculateTodayCount(filtered);
+  }
+
+  /**
+   * Calcula la cantidad de notificaciones recibidas hoy.
+   * 
+   * @description
+   * Cuenta las notificaciones cuya fecha de creación corresponde al día actual.
+   * 
+   * @param {DbNotification[]} notifications - Lista de notificaciones a analizar
+   * @returns {void}
+   * @public
+   */
+  calculateTodayCount(notifications: DbNotification[]) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    this.todayCount = notifications.filter(notification => {
+      const notificationDate = new Date(notification.fechaCreacion);
+      notificationDate.setHours(0, 0, 0, 0);
+      return notificationDate.getTime() === today.getTime();
+    }).length;
   }
 
   /**
